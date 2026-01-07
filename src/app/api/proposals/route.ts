@@ -11,17 +11,22 @@ export async function GET(request: Request) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
+        const { searchParams } = new URL(request.url);
+        const scope = searchParams.get("scope");
+
+        let whereClause: any = {
+            userId: session.user.id
+        };
+
+        if (scope === "all") {
+            whereClause = {}; // Fetch all proposals
+        }
+
         const proposals = await prisma.proposal.findMany({
-            where: {
-                userId: session.user.id
-            },
-            select: {
-                id: true,
-                film: {
-                    select: {
-                        tmdbId: true
-                    }
-                }
+            where: whereClause,
+            include: {
+                film: true, // Include full film details for 'all' scope
+                user: true  // Include proposer details
             }
         });
 

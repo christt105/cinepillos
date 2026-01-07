@@ -43,8 +43,8 @@ model Proposal {
   filmId    String
   createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id])
-  film Film @relation(fields: [filmId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  film Film @relation(fields: [filmId], references: [id], onDelete: Cascade)
   likes Like[]
 
   @@unique([userId, filmId])
@@ -56,8 +56,8 @@ model Like {
   proposalId String
   createdAt  DateTime @default(now())
 
-  user     User     @relation(fields: [userId], references: [id])
-  proposal Proposal @relation(fields: [proposalId], references: [id])
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  proposal Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
 
   @@unique([userId, proposalId])
 }
@@ -68,8 +68,8 @@ model Wishlist {
   filmId    String
   createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id])
-  film Film @relation(fields: [filmId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  film Film @relation(fields: [filmId], references: [id], onDelete: Cascade)
 
   @@unique([userId, filmId])
 }
@@ -81,8 +81,8 @@ model Comment {
   filmId    String
   createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id])
-  film Film @relation(fields: [filmId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  film Film @relation(fields: [filmId], references: [id], onDelete: Cascade)
 }
 
 model Meeting {
@@ -100,8 +100,8 @@ model MeetingCandidate {
   filmId    String
   userId    String   @default("system")
 
-  meeting Meeting @relation(fields: [meetingId], references: [id])
-  film    Film    @relation(fields: [filmId], references: [id])
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  film    Film    @relation(fields: [filmId], references: [id], onDelete: Cascade)
   votes   Vote[]
 
   @@unique([meetingId, filmId])
@@ -113,8 +113,8 @@ model Vote {
   userId        String
   createdAt     DateTime @default(now())
 
-  candidate MeetingCandidate @relation(fields: [candidateId], references: [id])
-  user      User             @relation(fields: [userId], references: [id])
+  candidate MeetingCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([candidateId, userId])
 }

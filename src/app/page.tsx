@@ -17,17 +17,40 @@ export default async function Home() {
   }
 
   // Fetch Next Meeting
+  // Fetch Next Meeting (or recently concluded)
   const nextMeeting = await prisma.meeting.findFirst({
     where: {
-      date: { gt: new Date() },
+      date: { gt: new Date(Date.now() - 24 * 60 * 60 * 1000) }, // Show meetings from last 24h to keep concluded ones visible
     },
     orderBy: { date: 'asc' },
     include: {
       candidates: {
-        include: { film: true }
+        include: {
+          film: {
+            include: {
+              proposals: {
+                include: { user: true }
+              }
+            }
+          }
+        }
       }
     }
   });
+
+  // Manually fetch users for candidates (workaround for missing schema relation)
+  const userIds = new Set<string>();
+  if (nextMeeting) {
+    nextMeeting.candidates.forEach(c => {
+      if (c.userId) userIds.add(c.userId);
+    });
+  }
+
+  const users = await prisma.user.findMany({
+    where: { id: { in: Array.from(userIds) } }
+  });
+
+  const usersMap = new Map(users.map(u => [u.id, u]));
 
   // Fetch Proposals (Recent)
   // Fetch Proposals (Recent Films with Proposals)
@@ -51,12 +74,122 @@ export default async function Home() {
                 {new Date(nextMeeting.date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
               </h3>
               <p style={{ opacity: 0.7, marginBottom: '2rem' }}>Status: {nextMeeting.status}</p>
-              <Link href="/meetings" className="btn btn-primary">
-                Go to Voting Room
-              </Link>
+
+              {/* Status: VOTING */}
+              {nextMeeting.status === 'VOTING' && (
+                <div>
+                  <h4 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Vote for the next movie:</h4>
+                  <div className="responsive-proposals">
+                    {nextMeeting.candidates.map(candidate => {
+                      // Use original proposers
+                      const proposers = candidate.film.proposals.map((p: any) => p.user);
+                      const mainProposer = proposers[0];
+
+                      return (
+                        <div key={candidate.id} className="proposal-card glass-card" style={{ padding: '0.5rem' }}>
+                          <div style={{ aspectRatio: '2/3', position: 'relative', borderRadius: '0.5rem', overflow: 'hidden', marginBottom: '0.5rem' }}>
+                            <Image
+                              src={`https://image.tmdb.org/t/p/w500${candidate.film.posterPath}`}
+                              alt={candidate.film.title}
+                              fill
+                              style={{ objectFit: 'cover' }}
+                            />
+                          </div>
+                          <h4 style={{ fontSize: '0.9rem', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{candidate.film.title}</h4>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem', fontSize: '0.8rem', opacity: 0.8 }}>
+                            {mainProposer?.image ? (
+                              <div style={{ width: '20px', height: '20px', borderRadius: '50%', overflow: 'hidden', position: 'relative' }}>
+                                <Image src={mainProposer.image} alt={mainProposer.name || 'User'} fill style={{ objectFit: 'cover' }} />
+                              </div>
+                            ) : (
+                              <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#555' }} />
+                            )}
+                            <span>{mainProposer?.name || 'Unknown'}</span>
+                            {proposers.length > 1 && <span style={{ fontSize: '0.7em', opacity: 0.7 }}>+{proposers.length - 1}</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div style={{ marginTop: '2rem' }}>
+                    <Link href="/meetings" className="btn btn-primary">
+                      Go to Voting Room
+                    </Link>
+                  </div>
+                </div>
+              )}
+
+              {/* Status: CONCLUDED */}
+              {nextMeeting.status === 'CONCLUDED' && (
+                <div>
+                  <h4 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#ffd700' }}>Winner Selection</h4>
+                  {(() => {
+                    const winnerCandidate = nextMeeting.candidates.find(c => c.filmId === nextMeeting.selectedFilmId);
+                    if (winnerCandidate) {
+                      const proposers = winnerCandidate.film.proposals.map((p: any) => p.user);
+                      const mainProposer = proposers[0];
+
+                      return (
+                        <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+                          <div style={{ flex: '0 0 200px', borderRadius: '1rem', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+                            <Image
+                              src={`https://image.tmdb.org/t/p/w500${winnerCandidate.film.posterPath}`}
+                              alt={winnerCandidate.film.title}
+                              width={200}
+                              height={300}
+                              style={{ objectFit: 'cover' }}
+                            />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <h1 style={{ fontSize: '3rem', fontWeight: 'bold', lineHeight: 1.1, marginBottom: '0.5rem' }}>{winnerCandidate.film.title}</h1>
+                            <p style={{ fontSize: '1.1rem', opacity: 0.8, marginBottom: '2rem', maxWidth: '600px' }}>{winnerCandidate.film.overview.slice(0, 150)}...</p>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', background: 'rgba(255,255,255,0.1)', padding: '0.5rem 1rem', borderRadius: '2rem', width: 'fit-content' }}>
+                              <span style={{ opacity: 0.7 }}>Proposed by</span>
+                              {mainProposer?.image && (
+                                <Image src={mainProposer.image} alt={mainProposer.name || ''} width={24} height={24} style={{ borderRadius: '50%' }} />
+                              )}
+                              <span style={{ fontWeight: '600' }}>{mainProposer?.name}</span>
+                              {proposers.length > 1 && <span style={{ fontSize: '0.8em', opacity: 0.7 }}>+{proposers.length - 1} others</span>}
+                            </div>
+
+                            <Link href={`/movies/${winnerCandidate.film.tmdbId}`} className="btn btn-primary">
+                              View Movie Details
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return <p>No winner selected yet.</p>;
+                  })()}
+                </div>
+              )}
+
+              {/* Status: PLANNING (Default) */}
+              {(nextMeeting.status === 'PLANNING' || !nextMeeting.status) && (
+                <>
+                  <Link href="/meetings" className="btn btn-primary">
+                    Go to Voting Room
+                  </Link>
+                </>
+              )}
+
             </div>
-            {/* Background art if selected film exists? For now simple gradient */}
-            <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, background: 'linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 100%)', zIndex: 1 }} />
+            {/* Background art */}
+            <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, background: 'linear-gradient(90deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 100%)', zIndex: 1 }} />
+            {/* Dynamic background if winner or candidates */}
+            {nextMeeting.candidates.length > 0 && (
+              <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 0, opacity: 0.3 }}>
+                <Image
+                  src={`https://image.tmdb.org/t/p/original${nextMeeting.status === 'CONCLUDED' && nextMeeting.selectedFilmId
+                    ? nextMeeting.candidates.find(c => c.filmId === nextMeeting.selectedFilmId)?.film.posterPath
+                    : nextMeeting.candidates[0]?.film.posterPath}`}
+                  alt="Background"
+                  fill
+                  style={{ objectFit: 'cover', filter: 'blur(20px)' }}
+                />
+              </div>
+            )}
           </div>
         ) : (
           <div className="glass-card" style={{ padding: '2rem', borderRadius: '1rem', textAlign: 'center' }}>

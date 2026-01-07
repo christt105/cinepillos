@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Link as LinkIcon } from "lucide-react";
+import { ProposalButton } from "./ProposalButton";
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -138,6 +139,3 @@ export default async function MovieDetailsPage(props: PageProps) {
         </div>
     );
 }
-
-// Client Component for the button
-import { ProposalButton } from "./ProposalButton";
