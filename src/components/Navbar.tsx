@@ -14,7 +14,7 @@ export default function Navbar() {
             <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '100%' }}>
                 <Link href="/" className={styles.logo}>
                     <Film className={styles.icon} />
-                    <span>ClubDeCine</span>
+                    <span>Club De Cine Los Zorropillos</span>
                 </Link>
 
                 <div className={styles.links}>
