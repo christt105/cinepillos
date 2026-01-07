@@ -6,9 +6,11 @@ import { TMDBMovie } from "@/lib/tmdb";
 interface MovieCardProps {
     movie: TMDBMovie;
     onAdd?: (movie: TMDBMovie) => void;
+    loading?: boolean;
+    disabled?: boolean;
 }
 
-export default function MovieCard({ movie, onAdd }: MovieCardProps) {
+export default function MovieCard({ movie, onAdd, loading = false, disabled = false }: MovieCardProps) {
     const imageUrl = movie.poster_path
         ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
         : "https://via.placeholder.com/500x750?text=No+Image";
@@ -26,8 +28,18 @@ export default function MovieCard({ movie, onAdd }: MovieCardProps) {
                 <div className={styles.overlay}>
                     <p className={styles.overview}>{movie.overview.slice(0, 150)}...</p>
                     <div className={styles.actions}>
-                        <button className="btn btn-primary" onClick={() => onAdd?.(movie)}>
-                            <Plus size={16} style={{ marginRight: 4 }} /> Add
+                        <button
+                            className="btn btn-primary"
+                            onClick={() => onAdd?.(movie)}
+                            disabled={disabled || loading}
+                            style={{ opacity: (disabled || loading) ? 0.7 : 1, cursor: (disabled || loading) ? 'not-allowed' : 'pointer' }}
+                        >
+                            {loading ? (
+                                <span style={{ marginRight: 4 }}>...</span>
+                            ) : (
+                                <Plus size={16} style={{ marginRight: 4 }} />
+                            )}
+                            {disabled ? "Proposed" : "Add"}
                         </button>
                         <a
                             href={`https://www.themoviedb.org/movie/${movie.id}`}

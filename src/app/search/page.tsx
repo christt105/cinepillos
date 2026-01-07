@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useDebounce } from "@/hooks/useDebounce"; // Need to create this hook usually, or just inline debounce
 import MovieCard from "@/components/MovieCard";
 import { Search } from "lucide-react";
 import { TMDBMovie } from "@/lib/tmdb";
@@ -12,6 +11,9 @@ export default function SearchPage() {
     const [loading, setLoading] = useState(false);
 
     // Simple debounce effect
+    const [proposedIds, setProposedIds] = useState<number[]>([]);
+    const [addingId, setAddingId] = useState<number | null>(null);
+
     useEffect(() => {
         const timer = setTimeout(() => {
             fetchMovies(query);
@@ -34,9 +36,33 @@ export default function SearchPage() {
         }
     }
 
-    const handleAdd = (movie: TMDBMovie) => {
-        // Mock add to proposal
-        alert(`Proposed: ${movie.title} (DB not connected in this step)`);
+    const handleAdd = async (movie: TMDBMovie) => {
+        if (proposedIds.includes(movie.id)) return;
+
+        setAddingId(movie.id);
+        try {
+            const res = await fetch("/api/proposals", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    tmdbId: movie.id,
+                    title: movie.title,
+                    overview: movie.overview,
+                    posterPath: movie.poster_path,
+                    releaseDate: movie.release_date
+                })
+            });
+
+            if (!res.ok) throw new Error("Failed to propose");
+
+            setProposedIds(prev => [...prev, movie.id]);
+            alert(`Proposed: ${movie.title}`);
+        } catch (error) {
+            console.error("Failed to propose", error);
+            alert("Failed to propose movie. Please try again.");
+        } finally {
+            setAddingId(null);
+        }
     };
 
     return (
@@ -67,7 +93,13 @@ export default function SearchPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '2rem' }}>
                 {movies.map((movie) => (
-                    <MovieCard key={movie.id} movie={movie} onAdd={handleAdd} />
+                    <MovieCard
+                        key={movie.id}
+                        movie={movie}
+                        onAdd={handleAdd}
+                        loading={addingId === movie.id}
+                        disabled={proposedIds.includes(movie.id)}
+                    />
                 ))}
             </div>
 
