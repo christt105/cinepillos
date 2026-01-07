@@ -78,3 +78,25 @@
     color: hsl(var(--foreground));
     opacity: 0.6;
 }
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .overlay {
+        opacity: 1;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+        justify-content: flex-end;
+        padding-bottom: 2rem;
+    }
+
+    .overview {
+        display: none;
+    }
+
+    .card:hover {
+        transform: none;
+    }
+
+    .card:hover .image {
+        transform: none;
+    }
+}

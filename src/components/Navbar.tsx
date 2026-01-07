@@ -2,21 +2,24 @@
 
 import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { Film, Calendar, User, LogOut, LogIn } from "lucide-react";
+import { Film, Calendar, User, LogOut, LogIn, Menu, X } from "lucide-react";
 import clsx from "clsx";
 import styles from "./Navbar.module.css";
+import { useState } from "react";
 
 export default function Navbar() {
     const { data: session } = useSession();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     return (
         <nav className={clsx(styles.navbar, "glass")}>
             <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '100%' }}>
                 <Link href="/" className={styles.logo}>
                     <Film className={styles.icon} />
-                    <span>Club De Cine Los Zorropillos</span>
+                    <span>Zorropillos</span>
                 </Link>
 
+                {/* Desktop Links */}
                 <div className={styles.links}>
                     {session ? (
                         <>
@@ -40,6 +43,49 @@ export default function Navbar() {
                         </button>
                     )}
                 </div>
+
+                {/* Mobile Menu Button */}
+                <button
+                    className={styles.mobileMenuBtn}
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                >
+                    {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                </button>
+
+                {/* Mobile Menu Dropdown */}
+                {isMenuOpen && (
+                    <div className={styles.mobileMenu}>
+                        {session ? (
+                            <>
+                                <Link
+                                    href="/search"
+                                    className={styles.link}
+                                    onClick={() => setIsMenuOpen(false)}
+                                >
+                                    Search
+                                </Link>
+                                <Link
+                                    href="/meetings"
+                                    className={styles.link}
+                                    onClick={() => setIsMenuOpen(false)}
+                                >
+                                    Meetings
+                                </Link>
+                                <div className={styles.userMenu}>
+                                    <span className={styles.username}>{session.user?.name || session.user?.email}</span>
+                                    <button onClick={() => signOut()} className="btn btn-ghost">
+                                        <LogOut size={18} />
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <button onClick={() => signIn()} className="btn btn-primary" style={{ width: '100%' }}>
+                                <LogIn size={18} style={{ marginRight: '0.5rem' }} />
+                                Sign In
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
         </nav>
     );

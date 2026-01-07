@@ -45,18 +45,21 @@ body {
 }
 
 .glass-card {
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0.01) 100%
-  );
+  background: linear-gradient(145deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0.01) 100%);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
 }
 
 /* Typography & Layout */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: hsl(var(--foreground));
   letter-spacing: -0.02em;
   font-weight: 700;
@@ -124,4 +127,45 @@ a {
 
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--primary));
+}
+
+/* Responsive Proposals */
+.responsive-proposals {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  scrollbar-width: thin;
+  /* For Firefox */
+}
+
+@media (max-width: 768px) {
+  .responsive-proposals {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    overflow-x: visible;
+    padding-bottom: 0;
+  }
+
+  /* Make cards expand to fill grid */
+  .responsive-proposals>a {
+    min-width: 0;
+    /* Allow grid item to shrink */
+  }
+}
+
+.proposal-card {
+  min-width: 200px;
+  max-width: 200px;
+  position: relative;
+  transition: transform 0.2s;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .proposal-card {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
 }

@@ -76,10 +76,10 @@ export default async function Home() {
         </div>
 
         {filmsWithProposals.length > 0 ? (
-          <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '1rem' }}>
+          <div className="responsive-proposals">
             {filmsWithProposals.map((film) => (
               <Link key={film.id} href={`/movies/${film.tmdbId}`}>
-                <div style={{ minWidth: '200px', maxWidth: '200px', position: 'relative', transition: 'transform 0.2s', cursor: 'pointer' }} className="movie-hover">
+                <div className="movie-hover proposal-card">
                   <div style={{ aspectRatio: '2/3', position: 'relative', borderRadius: '0.5rem', overflow: 'hidden', marginBottom: '0.5rem' }}>
                     <Image
                       src={`https://image.tmdb.org/t/p/w500${film.posterPath}`}
