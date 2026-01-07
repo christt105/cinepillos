@@ -86,7 +86,7 @@ export function ProfileSelector({ users }: { users: User[] }) {
     if (editingUser) {
         return (
             <div className="glass-card" style={{ padding: '2rem', borderRadius: '0.5rem', textAlign: 'center', maxWidth: '400px', width: '100%' }}>
-                <h3 style={{ marginBottom: '1rem' }}>Update Avatar</h3>
+                <h3 style={{ marginBottom: '1rem' }}>Actualizar Avatar</h3>
                 <div style={{ marginBottom: '1.5rem', position: 'relative', width: '100px', height: '100px', margin: '0 auto 1.5rem' }}>
                     <Image
                         src={newImageUrl || "https://via.placeholder.com/150"}
@@ -99,7 +99,7 @@ export function ProfileSelector({ users }: { users: User[] }) {
 
                 <input
                     type="text"
-                    placeholder="Paste Image URL"
+                    placeholder="Pegar URL de imagen"
                     value={newImageUrl}
                     onChange={(e) => setNewImageUrl(e.target.value)}
                     style={{
@@ -120,7 +120,7 @@ export function ProfileSelector({ users }: { users: User[] }) {
                         disabled={saving}
                         style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                     >
-                        {saving ? "Saving..." : <><Check size={16} /> Save</>}
+                        {saving ? "Guardando..." : <><Check size={16} /> Guardar</>}
                     </button>
                     <button
                         onClick={() => setEditingUser(null)}
@@ -128,7 +128,7 @@ export function ProfileSelector({ users }: { users: User[] }) {
                         disabled={saving}
                         style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                     >
-                        <X size={16} /> Cancel
+                        <X size={16} /> Cancelar
                     </button>
                 </div>
             </div>
@@ -151,7 +151,7 @@ export function ProfileSelector({ users }: { users: User[] }) {
                 </div>
 
                 <form onSubmit={handleLogin}>
-                    <p style={{ marginBottom: '0.5rem', opacity: 0.8 }}>Enter Profile PIN</p>
+                    <p style={{ marginBottom: '0.5rem', opacity: 0.8 }}>Introduce PIN</p>
                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '1.5rem' }}>
                         <input
                             type="password"
@@ -172,8 +172,8 @@ export function ProfileSelector({ users }: { users: User[] }) {
                         />
                     </div>
                     <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                        <button type="submit" className="btn btn-primary" style={{ padding: '0.5rem 2rem' }}>Enter</button>
-                        <button type="button" className="btn btn-ghost" onClick={() => setSelectedUser(null)}>Back</button>
+                        <button type="submit" className="btn btn-primary" style={{ padding: '0.5rem 2rem' }}>Entrar</button>
+                        <button type="button" className="btn btn-ghost" onClick={() => setSelectedUser(null)}>Volver</button>
                     </div>
                 </form>
             </div>

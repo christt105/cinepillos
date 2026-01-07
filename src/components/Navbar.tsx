@@ -24,10 +24,10 @@ export default function Navbar() {
                     {session ? (
                         <>
                             <Link href="/search" className={styles.link}>
-                                Search
+                                Buscar
                             </Link>
                             <Link href="/meetings" className={styles.link}>
-                                Meetings
+                                Reuniones
                             </Link>
                             <div className={styles.userMenu}>
                                 <span className={styles.username}>{session.user?.name || session.user?.email}</span>
@@ -39,7 +39,7 @@ export default function Navbar() {
                     ) : (
                         <button onClick={() => signIn()} className="btn btn-primary">
                             <LogIn size={18} style={{ marginRight: '0.5rem' }} />
-                            Sign In
+                            Entrar
                         </button>
                     )}
                 </div>
@@ -62,14 +62,14 @@ export default function Navbar() {
                                     className={styles.link}
                                     onClick={() => setIsMenuOpen(false)}
                                 >
-                                    Search
+                                    Buscar
                                 </Link>
                                 <Link
                                     href="/meetings"
                                     className={styles.link}
                                     onClick={() => setIsMenuOpen(false)}
                                 >
-                                    Meetings
+                                    Reuniones
                                 </Link>
                                 <div className={styles.userMenu}>
                                     <span className={styles.username}>{session.user?.name || session.user?.email}</span>
@@ -81,7 +81,7 @@ export default function Navbar() {
                         ) : (
                             <button onClick={() => signIn()} className="btn btn-primary" style={{ width: '100%' }}>
                                 <LogIn size={18} style={{ marginRight: '0.5rem' }} />
-                                Sign In
+                                Entrar
                             </button>
                         )}
                     </div>

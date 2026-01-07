@@ -139,7 +139,7 @@ export default function MeetingsPage() {
     };
 
     const handleRemoveCandidate = async (meetingId: string, candidateId: string) => {
-        if (!confirm("Are you sure you want to remove this proposal?")) return;
+        if (!confirm("¿Estás seguro de que quieres quitar esta propuesta?")) return;
 
         try {
             const res = await fetch(`/api/meetings/${meetingId}/candidates/${candidateId}`, {
@@ -158,7 +158,7 @@ export default function MeetingsPage() {
     };
 
     const handleConcludeVoting = async (meetingId: string) => {
-        if (!confirm("Are you sure you want to conclude voting? This cannot be undone.")) return;
+        if (!confirm("¿Estás seguro de que quieres finalizar la votación? No se puede deshacer.")) return;
 
         try {
             const res = await fetch(`/api/meetings/${meetingId}/conclude`, {
@@ -182,15 +182,15 @@ export default function MeetingsPage() {
     };
 
     if (loading) {
-        return <div className="container" style={{ paddingTop: '2rem', textAlign: 'center' }}>Loading meetings...</div>;
+        return <div className="container" style={{ paddingTop: '2rem', textAlign: 'center' }}>Cargando reuniones...</div>;
     }
 
     return (
         <div style={{ maxWidth: '1000px', margin: '0 auto', paddingBottom: '4rem' }}>
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <h1>Cinema Meetings</h1>
+                <h1>Sesiones de Cine</h1>
                 <button className="btn btn-primary" onClick={() => setShowDateModal(true)}>
-                    <Plus size={16} style={{ marginRight: '0.5rem' }} /> Schedule Meeting
+                    <Plus size={16} style={{ marginRight: '0.5rem' }} /> Programar Reunión
                 </button>
             </header>
 
@@ -201,7 +201,7 @@ export default function MeetingsPage() {
                     display: 'flex', justifyContent: 'center', alignItems: 'center'
                 }} onClick={() => setShowDateModal(false)}>
                     <div className="glass-card" style={{ padding: '2rem', minWidth: '300px' }} onClick={e => e.stopPropagation()}>
-                        <h3 style={{ marginBottom: '1rem' }}>Select Date</h3>
+                        <h3 style={{ marginBottom: '1rem' }}>Seleccionar Fecha</h3>
                         <input
                             type="datetime-local"
                             className="input"
@@ -210,8 +210,8 @@ export default function MeetingsPage() {
                             onChange={(e) => setNewMeetingDate(e.target.value)}
                         />
                         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-                            <button className="btn btn-ghost" onClick={() => setShowDateModal(false)}>Cancel</button>
-                            <button className="btn btn-primary" onClick={handleCreateMeeting} disabled={!newMeetingDate}>Schedule</button>
+                            <button className="btn btn-ghost" onClick={() => setShowDateModal(false)}>Cancelar</button>
+                            <button className="btn btn-primary" onClick={handleCreateMeeting} disabled={!newMeetingDate}>Programar</button>
                         </div>
                     </div>
                 </div>
@@ -221,9 +221,9 @@ export default function MeetingsPage() {
                 {meetings.length === 0 ? (
                     <div className="glass-card" style={{ padding: '3rem', textAlign: 'center', opacity: 0.7 }}>
                         <CalendarIcon size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                        <p>No upcoming meetings scheduled.</p>
+                        <p>No hay sesiones programadas.</p>
                         <button className="btn btn-ghost" onClick={() => setShowDateModal(true)} style={{ marginTop: '1rem' }}>
-                            Schedule One Now
+                            Programar Una
                         </button>
                     </div>
                 ) : (
@@ -260,7 +260,7 @@ export default function MeetingsPage() {
                                                 style={{ fontSize: '0.8rem', padding: '0.2rem 0.5rem', opacity: 0.7 }}
                                                 onClick={() => handleConcludeVoting(meeting.id)}
                                             >
-                                                Conclude Voting
+                                                Finalizar Votación
                                             </button>
                                         )}
                                     </div>
@@ -269,7 +269,7 @@ export default function MeetingsPage() {
 
                             {meeting.status === 'VOTING' && (
                                 <div>
-                                    <h4 style={{ marginBottom: '1rem', opacity: 0.8 }}>Proposed Films</h4>
+                                    <h4 style={{ marginBottom: '1rem', opacity: 0.8 }}>Películas Propuestas</h4>
                                     <div style={{ display: 'grid', gap: '1rem' }}>
                                         {meeting.candidates.map((candidate) => (
                                             <div key={candidate.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '0.5rem' }}>
@@ -282,11 +282,11 @@ export default function MeetingsPage() {
                                                     </div>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem', opacity: 0.7, fontSize: '0.8rem' }}>
                                                         <User size={14} />
-                                                        <span>Proposed by {candidate.user?.name || "Unknown"}</span>
+                                                        <span>Propuesta por {candidate.user?.name || "Desconocido"}</span>
                                                     </div>
                                                 </div>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                                    <span style={{ fontSize: '0.9rem', opacity: 0.8 }}>{candidate.votes.length} votes</span>
+                                                    <span style={{ fontSize: '0.9rem', opacity: 0.8 }}>{candidate.votes.length} votos</span>
 
                                                     <button className="btn btn-ghost" onClick={() => handleVote(meeting.id, candidate.id)} style={{ color: 'hsl(var(--primary))' }}>
                                                         <ThumbsUp size={18} />
@@ -304,8 +304,8 @@ export default function MeetingsPage() {
                                         {showAddModal === meeting.id ? (
                                             <div style={{ background: 'rgba(0,0,0,0.5)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)' }}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                                                    <h5>Select a film to propose:</h5>
-                                                    <button onClick={() => setShowAddModal(null)} className="btn btn-ghost" style={{ padding: '0.2rem' }}>Close</button>
+                                                    <h5>Elige película a proponer:</h5>
+                                                    <button onClick={() => setShowAddModal(null)} className="btn btn-ghost" style={{ padding: '0.2rem' }}>Cerrar</button>
                                                 </div>
                                                 <div style={{ display: 'grid', gap: '0.5rem', maxHeight: '300px', overflowY: 'auto' }}>
                                                     {proposedFilms.map(film => (
@@ -318,7 +318,7 @@ export default function MeetingsPage() {
                                                             <span>{film.title}</span>
                                                         </button>
                                                     ))}
-                                                    {proposedFilms.length === 0 && <p style={{ opacity: 0.5 }}>No proposals found.</p>}
+                                                    {proposedFilms.length === 0 && <p style={{ opacity: 0.5 }}>No se encontraron propuestas.</p>}
                                                 </div>
                                             </div>
                                         ) : (
@@ -327,7 +327,7 @@ export default function MeetingsPage() {
                                                 style={{ width: '100%', border: '1px dashed rgba(255,255,255,0.2)' }}
                                                 onClick={() => openAddModal(meeting.id)}
                                             >
-                                                + Propose a film
+                                                + Proponer película
                                             </button>
                                         )}
                                     </div>
@@ -336,24 +336,24 @@ export default function MeetingsPage() {
 
                             {meeting.status === 'PLANNING' && (
                                 <div style={{ textAlign: 'center', padding: '2rem', opacity: 0.6 }}>
-                                    <p>Voting has not started yet.</p>
+                                    <p>La votación aún no ha comenzado.</p>
                                 </div>
                             )}
 
                             {meeting.status === 'CONCLUDED' && (
                                 <div style={{ textAlign: 'center', padding: '2rem', background: 'rgba(255,255,255,0.02)', borderRadius: '1rem' }}>
                                     <Trophy size={48} style={{ color: 'gold', marginBottom: '1rem' }} />
-                                    <h3>Winner Selected!</h3>
+                                    <h3>¡Ganador Seleccionado!</h3>
                                     {(() => {
                                         const winner = meeting.candidates.find(c => c.film.id === meeting.selectedFilmId);
                                         return winner ? (
                                             <div style={{ marginTop: '1rem' }}>
                                                 <h2 style={{ fontSize: '1.5rem', color: 'hsl(var(--primary))' }}>{winner.film.title}</h2>
-                                                <p style={{ opacity: 0.7 }}>Proposed by {winner.user?.name || "Unknown"}</p>
-                                                <p style={{ marginTop: '0.5rem', fontWeight: 'bold' }}>{winner.votes.length} votes</p>
+                                                <p style={{ opacity: 0.7 }}>Propuesta por {winner.user?.name || "Desconocido"}</p>
+                                                <p style={{ marginTop: '0.5rem', fontWeight: 'bold' }}>{winner.votes.length} votos</p>
                                             </div>
                                         ) : (
-                                            <p>No winner selected (Tie or no votes)</p>
+                                            <p>No hay ganador (Empate o sin votos)</p>
                                         );
                                     })()}
                                 </div>

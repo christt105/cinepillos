@@ -110,7 +110,7 @@ export default function SearchPage() {
                     <Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
                     <input
                         type="text"
-                        placeholder="Search for a movie..."
+                        placeholder="Buscar una película..."
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         style={{
@@ -127,7 +127,7 @@ export default function SearchPage() {
                 </div>
             </div>
 
-            {loading && <p style={{ textAlign: 'center', opacity: 0.5 }}>Loading...</p>}
+            {loading && <p style={{ textAlign: 'center', opacity: 0.5 }}>Cargando...</p>}
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '2rem' }}>
                 {movies.map((movie) => (
@@ -142,7 +142,7 @@ export default function SearchPage() {
             </div>
 
             {!loading && movies.length === 0 && (
-                <p style={{ textAlign: 'center', opacity: 0.5, marginTop: '2rem' }}>No movies found.</p>
+                <p style={{ textAlign: 'center', opacity: 0.5, marginTop: '2rem' }}>No se encontraron películas.</p>
             )}
         </div>
     );

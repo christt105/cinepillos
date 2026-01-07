@@ -52,7 +52,7 @@ export default function MovieCard({ movie, onAdd, loading = false, disabled = fa
                             ) : (
                                 <Plus size={16} style={{ marginRight: 4, transform: isProposed ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s' }} />
                             )}
-                            {isProposed ? "Remove" : "Add"}
+                            {isProposed ? "Quitar" : "Añadir"}
                         </button>
                         <a
                             href={`https://www.themoviedb.org/movie/${movie.id}`}

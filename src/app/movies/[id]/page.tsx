@@ -54,7 +54,7 @@ export default async function MovieDetailsPage(props: PageProps) {
     return (
         <div style={{ paddingBottom: '4rem' }}>
             <Link href="/" className="btn btn-ghost" style={{ marginBottom: '1rem', display: 'inline-flex', alignItems: 'center' }}>
-                <ArrowLeft size={16} style={{ marginRight: 8 }} /> Back to Home
+                <ArrowLeft size={16} style={{ marginRight: 8 }} /> Volver al Inicio
             </Link>
 
             <div className="glass-card" style={{ padding: '2rem', display: 'flex', gap: '2rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
@@ -96,7 +96,7 @@ export default async function MovieDetailsPage(props: PageProps) {
                             </form>
                         </div>
                     ) : (
-                        <p style={{ marginBottom: '2rem', opacity: 0.7 }}>Sign in to propose movies.</p>
+                        <p style={{ marginBottom: '2rem', opacity: 0.7 }}>Inicia sesión para proponer.</p>
                     )}
 
                     <div style={{ marginBottom: '2rem' }}>
@@ -105,15 +105,14 @@ export default async function MovieDetailsPage(props: PageProps) {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="btn btn-ghost"
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', border: '1px solid var(--border)' }}
                         >
-                            <LinkIcon size={16} /> View on TMDB
+                            <LinkIcon size={16} /> Ver en TMDB
                         </a>
                     </div>
 
                     {allProposals.length > 0 && (
                         <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: '0.5rem' }}>
-                            <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', fontWeight: 600 }}>Proposed by:</h3>
+                            <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', fontWeight: 600 }}>Propuesta por:</h3>
                             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                                 {allProposals.map(p => (
                                     <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

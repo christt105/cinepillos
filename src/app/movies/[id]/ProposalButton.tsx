@@ -77,9 +77,9 @@ export function ProposalButton({ tmdbId, title, overview, posterPath, releaseDat
                 style={{ background: 'var(--destructive)', color: 'white', border: 'none' }}
                 disabled={loading}
             >
-                {loading ? "Processing..." : (
+                {loading ? "Procesando..." : (
                     <>
-                        <Trash2 size={16} style={{ marginRight: 8 }} /> Remove Proposal
+                        <Trash2 size={16} style={{ marginRight: 8 }} /> Quitar Propuesta
                     </>
                 )}
             </button>
@@ -92,9 +92,9 @@ export function ProposalButton({ tmdbId, title, overview, posterPath, releaseDat
             className="btn btn-primary"
             disabled={loading}
         >
-            {loading ? "Processing..." : (
+            {loading ? "Procesando..." : (
                 <>
-                    <Plus size={16} style={{ marginRight: 8 }} /> Propose Film
+                    <Plus size={16} style={{ marginRight: 8 }} /> Proponer Película
                 </>
             )}
         </button>

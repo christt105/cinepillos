@@ -56,7 +56,6 @@ export default async function Home() {
   // Fetch Proposals (Recent Films with Proposals)
   const filmsWithProposals = await prisma.film.findMany({
     where: { proposals: { some: {} } },
-    take: 10,
     orderBy: { createdAt: 'desc' },
     include: { proposals: { include: { user: true } } }
   });
@@ -66,19 +65,19 @@ export default async function Home() {
 
       {/* Hero / Next Session */}
       <section style={{ marginBottom: '3rem' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem', color: '#e5e5e5' }}>Next Session</h2>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem', color: '#e5e5e5' }}>Próxima Sesión</h2>
         {nextMeeting ? (
           <div className="glass-card" style={{ padding: '2rem', borderRadius: '1rem', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'relative', zIndex: 10 }}>
               <h3 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
                 {new Date(nextMeeting.date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
               </h3>
-              <p style={{ opacity: 0.7, marginBottom: '2rem' }}>Status: {nextMeeting.status}</p>
+              <p style={{ opacity: 0.7, marginBottom: '2rem' }}>Estado: {nextMeeting.status}</p>
 
               {/* Status: VOTING */}
               {nextMeeting.status === 'VOTING' && (
                 <div>
-                  <h4 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Vote for the next movie:</h4>
+                  <h4 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Vota por la próxima película:</h4>
                   <div className="responsive-proposals">
                     {nextMeeting.candidates.map(candidate => {
                       // Use original proposers
@@ -113,7 +112,7 @@ export default async function Home() {
                   </div>
                   <div style={{ marginTop: '2rem' }}>
                     <Link href="/meetings" className="btn btn-primary">
-                      Go to Voting Room
+                      Ir a la Sala de Votación
                     </Link>
                   </div>
                 </div>
@@ -122,7 +121,7 @@ export default async function Home() {
               {/* Status: CONCLUDED */}
               {nextMeeting.status === 'CONCLUDED' && (
                 <div>
-                  <h4 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#ffd700' }}>Winner Selection</h4>
+                  <h4 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#ffd700' }}>Película Ganadora</h4>
                   {(() => {
                     const winnerCandidate = nextMeeting.candidates.find(c => c.filmId === nextMeeting.selectedFilmId);
                     if (winnerCandidate) {
@@ -145,7 +144,7 @@ export default async function Home() {
                             <p style={{ fontSize: '1.1rem', opacity: 0.8, marginBottom: '2rem', maxWidth: '600px' }}>{winnerCandidate.film.overview.slice(0, 150)}...</p>
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', background: 'rgba(255,255,255,0.1)', padding: '0.5rem 1rem', borderRadius: '2rem', width: 'fit-content' }}>
-                              <span style={{ opacity: 0.7 }}>Proposed by</span>
+                              <span style={{ opacity: 0.7 }}>Propuesta por</span>
                               {mainProposer?.image && (
                                 <Image src={mainProposer.image} alt={mainProposer.name || ''} width={24} height={24} style={{ borderRadius: '50%' }} />
                               )}
@@ -154,13 +153,13 @@ export default async function Home() {
                             </div>
 
                             <Link href={`/movies/${winnerCandidate.film.tmdbId}`} className="btn btn-primary">
-                              View Movie Details
+                              Ver Detalles
                             </Link>
                           </div>
                         </div>
                       );
                     }
-                    return <p>No winner selected yet.</p>;
+                    return <p>No se ha seleccionado ganador aún.</p>;
                   })()}
                 </div>
               )}
@@ -169,7 +168,7 @@ export default async function Home() {
               {(nextMeeting.status === 'PLANNING' || !nextMeeting.status) && (
                 <>
                   <Link href="/meetings" className="btn btn-primary">
-                    Go to Voting Room
+                    Ir a la Sala de Votación
                   </Link>
                 </>
               )}
@@ -193,8 +192,8 @@ export default async function Home() {
           </div>
         ) : (
           <div className="glass-card" style={{ padding: '2rem', borderRadius: '1rem', textAlign: 'center' }}>
-            <p style={{ opacity: 0.6, marginBottom: '1rem' }}>No upcoming sessions scheduled.</p>
-            <button className="btn btn-ghost">Schedule One</button>
+            <p style={{ opacity: 0.6, marginBottom: '1rem' }}>No hay sesiones programadas.</p>
+            <button className="btn btn-ghost">Programar Una</button>
           </div>
         )}
       </section>
@@ -202,9 +201,9 @@ export default async function Home() {
       {/* Proposals Row */}
       <section style={{ marginBottom: '3rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#e5e5e5' }}>Proposals</h2>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#e5e5e5' }}>Propuestas</h2>
           <Link href="/search" className="btn btn-ghost" style={{ fontSize: '0.9rem' }}>
-            <Plus size={16} style={{ marginRight: 4 }} /> Add New
+            <Plus size={16} style={{ marginRight: 4 }} /> Añadir Nueva
           </Link>
         </div>
 
@@ -238,8 +237,8 @@ export default async function Home() {
           </div>
         ) : (
           <div style={{ padding: '3rem', textAlign: 'center', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '1rem' }}>
-            <p style={{ opacity: 0.5, marginBottom: '1rem' }}>No proposals yet.</p>
-            <Link href="/search" className="btn btn-primary">Start Proposing</Link>
+            <p style={{ opacity: 0.5, marginBottom: '1rem' }}>Aún no hay propuestas.</p>
+            <Link href="/search" className="btn btn-primary">Empezar a Proponer</Link>
           </div>
         )}
       </section>
