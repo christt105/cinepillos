@@ -25,7 +25,7 @@ async function fetchTMDB<T>(endpoint: string, params: Record<string, string> = {
 
     const query = new URLSearchParams({
         api_key: TMDB_API_KEY,
-        language: 'en-US',
+        language: 'es-ES',
         ...params,
     });
 

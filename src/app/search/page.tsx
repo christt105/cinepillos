@@ -10,9 +10,28 @@ export default function SearchPage() {
     const [movies, setMovies] = useState<TMDBMovie[]>([]);
     const [loading, setLoading] = useState(false);
 
-    // Simple debounce effect
-    const [proposedIds, setProposedIds] = useState<number[]>([]);
-    const [addingId, setAddingId] = useState<number | null>(null);
+    // State for proposals: Map tmdbId -> proposalId
+    const [proposalsMap, setProposalsMap] = useState<Map<number, string>>(new Map());
+    const [togglingId, setTogglingId] = useState<number | null>(null);
+
+    // Fetch existing proposals
+    useEffect(() => {
+        const fetchProposals = async () => {
+            try {
+                const res = await fetch("/api/proposals");
+                if (res.ok) {
+                    const data = await res.json();
+                    const newMap = new Map<number, string>();
+                    // Data shape: [{ id: "...", film: { tmdbId: 123 } }]
+                    data.forEach((p: any) => newMap.set(p.film.tmdbId, p.id));
+                    setProposalsMap(newMap);
+                }
+            } catch (error) {
+                console.error("Failed to fetch proposals", error);
+            }
+        };
+        fetchProposals();
+    }, []);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -36,32 +55,51 @@ export default function SearchPage() {
         }
     }
 
-    const handleAdd = async (movie: TMDBMovie) => {
-        if (proposedIds.includes(movie.id)) return;
+    const handleToggle = async (movie: TMDBMovie) => {
+        if (togglingId === movie.id) return;
+        setTogglingId(movie.id);
 
-        setAddingId(movie.id);
+        const existingProposalId = proposalsMap.get(movie.id);
+
         try {
-            const res = await fetch("/api/proposals", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    tmdbId: movie.id,
-                    title: movie.title,
-                    overview: movie.overview,
-                    posterPath: movie.poster_path,
-                    releaseDate: movie.release_date
-                })
-            });
+            if (existingProposalId) {
+                // Remove
+                const res = await fetch(`/api/proposals/${existingProposalId}`, { method: "DELETE" });
+                if (!res.ok) throw new Error("Failed to remove");
 
-            if (!res.ok) throw new Error("Failed to propose");
+                setProposalsMap(prev => {
+                    const next = new Map(prev);
+                    next.delete(movie.id);
+                    return next;
+                });
+            } else {
+                // Add
+                const res = await fetch("/api/proposals", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        tmdbId: movie.id,
+                        title: movie.title,
+                        overview: movie.overview,
+                        posterPath: movie.poster_path,
+                        releaseDate: movie.release_date
+                    })
+                });
 
-            setProposedIds(prev => [...prev, movie.id]);
-            alert(`Proposed: ${movie.title}`);
+                if (!res.ok) throw new Error("Failed to propose");
+                const data = await res.json();
+
+                setProposalsMap(prev => {
+                    const next = new Map(prev);
+                    next.set(movie.id, data.id);
+                    return next;
+                });
+            }
         } catch (error) {
-            console.error("Failed to propose", error);
-            alert("Failed to propose movie. Please try again.");
+            console.error("Toggle failed", error);
+            alert("Action failed. Please try again.");
         } finally {
-            setAddingId(null);
+            setTogglingId(null);
         }
     };
 
@@ -96,9 +134,9 @@ export default function SearchPage() {
                     <MovieCard
                         key={movie.id}
                         movie={movie}
-                        onAdd={handleAdd}
-                        loading={addingId === movie.id}
-                        disabled={proposedIds.includes(movie.id)}
+                        onAdd={handleToggle}
+                        loading={togglingId === movie.id}
+                        isProposed={proposalsMap.has(movie.id)}
                     />
                 ))}
             </div>

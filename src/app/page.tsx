@@ -76,23 +76,25 @@ export default async function Home() {
         {proposals.length > 0 ? (
           <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '1rem' }}>
             {proposals.map((proposal) => (
-              <div key={proposal.id} style={{ minWidth: '200px', maxWidth: '200px', position: 'relative', transition: 'transform 0.2s', cursor: 'pointer' }} className="movie-hover">
-                <div style={{ aspectRatio: '2/3', position: 'relative', borderRadius: '0.5rem', overflow: 'hidden', marginBottom: '0.5rem' }}>
-                  <Image
-                    src={`https://image.tmdb.org/t/p/w500${proposal.film.posterPath}`}
-                    alt={proposal.film.title}
-                    fill
-                    style={{ objectFit: 'cover' }}
-                  />
-                </div>
-                <h4 style={{ fontSize: '0.9rem', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{proposal.film.title}</h4>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
-                  <div style={{ width: '20px', height: '20px', borderRadius: '50%', overflow: 'hidden', position: 'relative' }}>
-                    <Image src={proposal.user.image || ''} alt={proposal.user.name || ''} fill unoptimized />
+              <Link key={proposal.id} href={`/movies/${proposal.film.tmdbId}`}>
+                <div style={{ minWidth: '200px', maxWidth: '200px', position: 'relative', transition: 'transform 0.2s', cursor: 'pointer' }} className="movie-hover">
+                  <div style={{ aspectRatio: '2/3', position: 'relative', borderRadius: '0.5rem', overflow: 'hidden', marginBottom: '0.5rem' }}>
+                    <Image
+                      src={`https://image.tmdb.org/t/p/w500${proposal.film.posterPath}`}
+                      alt={proposal.film.title}
+                      fill
+                      style={{ objectFit: 'cover' }}
+                    />
                   </div>
-                  <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>{proposal.user.name}</span>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{proposal.film.title}</h4>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
+                    <div style={{ width: '20px', height: '20px', borderRadius: '50%', overflow: 'hidden', position: 'relative' }}>
+                      <Image src={proposal.user.image || ''} alt={proposal.user.name || ''} fill unoptimized />
+                    </div>
+                    <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>{proposal.user.name}</span>
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (

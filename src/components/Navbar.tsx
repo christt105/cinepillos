@@ -24,7 +24,6 @@ export default function Navbar() {
                                 Search
                             </Link>
                             <Link href="/meetings" className={styles.link}>
-                                <Calendar className="w-4 h-4 mr-2" size={18} />
                                 Meetings
                             </Link>
                             <div className={styles.userMenu}>
