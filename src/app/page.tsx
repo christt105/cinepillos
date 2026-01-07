@@ -30,10 +30,12 @@ export default async function Home() {
   });
 
   // Fetch Proposals (Recent)
-  const proposals = await prisma.proposal.findMany({
+  // Fetch Proposals (Recent Films with Proposals)
+  const filmsWithProposals = await prisma.film.findMany({
+    where: { proposals: { some: {} } },
     take: 10,
     orderBy: { createdAt: 'desc' },
-    include: { film: true, user: true }
+    include: { proposals: { include: { user: true } } }
   });
 
   return (
@@ -73,25 +75,29 @@ export default async function Home() {
           </Link>
         </div>
 
-        {proposals.length > 0 ? (
+        {filmsWithProposals.length > 0 ? (
           <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '1rem' }}>
-            {proposals.map((proposal) => (
-              <Link key={proposal.id} href={`/movies/${proposal.film.tmdbId}`}>
+            {filmsWithProposals.map((film) => (
+              <Link key={film.id} href={`/movies/${film.tmdbId}`}>
                 <div style={{ minWidth: '200px', maxWidth: '200px', position: 'relative', transition: 'transform 0.2s', cursor: 'pointer' }} className="movie-hover">
                   <div style={{ aspectRatio: '2/3', position: 'relative', borderRadius: '0.5rem', overflow: 'hidden', marginBottom: '0.5rem' }}>
                     <Image
-                      src={`https://image.tmdb.org/t/p/w500${proposal.film.posterPath}`}
-                      alt={proposal.film.title}
+                      src={`https://image.tmdb.org/t/p/w500${film.posterPath}`}
+                      alt={film.title}
                       fill
                       style={{ objectFit: 'cover' }}
                     />
                   </div>
-                  <h4 style={{ fontSize: '0.9rem', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{proposal.film.title}</h4>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
-                    <div style={{ width: '20px', height: '20px', borderRadius: '50%', overflow: 'hidden', position: 'relative' }}>
-                      <Image src={proposal.user.image || ''} alt={proposal.user.name || ''} fill unoptimized />
-                    </div>
-                    <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>{proposal.user.name}</span>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{film.title}</h4>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', marginTop: '0.2rem' }}>
+                    {film.proposals.slice(0, 3).map((proposal: any) => (
+                      <div key={proposal.id} style={{ width: '20px', height: '20px', borderRadius: '50%', overflow: 'hidden', position: 'relative', background: '#333', border: '1px solid #000' }}>
+                        <Image src={proposal.user.image || ''} alt={proposal.user.name || ''} fill unoptimized />
+                      </div>
+                    ))}
+                    {film.proposals.length > 3 && (
+                      <span style={{ fontSize: '0.7rem', opacity: 0.6, marginLeft: 4 }}>+{film.proposals.length - 3}</span>
+                    )}
                   </div>
                 </div>
               </Link>
