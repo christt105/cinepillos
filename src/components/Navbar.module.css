@@ -1,0 +1,64 @@
+.navbar {
+    height: 70px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    transition: opacity 0.2s;
+}
+
+.logo:hover {
+    opacity: 0.8;
+}
+
+.icon {
+    color: hsl(var(--primary));
+    /* Fallback if gradient fails on icon, but icon is SVG so fill needs handling */
+    /* Lucide icons use stroke usually, so we can set stroke color via color prop or here */
+    stroke: hsl(var(--primary));
+}
+
+.links {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.link {
+    font-weight: 500;
+    color: hsl(var(--foreground));
+    opacity: 0.8;
+    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.link:hover {
+    opacity: 1;
+    color: hsl(var(--primary));
+}
+
+.userMenu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-left: 1.5rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.username {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+}
