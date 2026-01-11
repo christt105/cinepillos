@@ -39,16 +39,13 @@ export async function PATCH(
         let winnerId = null;
         let maxVotes = -1;
 
-        meeting.candidates.forEach(c => {
-            const voteCount = c.votes.length;
-            if (voteCount > maxVotes) {
-                maxVotes = voteCount;
-                winnerId = c.filmId;
-            } else if (voteCount === maxVotes) {
-                // Tie handling? For now, keep the first one or logic for tie?
-                // Simple first one wins or random? Let's just keep first found.
-            }
-        });
+        meeting.candidates.forEach((c: { votes: any[] }) => {
+    const voteCount = c.votes.length;
+    if (voteCount > maxVotes) {
+        maxVotes = voteCount;
+        // ...
+    }
+});
 
         if (!winnerId && meeting.candidates.length > 0) {
             // If no votes but candidates exist?

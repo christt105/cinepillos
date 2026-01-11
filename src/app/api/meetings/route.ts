@@ -23,7 +23,7 @@ export async function GET() {
 
         // Manually fetch users for candidates
         const userIds = new Set<string>();
-        meetings.forEach(meeting => {
+        meetings.forEach((meeting: { candidates: { userId: string | null }[] }) => {
             meeting.candidates.forEach(candidate => {
                 if (candidate.userId) {
                     userIds.add(candidate.userId);

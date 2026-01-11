@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { ProfileSelector } from "./ProfileSelector";
 
 // Server Component to fetch users
+export const dynamic = "force-dynamic";
+
 export default async function LoginPage() {
     const users = await prisma.user.findMany({
         select: { id: true, name: true, image: true, email: true }
