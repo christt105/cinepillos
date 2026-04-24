@@ -1,0 +1,18 @@
+# Web framework
+fastapi[standard]
+uvicorn[standard]
+
+# Database
+sqlalchemy
+
+# Validation & Settings
+pydantic[email]
+pydantic-settings
+
+# Auth
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+
+# HTTP client (for TMDB API)
+httpx
