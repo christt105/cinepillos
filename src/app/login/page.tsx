@@ -3,10 +3,8 @@
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { Film, LogIn } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-    const router = useRouter();
     const [identifier, setIdentifier] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState(false);
@@ -28,7 +26,7 @@ export default function LoginPage() {
         if (res?.error) {
             setError(true);
         } else {
-            router.push("/");
+            window.location.href = "/";
         }
     };
 

@@ -111,6 +111,11 @@ a {
   background: rgba(255, 255, 255, 0.05);
 }
 
+/* Drum picker columns */
+.drum-col::-webkit-scrollbar {
+  display: none;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

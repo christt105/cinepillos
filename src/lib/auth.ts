@@ -9,6 +9,7 @@ export const authOptions: NextAuthOptions = {
     session: {
         strategy: "jwt",
     },
+    useSecureCookies: false,
     pages: {
         signIn: "/login",
     },

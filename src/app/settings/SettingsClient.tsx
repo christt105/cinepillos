@@ -80,7 +80,8 @@ export default function SettingsClient({ user }: { user: User }) {
                 setTimeout(() => setSaved(false), 2000);
                 router.refresh();
             } else {
-                setError("Error guardando los cambios");
+                const data = await res.json().catch(() => ({}));
+                setError(data.error === "name_taken" ? "Ese nombre ya está en uso" : "Error guardando los cambios");
             }
         } finally {
             setSaving(false);

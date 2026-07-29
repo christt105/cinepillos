@@ -162,6 +162,9 @@ export default function Navbar() {
                                             </Link>
                                         )}
                                     </div>
+                                    <Link href="/settings" className="btn btn-ghost" onClick={() => setIsMenuOpen(false)}>
+                                        <Settings size={18} />
+                                    </Link>
                                     <button onClick={() => signOut()} className="btn btn-ghost">
                                         <LogOut size={18} />
                                     </button>

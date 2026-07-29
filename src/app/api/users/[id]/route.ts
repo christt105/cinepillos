@@ -22,7 +22,11 @@ export async function PATCH(
         const { name, image, newPassword } = body;
 
         const data: Record<string, unknown> = {};
-        if (name !== undefined) data.name = name;
+        if (name !== undefined) {
+            const existing = await prisma.user.findFirst({ where: { name, NOT: { id } } });
+            if (existing) return NextResponse.json({ error: "name_taken" }, { status: 409 });
+            data.name = name;
+        }
         if (image !== undefined) data.image = image;
         if (newPassword) data.password = await bcrypt.hash(newPassword, 10);
 
