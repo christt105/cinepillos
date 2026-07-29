@@ -15,14 +15,11 @@ export async function PATCH(
     try {
         const { id: meetingId } = await params;
 
-        // Get candidates and vote counts
         const meeting = await prisma.meeting.findUnique({
             where: { id: meetingId },
             include: {
                 candidates: {
-                    include: {
-                        votes: true
-                    }
+                    include: { votes: true }
                 }
             }
         });
@@ -35,30 +32,20 @@ export async function PATCH(
             return NextResponse.json({ error: "Meeting is not in voting phase" }, { status: 400 });
         }
 
-        // Determine winner
-        let winnerId = null;
-        let maxVotes = -1;
+        let winnerId: string | null = null;
+        let maxVotes = 0;
 
-        meeting.candidates.forEach((c: { votes: any[] }) => {
-    const voteCount = c.votes.length;
-    if (voteCount > maxVotes) {
-        maxVotes = voteCount;
-        // ...
-    }
-});
-
-        if (!winnerId && meeting.candidates.length > 0) {
-            // If no votes but candidates exist?
-            // If maxVotes is 0, winnerId is the first one?
-            // If maxVotes >= 0 it works.
+        for (const candidate of meeting.candidates) {
+            const voteCount = candidate.votes.length;
+            if (voteCount > maxVotes) {
+                maxVotes = voteCount;
+                winnerId = candidate.filmId;
+            }
         }
 
         await prisma.meeting.update({
             where: { id: meetingId },
-            data: {
-                status: "CONCLUDED",
-                selectedFilmId: winnerId
-            }
+            data: { status: "CONCLUDED", selectedFilmId: winnerId }
         });
 
         return NextResponse.json({ success: true, winnerId });

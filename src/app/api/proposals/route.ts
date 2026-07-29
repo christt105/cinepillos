@@ -15,11 +15,12 @@ export async function GET(request: Request) {
         const scope = searchParams.get("scope");
 
         let whereClause: any = {
-            userId: session.user.id
+            userId: session.user.id,
+            familyId: session.user.activeFamilyId
         };
 
         if (scope === "all") {
-            whereClause = {}; // Fetch all proposals
+            whereClause = { familyId: session.user.activeFamilyId }; // Fetch all proposals for family
         }
 
         const proposals = await prisma.proposal.findMany({
@@ -76,12 +77,15 @@ export async function POST(request: Request) {
         // So if it exists, it might throw, or we can check first.
         // Let's check first to return a friendly message or just return the existing one.
 
-        const existingProposal = await prisma.proposal.findUnique({
+        if (!session.user.activeFamilyId) {
+            return new NextResponse("No active family", { status: 400 });
+        }
+
+        const existingProposal = await prisma.proposal.findFirst({
             where: {
-                userId_filmId: {
-                    userId: session.user.id,
-                    filmId: film.id
-                }
+                userId: session.user.id,
+                filmId: film.id,
+                familyId: session.user.activeFamilyId
             }
         });
 
@@ -93,6 +97,7 @@ export async function POST(request: Request) {
             data: {
                 userId: session.user.id,
                 filmId: film.id,
+                familyId: session.user.activeFamilyId,
             },
         });
 

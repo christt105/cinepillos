@@ -53,14 +53,27 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
     callbacks: {
-        session: ({ session, token }) => {
-            return {
-                ...session,
-                user: {
-                    ...session.user,
-                    id: token.id,
-                },
-            };
+        session: async ({ session, token }) => {
+            if (token.id) {
+                // Fetch latest user data including families
+                const dbUser = await prisma.user.findUnique({
+                    where: { id: token.id as string },
+                    include: { families: true, activeFamily: true }
+                });
+                
+                return {
+                    ...session,
+                    user: {
+                        ...session.user,
+                        id: token.id,
+                        activeFamilyId: dbUser?.activeFamilyId,
+                        activeFamily: dbUser?.activeFamily,
+                        families: dbUser?.families || [],
+                        isAdmin: dbUser?.isAdmin || false
+                    },
+                };
+            }
+            return session;
         },
         jwt: ({ token, user }) => {
             if (user) {

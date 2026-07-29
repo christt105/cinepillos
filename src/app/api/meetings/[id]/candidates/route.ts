@@ -21,26 +21,16 @@ export async function POST(
             return NextResponse.json({ error: "Film ID is required" }, { status: 400 });
         }
 
-        // Check if candidate already exists
         const existing = await prisma.meetingCandidate.findUnique({
-            where: {
-                meetingId_filmId: {
-                    meetingId,
-                    filmId
-                }
-            }
+            where: { meetingId_filmId: { meetingId, filmId } }
         });
 
         if (existing) {
             return NextResponse.json({ error: "Film already proposed for this meeting" }, { status: 400 });
         }
 
-        // Check if user has already proposed ANY film for this meeting
         const userCandidate = await prisma.meetingCandidate.findFirst({
-            where: {
-                meetingId,
-                userId: session.user.id
-            }
+            where: { meetingId, userId: session.user.id }
         });
 
         if (userCandidate) {
@@ -48,14 +38,11 @@ export async function POST(
         }
 
         const candidate = await prisma.meetingCandidate.create({
-            data: {
-                meetingId,
-                filmId,
-                userId: session.user.id // Assuming session.user.id is available, check auth.ts if not
-            },
+            data: { meetingId, filmId, userId: session.user.id },
             include: {
                 film: true,
-                votes: true
+                votes: true,
+                user: { select: { id: true, name: true, image: true } }
             }
         });
 

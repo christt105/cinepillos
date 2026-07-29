@@ -29,8 +29,48 @@ export default function Navbar() {
                             <Link href="/meetings" className={styles.link}>
                                 Reuniones
                             </Link>
+                            {session.user?.activeFamilyId && (
+                                <Link href={`/groups/${session.user.activeFamilyId}`} className={styles.link}>
+                                    Mi Grupo
+                                </Link>
+                            )}
                             <div className={styles.userMenu}>
-                                <span className={styles.username}>{session.user?.name || session.user?.email}</span>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginRight: '1rem' }}>
+                                    <span className={styles.username}>{session.user?.name || session.user?.email}</span>
+                                    {session.user?.families?.length > 0 && (
+                                        <select 
+                                            value={session.user.activeFamilyId || ""}
+                                            onChange={async (e) => {
+                                                await fetch('/api/users/activeFamily', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ familyId: e.target.value })
+                                                });
+                                                window.location.reload();
+                                            }}
+                                            style={{
+                                                background: 'transparent',
+                                                border: 'none',
+                                                color: '#aaa',
+                                                fontSize: '0.8rem',
+                                                cursor: 'pointer',
+                                                outline: 'none'
+                                            }}
+                                        >
+                                            <option value="" disabled>Selecciona Grupo</option>
+                                            {session.user.families.map(f => (
+                                                <option key={f.id} value={f.id} style={{ color: 'black' }}>
+                                                    {f.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    )}
+                                    {session.user?.isAdmin && (
+                                        <Link href="/admin" className={styles.link} style={{ fontSize: '0.8rem', padding: 0, marginTop: '4px', opacity: 0.8 }}>
+                                            Administración
+                                        </Link>
+                                    )}
+                                </div>
                                 <button onClick={() => signOut()} className="btn btn-ghost">
                                     <LogOut size={18} />
                                 </button>
@@ -71,8 +111,54 @@ export default function Navbar() {
                                 >
                                     Reuniones
                                 </Link>
+                                {session.user?.activeFamilyId && (
+                                    <Link
+                                        href={`/groups/${session.user.activeFamilyId}`}
+                                        className={styles.link}
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        Mi Grupo
+                                    </Link>
+                                )}
                                 <div className={styles.userMenu}>
-                                    <span className={styles.username}>{session.user?.name || session.user?.email}</span>
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginRight: '1rem' }}>
+                                        <span className={styles.username}>{session.user?.name || session.user?.email}</span>
+                                        {session.user?.families?.length > 0 && (
+                                            <select 
+                                                value={session.user.activeFamilyId || ""}
+                                                onChange={async (e) => {
+                                                    await fetch('/api/users/activeFamily', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({ familyId: e.target.value })
+                                                    });
+                                                    window.location.reload();
+                                                }}
+                                                style={{
+                                                    background: 'transparent',
+                                                    border: 'none',
+                                                    color: '#aaa',
+                                                    fontSize: '0.8rem',
+                                                    cursor: 'pointer',
+                                                    outline: 'none',
+                                                    padding: 0,
+                                                    marginTop: '4px'
+                                                }}
+                                            >
+                                                <option value="" disabled>Selecciona Grupo</option>
+                                                {session.user.families.map(f => (
+                                                    <option key={f.id} value={f.id} style={{ color: 'black' }}>
+                                                        {f.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        )}
+                                        {session.user?.isAdmin && (
+                                            <Link href="/admin" className={styles.link} style={{ fontSize: '0.8rem', padding: 0, marginTop: '4px', opacity: 0.8 }}>
+                                                Administración
+                                            </Link>
+                                        )}
+                                    </div>
                                     <button onClick={() => signOut()} className="btn btn-ghost">
                                         <LogOut size={18} />
                                     </button>

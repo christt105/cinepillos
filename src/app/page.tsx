@@ -16,11 +16,13 @@ export default async function Home() {
     redirect("/login");
   }
 
-  // Fetch Next Meeting
+  const activeFamilyId = session.user?.activeFamilyId;
+
   // Fetch Next Meeting (or recently concluded)
-  const nextMeeting = await prisma.meeting.findFirst({
+  const nextMeeting = activeFamilyId ? await prisma.meeting.findFirst({
     where: {
       date: { gt: new Date(Date.now() - 24 * 60 * 60 * 1000) }, // Show meetings from last 24h to keep concluded ones visible
+      familyId: activeFamilyId
     },
     orderBy: { date: 'asc' },
     include: {
@@ -29,6 +31,7 @@ export default async function Home() {
           film: {
             include: {
               proposals: {
+                where: { familyId: activeFamilyId },
                 include: { user: true }
               }
             }
@@ -36,32 +39,24 @@ export default async function Home() {
         }
       }
     }
-  });
+  }) : null;
 
-  // Manually fetch users for candidates (workaround for missing schema relation)
-  const userIds = new Set<string>();
-  if (nextMeeting) {
-    nextMeeting.candidates.forEach(c => {
-      if (c.userId) userIds.add(c.userId);
-    });
-  }
-
-  const users = await prisma.user.findMany({
-    where: { id: { in: Array.from(userIds) } }
-  });
-
-  const usersMap = new Map(users.map(u => [u.id, u]));
-
-  // Fetch Proposals (Recent)
   // Fetch Proposals (Recent Films with Proposals)
-  const filmsWithProposals = await prisma.film.findMany({
-    where: { proposals: { some: {} } },
+  const filmsWithProposals = activeFamilyId ? await prisma.film.findMany({
+    where: { proposals: { some: { familyId: activeFamilyId } } },
     orderBy: { createdAt: 'desc' },
-    include: { proposals: { include: { user: true } } }
-  });
+    include: { proposals: { where: { familyId: activeFamilyId }, include: { user: true } } }
+  }) : [];
 
   return (
     <div style={{ paddingBottom: '4rem' }}>
+      {!activeFamilyId && (
+          <div className="glass-card" style={{ padding: '2rem', textAlign: 'center', marginBottom: '2rem' }}>
+              <h2>¡Bienvenido!</h2>
+              <p style={{ opacity: 0.8, marginTop: '1rem' }}>No tienes ningún grupo de cine activo.</p>
+              <p style={{ opacity: 0.8 }}>Selecciona uno en el menú superior o pide a un administrador que te añada a uno.</p>
+          </div>
+      )}
 
       {/* Hero / Next Session */}
       <section style={{ marginBottom: '3rem' }}>

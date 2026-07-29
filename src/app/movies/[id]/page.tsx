@@ -37,16 +37,19 @@ export default async function MovieDetailsPage(props: PageProps) {
         notFound();
     }
 
+    const activeFamilyId = session?.user?.activeFamilyId;
+
     // Check if proposal exists for this user and this film (by TMDB ID)
     // First, find the film record in DB if it exists
-    const dbFilm = await prisma.film.findUnique({
+    const dbFilm = activeFamilyId ? await prisma.film.findUnique({
         where: { tmdbId },
         include: {
             proposals: {
+                where: { familyId: activeFamilyId },
                 include: { user: true }
             }
         }
-    });
+    }) : null;
 
     const existingProposalId = dbFilm?.proposals?.find(p => p.userId === session?.user?.id)?.id || null;
     const allProposals = dbFilm?.proposals || [];

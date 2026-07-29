@@ -14,8 +14,8 @@ services:
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
     volumes:
-      # Mount the database directory so data persists
-      - ./prisma:/app/prisma
+      - /home/christian/Projects/club-cine/club-de-cine/prisma:/app/prisma
+      - /home/christian/Projects/club-cine/club-de-cine/public/uploads:/app/public/uploads
     ports:
       - "6889:6889"
 
