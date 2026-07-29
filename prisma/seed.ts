@@ -7,28 +7,29 @@ async function main() {
     const hashedPassword = await bcrypt.hash('1234', 10)
 
     const users = [
-        { name: 'Christian', email: 'christian@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Christian' },
-        { name: 'Laia', email: 'laia@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Laia' },
-        { name: 'Montse', email: 'montse@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Montse' },
-        { name: 'Agui', email: 'agui@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Agui' },
-        { name: 'Celia', email: 'celia@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Celia' },
-        { name: 'Moreno', email: 'moreno@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Moreno' },
-        { name: 'Sara', email: 'sara@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Sara' },
-        { name: 'María', email: 'maria@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Maria' },
-        { name: 'Rubén', email: 'ruben@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Ruben' },
-        { name: 'Pato', email: 'pato@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Pato' },
-        { name: 'Chantal', email: 'chantal@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Chantal' },
+        { name: 'Christian', email: 'christian@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Christian', isAdmin: true },
+        { name: 'Laia', email: 'laia@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Laia', isAdmin: false },
+        { name: 'Montse', email: 'montse@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Montse', isAdmin: false },
+        { name: 'Agui', email: 'agui@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Agui', isAdmin: false },
+        { name: 'Celia', email: 'celia@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Celia', isAdmin: false },
+        { name: 'Moreno', email: 'moreno@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Moreno', isAdmin: false },
+        { name: 'Sara', email: 'sara@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Sara', isAdmin: false },
+        { name: 'María', email: 'maria@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Maria', isAdmin: false },
+        { name: 'Rubén', email: 'ruben@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Ruben', isAdmin: false },
+        { name: 'Pato', email: 'pato@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Pato', isAdmin: false },
+        { name: 'Chantal', email: 'chantal@zorropillos.com', image: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Chantal', isAdmin: false },
     ]
 
     for (const user of users) {
         await prisma.user.upsert({
             where: { email: user.email },
-            update: {},
+            update: { isAdmin: user.isAdmin },
             create: {
                 name: user.name,
                 email: user.email,
                 password: hashedPassword,
                 image: user.image,
+                isAdmin: user.isAdmin,
             },
         })
     }
