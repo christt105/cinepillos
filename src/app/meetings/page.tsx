@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Calendar as CalendarIcon, ThumbsUp, Plus, Trash2, User, Trophy } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import DateTimePicker from "@/components/DateTimePicker";
 
 interface Meeting {
     id: string;
@@ -41,7 +42,7 @@ export default function MeetingsPage() {
     const [proposedFilms, setProposedFilms] = useState<any[]>([]);
     const [showAddModal, setShowAddModal] = useState<string | null>(null); // meetingId
     const [showDateModal, setShowDateModal] = useState(false);
-    const [newMeetingDate, setNewMeetingDate] = useState("");
+    const [newMeetingDate, setNewMeetingDate] = useState<Date>(new Date());
 
     const router = useRouter();
 
@@ -97,18 +98,16 @@ export default function MeetingsPage() {
     };
 
     const handleCreateMeeting = async () => {
-        if (!newMeetingDate) return;
-
         try {
             const res = await fetch("/api/meetings", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ date: new Date(newMeetingDate).toISOString() })
+                body: JSON.stringify({ date: newMeetingDate.toISOString() })
             });
 
             if (res.ok) {
                 setShowDateModal(false);
-                setNewMeetingDate("");
+                setNewMeetingDate(new Date());
                 fetchMeetings();
             } else {
                 alert("Failed to create meeting");
@@ -197,21 +196,15 @@ export default function MeetingsPage() {
             {/* Date Selection Modal */}
             {showDateModal && (
                 <div style={{
-                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 100,
-                    display: 'flex', justifyContent: 'center', alignItems: 'center'
+                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100,
+                    display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem'
                 }} onClick={() => setShowDateModal(false)}>
-                    <div className="glass-card" style={{ padding: '2rem', minWidth: '300px' }} onClick={e => e.stopPropagation()}>
-                        <h3 style={{ marginBottom: '1rem' }}>Seleccionar Fecha</h3>
-                        <input
-                            type="datetime-local"
-                            className="input"
-                            style={{ width: '100%', padding: '0.5rem', marginBottom: '1rem', background: '#333', color: 'white', border: '1px solid #555', borderRadius: '0.5rem' }}
-                            value={newMeetingDate}
-                            onChange={(e) => setNewMeetingDate(e.target.value)}
-                        />
-                        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                    <div className="glass-card" style={{ padding: '2rem', maxWidth: '600px', width: '100%' }} onClick={e => e.stopPropagation()}>
+                        <h3 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>Programar Sesión</h3>
+                        <DateTimePicker value={newMeetingDate} onChange={setNewMeetingDate} />
+                        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2rem' }}>
                             <button className="btn btn-ghost" onClick={() => setShowDateModal(false)}>Cancelar</button>
-                            <button className="btn btn-primary" onClick={handleCreateMeeting} disabled={!newMeetingDate}>Programar</button>
+                            <button className="btn btn-primary" onClick={handleCreateMeeting}>Programar</button>
                         </div>
                     </div>
                 </div>

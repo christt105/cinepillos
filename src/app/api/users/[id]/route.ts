@@ -1,22 +1,34 @@
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 
 export async function PATCH(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    try {
-        const { id } = await params;
-        const body = await request.json();
-        const { image } = body;
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        if (!image) {
-            return NextResponse.json({ error: "Image URL is required" }, { status: 400 });
-        }
+    const { id } = await params;
+
+    if (session.user.id !== id && !session.user.isAdmin) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    try {
+        const body = await request.json();
+        const { name, image, newPassword } = body;
+
+        const data: Record<string, unknown> = {};
+        if (name !== undefined) data.name = name;
+        if (image !== undefined) data.image = image;
+        if (newPassword) data.password = await bcrypt.hash(newPassword, 10);
 
         const updatedUser = await prisma.user.update({
             where: { id },
-            data: { image },
+            data,
         });
 
         return NextResponse.json(updatedUser);

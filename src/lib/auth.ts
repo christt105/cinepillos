@@ -16,17 +16,20 @@ export const authOptions: NextAuthOptions = {
         CredentialsProvider({
             name: "Credentials",
             credentials: {
-                email: { label: "Email", type: "email" },
+                identifier: { label: "Email o nombre", type: "text" },
                 password: { label: "Password", type: "password" },
             },
             async authorize(credentials) {
-                if (!credentials?.email || !credentials?.password) {
+                if (!credentials?.identifier || !credentials?.password) {
                     return null;
                 }
 
-                const user = await prisma.user.findUnique({
+                const user = await prisma.user.findFirst({
                     where: {
-                        email: credentials.email,
+                        OR: [
+                            { email: credentials.identifier },
+                            { name: credentials.identifier },
+                        ],
                     },
                 });
 
@@ -55,12 +58,11 @@ export const authOptions: NextAuthOptions = {
     callbacks: {
         session: async ({ session, token }) => {
             if (token.id) {
-                // Fetch latest user data including families
                 const dbUser = await prisma.user.findUnique({
                     where: { id: token.id as string },
                     include: { families: true, activeFamily: true }
                 });
-                
+
                 return {
                     ...session,
                     user: {

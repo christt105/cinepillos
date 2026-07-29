@@ -188,7 +188,7 @@ export default async function Home() {
         ) : (
           <div className="glass-card" style={{ padding: '2rem', borderRadius: '1rem', textAlign: 'center' }}>
             <p style={{ opacity: 0.6, marginBottom: '1rem' }}>No hay sesiones programadas.</p>
-            <button className="btn btn-ghost">Programar Una</button>
+            <Link href="/meetings" className="btn btn-ghost">Programar Una</Link>
           </div>
         )}
       </section>

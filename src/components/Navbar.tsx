@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useSession, signIn, signOut } from "next-auth/react";
-import { Film, Calendar, User, LogOut, LogIn, Menu, X } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
+import { Film, LogOut, LogIn, Menu, X, Settings } from "lucide-react";
 import clsx from "clsx";
 import styles from "./Navbar.module.css";
 import { useState } from "react";
@@ -71,16 +71,19 @@ export default function Navbar() {
                                         </Link>
                                     )}
                                 </div>
+                                <Link href="/settings" className="btn btn-ghost" title="Mi perfil">
+                                    <Settings size={18} />
+                                </Link>
                                 <button onClick={() => signOut()} className="btn btn-ghost">
                                     <LogOut size={18} />
                                 </button>
                             </div>
                         </>
                     ) : (
-                        <button onClick={() => signIn()} className="btn btn-primary">
+                        <Link href="/login" className="btn btn-primary">
                             <LogIn size={18} style={{ marginRight: '0.5rem' }} />
                             Entrar
-                        </button>
+                        </Link>
                     )}
                 </div>
 
@@ -165,10 +168,10 @@ export default function Navbar() {
                                 </div>
                             </>
                         ) : (
-                            <button onClick={() => signIn()} className="btn btn-primary" style={{ width: '100%' }}>
+                            <Link href="/login" className="btn btn-primary" style={{ width: '100%' }}>
                                 <LogIn size={18} style={{ marginRight: '0.5rem' }} />
                                 Entrar
-                            </button>
+                            </Link>
                         )}
                     </div>
                 )}
