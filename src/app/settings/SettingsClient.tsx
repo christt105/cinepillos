@@ -12,6 +12,12 @@ interface User {
     image: string | null;
 }
 
+const ERROR_MESSAGES: Record<string, string> = {
+    name_taken: "Ese nombre ya está en uso",
+    current_password_required: "Introduce tu PIN actual para cambiarlo",
+    current_password_invalid: "El PIN actual no es correcto",
+};
+
 export default function SettingsClient({ user }: { user: User }) {
     const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -21,6 +27,7 @@ export default function SettingsClient({ user }: { user: User }) {
     const [imageMode, setImageMode] = useState<"url" | "upload">("url");
     const [previewFile, setPreviewFile] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [currentPin, setCurrentPin] = useState("");
     const [newPin, setNewPin] = useState("");
     const [confirmPin, setConfirmPin] = useState("");
 
@@ -41,6 +48,10 @@ export default function SettingsClient({ user }: { user: User }) {
         setError("");
         if (newPin && newPin !== confirmPin) {
             setError("Los PINs no coinciden");
+            return;
+        }
+        if (newPin && !currentPin) {
+            setError("Introduce tu PIN actual para cambiarlo");
             return;
         }
 
@@ -67,7 +78,10 @@ export default function SettingsClient({ user }: { user: User }) {
 
             const body: Record<string, string> = { name };
             if (finalImage) body.image = finalImage;
-            if (newPin) body.newPassword = newPin;
+            if (newPin) {
+                body.currentPassword = currentPin;
+                body.newPassword = newPin;
+            }
 
             const res = await fetch(`/api/users/${user.id}`, {
                 method: "PATCH",
@@ -76,12 +90,15 @@ export default function SettingsClient({ user }: { user: User }) {
             });
 
             if (res.ok) {
+                setCurrentPin("");
+                setNewPin("");
+                setConfirmPin("");
                 setSaved(true);
                 setTimeout(() => setSaved(false), 2000);
                 router.refresh();
             } else {
                 const data = await res.json().catch(() => ({}));
-                setError(data.error === "name_taken" ? "Ese nombre ya está en uso" : "Error guardando los cambios");
+                setError(ERROR_MESSAGES[data.error] ?? "Error guardando los cambios");
             }
         } finally {
             setSaving(false);
@@ -180,6 +197,17 @@ export default function SettingsClient({ user }: { user: User }) {
             {/* PIN change */}
             <div className="glass-card" style={{ padding: "1.5rem" }}>
                 <h3 style={{ marginBottom: "1rem" }}>Cambiar PIN</h3>
+                <div style={{ marginBottom: "1rem" }}>
+                    <label style={{ display: "block", marginBottom: "0.4rem", opacity: 0.7, fontSize: "0.85rem" }}>PIN actual</label>
+                    <input
+                        type="password"
+                        maxLength={8}
+                        value={currentPin}
+                        onChange={e => setCurrentPin(e.target.value)}
+                        autoComplete="current-password"
+                        style={{ width: "100%", padding: "0.75rem 1rem", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0.5rem", color: "white", fontSize: "1rem", outline: "none", letterSpacing: "0.3rem", boxSizing: "border-box" }}
+                    />
+                </div>
                 <div style={{ display: "flex", gap: "1rem" }}>
                     <div style={{ flex: 1 }}>
                         <label style={{ display: "block", marginBottom: "0.4rem", opacity: 0.7, fontSize: "0.85rem" }}>Nuevo PIN</label>
