@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.activeFamilyId) {
+        if (!session?.user?.activeGroupId) {
             return NextResponse.json([]);
         }
 
@@ -14,7 +14,7 @@ export async function GET() {
             orderBy: { date: 'asc' },
             where: {
                 date: { gt: new Date(Date.now() - 86400000) },
-                familyId: session.user.activeFamilyId
+                groupId: session.user.activeGroupId
             },
             include: {
                 candidates: {
@@ -50,15 +50,15 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Date is required" }, { status: 400 });
         }
 
-        if (!session.user.activeFamilyId) {
-            return NextResponse.json({ error: "No active family selected" }, { status: 400 });
+        if (!session.user.activeGroupId) {
+            return NextResponse.json({ error: "No active group selected" }, { status: 400 });
         }
 
         const meeting = await prisma.meeting.create({
             data: {
                 date: new Date(date),
                 status: "VOTING",
-                familyId: session.user.activeFamilyId,
+                groupId: session.user.activeGroupId,
             }
         });
 

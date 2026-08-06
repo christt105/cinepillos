@@ -13,32 +13,36 @@ export default async function GroupPage({ params }: { params: Promise<{ id: stri
 
     if (!session) redirect("/login");
 
-    const family = await prisma.family.findUnique({
+    const group = await prisma.group.findUnique({
         where: { id },
         include: {
-            users: {
+            memberships: {
                 include: {
-                    proposals: {
-                        where: { familyId: id },
-                        include: { film: true },
-                        orderBy: { createdAt: "desc" }
+                    user: {
+                        include: {
+                            proposals: {
+                                where: { groupId: id },
+                                include: { film: true },
+                                orderBy: { createdAt: "desc" }
+                            }
+                        }
                     }
                 }
             }
         }
     });
 
-    if (!family) notFound();
+    if (!group) notFound();
 
-    const isMember = family.users.some(u => u.id === session.user.id);
+    const isMember = group.memberships.some(m => m.userId === session.user.id);
     if (!isMember && !session.user.isAdmin) redirect("/");
 
     return (
         <div style={{ maxWidth: "1200px", margin: "0 auto", paddingBottom: "4rem" }}>
-            <h1 style={{ fontSize: "2rem", marginBottom: "2rem" }}>{family.name}</h1>
+            <h1 style={{ fontSize: "2rem", marginBottom: "2rem" }}>{group.name}</h1>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "3rem" }}>
-                {family.users.map(member => (
+                {group.memberships.map(({ user: member }) => (
                     <section key={member.id}>
                         <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
                             <div style={{

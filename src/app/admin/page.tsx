@@ -18,17 +18,17 @@ export default async function AdminPage() {
     }
 
     const users = await prisma.user.findMany({
-        include: { families: true, activeFamily: true }
+        include: { memberships: { include: { group: true } }, activeGroup: true }
     });
 
-    const families = await prisma.family.findMany({
-        include: { users: true }
+    const groups = await prisma.group.findMany({
+        include: { memberships: true }
     });
 
     return (
         <div>
             <h1 style={{ fontSize: '2rem', marginBottom: '2rem' }}>Panel de Administración</h1>
-            <AdminClient initialUsers={users} initialFamilies={families} />
+            <AdminClient initialUsers={users} initialGroups={groups} />
         </div>
     );
 }

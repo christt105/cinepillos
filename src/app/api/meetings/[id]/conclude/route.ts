@@ -32,6 +32,14 @@ export async function PATCH(
             return NextResponse.json({ error: "Meeting is not in voting phase" }, { status: 400 });
         }
 
+        const membership = meeting.groupId ? await prisma.membership.findUnique({
+            where: { userId_groupId: { userId: session.user.id, groupId: meeting.groupId } }
+        }) : null;
+
+        if (membership?.role !== "OWNER") {
+            return NextResponse.json({ error: "Only the group owner can conclude a meeting" }, { status: 403 });
+        }
+
         let winnerId: string | null = null;
         let maxVotes = 0;
 

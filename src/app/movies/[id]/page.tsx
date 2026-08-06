@@ -37,15 +37,15 @@ export default async function MovieDetailsPage(props: PageProps) {
         notFound();
     }
 
-    const activeFamilyId = session?.user?.activeFamilyId;
+    const activeGroupId = session?.user?.activeGroupId;
 
     // Check if proposal exists for this user and this film (by TMDB ID)
     // First, find the film record in DB if it exists
-    const dbFilm = activeFamilyId ? await prisma.film.findUnique({
+    const dbFilm = activeGroupId ? await prisma.film.findUnique({
         where: { tmdbId },
         include: {
             proposals: {
-                where: { familyId: activeFamilyId },
+                where: { groupId: activeGroupId },
                 include: { user: true }
             }
         }

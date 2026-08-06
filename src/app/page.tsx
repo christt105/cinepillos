@@ -16,13 +16,13 @@ export default async function Home() {
     redirect("/login");
   }
 
-  const activeFamilyId = session.user?.activeFamilyId;
+  const activeGroupId = session.user?.activeGroupId;
 
   // Fetch Next Meeting (or recently concluded)
-  const nextMeeting = activeFamilyId ? await prisma.meeting.findFirst({
+  const nextMeeting = activeGroupId ? await prisma.meeting.findFirst({
     where: {
       date: { gt: new Date(Date.now() - 24 * 60 * 60 * 1000) }, // Show meetings from last 24h to keep concluded ones visible
-      familyId: activeFamilyId
+      groupId: activeGroupId
     },
     orderBy: { date: 'asc' },
     include: {
@@ -31,7 +31,7 @@ export default async function Home() {
           film: {
             include: {
               proposals: {
-                where: { familyId: activeFamilyId },
+                where: { groupId: activeGroupId },
                 include: { user: true }
               }
             }
@@ -42,15 +42,15 @@ export default async function Home() {
   }) : null;
 
   // Fetch Proposals (Recent Films with Proposals)
-  const filmsWithProposals = activeFamilyId ? await prisma.film.findMany({
-    where: { proposals: { some: { familyId: activeFamilyId } } },
+  const filmsWithProposals = activeGroupId ? await prisma.film.findMany({
+    where: { proposals: { some: { groupId: activeGroupId } } },
     orderBy: { createdAt: 'desc' },
-    include: { proposals: { where: { familyId: activeFamilyId }, include: { user: true } } }
+    include: { proposals: { where: { groupId: activeGroupId }, include: { user: true } } }
   }) : [];
 
   return (
     <div style={{ paddingBottom: '4rem' }}>
-      {!activeFamilyId && (
+      {!activeGroupId && (
           <div className="glass-card" style={{ padding: '2rem', textAlign: 'center', marginBottom: '2rem' }}>
               <h2>¡Bienvenido!</h2>
               <p style={{ opacity: 0.8, marginTop: '1rem' }}>No tienes ningún grupo de cine activo.</p>

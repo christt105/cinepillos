@@ -9,18 +9,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ userId:
     if (!session.user.isAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     try {
-        const { familyId } = await req.json();
+        const { groupId } = await req.json();
         const { userId } = await params;
 
-        const user = await prisma.user.update({
-            where: { id: userId },
+        const membership = await prisma.membership.create({
             data: {
-                families: { connect: { id: familyId } },
-                activeFamilyId: familyId,
+                userId,
+                groupId,
+                role: "MEMBER",
             }
         });
 
-        return NextResponse.json(user);
+        return NextResponse.json(membership);
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : "Unknown error";
         return NextResponse.json({ error: msg }, { status: 400 });

@@ -8,12 +8,12 @@ export async function POST(req: Request) {
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const { familyId } = await req.json();
-        
+        const { groupId } = await req.json();
+
         const user = await prisma.user.update({
             where: { id: session.user.id },
             data: {
-                activeFamilyId: familyId
+                activeGroupId: groupId
             }
         });
 

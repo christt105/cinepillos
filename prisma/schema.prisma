@@ -17,30 +17,39 @@ model User {
   isAdmin   Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  activeFamilyId String?
-  activeFamily   Family? @relation("ActiveFamily", fields: [activeFamilyId], references: [id])
+  activeGroupId String?
+  activeGroup   Group? @relation("ActiveGroup", fields: [activeGroupId], references: [id])
 
-  families  Family[] @relation("FamilyMembers")
+  memberships Membership[]
 
   proposals          Proposal[]
-  likes              Like[]
-  comments           Comment[]
   votes              Vote[]
-  wishlist           Wishlist[]
   candidatesProposed MeetingCandidate[]
 }
 
-model Family {
+model Group {
   id        String   @id @default(cuid())
   name      String
   image     String?
   createdAt DateTime @default(now())
 
-  users       User[]     @relation("FamilyMembers")
-  activeUsers User[]     @relation("ActiveFamily")
+  activeUsers User[]       @relation("ActiveGroup")
+  memberships Membership[]
   meetings    Meeting[]
   proposals   Proposal[]
-  comments    Comment[]
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  userId    String
+  groupId   String
+  role      String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
 }
 
 model Film {
@@ -52,9 +61,7 @@ model Film {
   releaseDate String?
   createdAt   DateTime @default(now())
 
-  proposals        Proposal[]
-  wishlists        Wishlist[]
-  comments         Comment[]
+  proposals         Proposal[]
   meetingCandidates MeetingCandidate[]
 }
 
@@ -62,62 +69,24 @@ model Proposal {
   id        String   @id @default(cuid())
   userId    String
   filmId    String
-  familyId  String?
+  groupId   String?
   createdAt DateTime @default(now())
 
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  film   Film    @relation(fields: [filmId], references: [id], onDelete: Cascade)
-  family Family? @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  likes  Like[]
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  film  Film   @relation(fields: [filmId], references: [id], onDelete: Cascade)
+  group Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, filmId, familyId])
-}
-
-model Like {
-  id         String   @id @default(cuid())
-  userId     String
-  proposalId String
-  createdAt  DateTime @default(now())
-
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  proposal Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, proposalId])
-}
-
-model Wishlist {
-  id        String   @id @default(cuid())
-  userId    String
-  filmId    String
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  film Film @relation(fields: [filmId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, filmId])
-}
-
-model Comment {
-  id        String   @id @default(cuid())
-  content   String
-  userId    String
-  filmId    String
-  familyId  String?
-  createdAt DateTime @default(now())
-
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  film   Film    @relation(fields: [filmId], references: [id], onDelete: Cascade)
-  family Family? @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  @@unique([userId, filmId, groupId])
 }
 
 model Meeting {
-  id        String   @id @default(cuid())
-  date      DateTime
-  status    String   @default("PLANNING")
+  id             String   @id @default(cuid())
+  date           DateTime
+  status         String
   selectedFilmId String?
-  familyId  String?
+  groupId        String?
 
-  family    Family? @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  group Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   candidates MeetingCandidate[]
 }

@@ -6,7 +6,7 @@ const { mockCreate } = vi.hoisted(() => ({
 
 vi.mock("@/lib/prisma", () => ({
     prisma: {
-        family: { create: mockCreate },
+        group: { create: mockCreate },
     },
 }));
 
@@ -18,25 +18,25 @@ vi.mock("@/lib/auth", () => ({
     authOptions: {},
 }));
 
-import { POST } from "@/app/api/admin/families/route";
+import { POST } from "@/app/api/admin/groups/route";
 import { getServerSession } from "next-auth";
 
 const makeRequest = (body: object) =>
-    new Request("http://localhost/api/admin/families", {
+    new Request("http://localhost/api/admin/groups", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
     });
 
-describe("POST /api/admin/families", () => {
+describe("POST /api/admin/groups", () => {
     beforeEach(() => vi.clearAllMocks());
 
-    it("creates a family when requester is admin", async () => {
+    it("creates a group when requester is admin", async () => {
         vi.mocked(getServerSession).mockResolvedValue({
             user: { id: "admin-1", isAdmin: true },
         } as never);
 
-        mockCreate.mockResolvedValue({ id: "f1", name: "Zorropillos" });
+        mockCreate.mockResolvedValue({ id: "g1", name: "Zorropillos" });
 
         const res = await POST(makeRequest({ name: "Zorropillos" }));
 

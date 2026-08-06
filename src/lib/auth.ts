@@ -60,7 +60,7 @@ export const authOptions: NextAuthOptions = {
             if (token.id) {
                 const dbUser = await prisma.user.findUnique({
                     where: { id: token.id as string },
-                    include: { families: true, activeFamily: true }
+                    include: { memberships: { include: { group: true } }, activeGroup: true }
                 });
 
                 return {
@@ -68,9 +68,9 @@ export const authOptions: NextAuthOptions = {
                     user: {
                         ...session.user,
                         id: token.id,
-                        activeFamilyId: dbUser?.activeFamilyId,
-                        activeFamily: dbUser?.activeFamily,
-                        families: dbUser?.families || [],
+                        activeGroupId: dbUser?.activeGroupId,
+                        activeGroup: dbUser?.activeGroup,
+                        groups: dbUser?.memberships.map(m => m.group) || [],
                         isAdmin: dbUser?.isAdmin || false
                     },
                 };

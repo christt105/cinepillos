@@ -25,9 +25,9 @@ import { getServerSession } from "next-auth";
 describe("GET /api/meetings", () => {
     beforeEach(() => vi.clearAllMocks());
 
-    it("returns meetings for the active family", async () => {
+    it("returns meetings for the active group", async () => {
         vi.mocked(getServerSession).mockResolvedValue({
-            user: { id: "u1", activeFamilyId: "f1" },
+            user: { id: "u1", activeGroupId: "g1" },
         } as never);
 
         const fakeMeetings = [{ id: "m1", date: new Date().toISOString(), status: "VOTING", candidates: [] }];
@@ -41,9 +41,9 @@ describe("GET /api/meetings", () => {
         expect(data[0].id).toBe("m1");
     });
 
-    it("returns empty array when user has no active family", async () => {
+    it("returns empty array when user has no active group", async () => {
         vi.mocked(getServerSession).mockResolvedValue({
-            user: { id: "u1", activeFamilyId: null },
+            user: { id: "u1", activeGroupId: null },
         } as never);
 
         const res = await GET();
@@ -65,13 +65,13 @@ describe("POST /api/meetings", () => {
 
     beforeEach(() => vi.clearAllMocks());
 
-    it("creates a meeting for the active family", async () => {
+    it("creates a meeting for the active group", async () => {
         vi.mocked(getServerSession).mockResolvedValue({
-            user: { id: "u1", activeFamilyId: "f1" },
+            user: { id: "u1", activeGroupId: "g1" },
         } as never);
 
         const date = new Date("2026-09-01T20:00:00Z").toISOString();
-        mockCreate.mockResolvedValue({ id: "m2", date, status: "VOTING", familyId: "f1" });
+        mockCreate.mockResolvedValue({ id: "m2", date, status: "VOTING", groupId: "g1" });
 
         const res = await POST(makeRequest({ date }));
 
@@ -79,13 +79,13 @@ describe("POST /api/meetings", () => {
         const data = await res.json();
         expect(data.id).toBe("m2");
         expect(mockCreate).toHaveBeenCalledWith(
-            expect.objectContaining({ data: expect.objectContaining({ familyId: "f1", status: "VOTING" }) })
+            expect.objectContaining({ data: expect.objectContaining({ groupId: "g1", status: "VOTING" }) })
         );
     });
 
     it("returns 400 when date is missing", async () => {
         vi.mocked(getServerSession).mockResolvedValue({
-            user: { id: "u1", activeFamilyId: "f1" },
+            user: { id: "u1", activeGroupId: "g1" },
         } as never);
 
         const res = await POST(makeRequest({}));
@@ -93,9 +93,9 @@ describe("POST /api/meetings", () => {
         expect(res.status).toBe(400);
     });
 
-    it("returns 400 when user has no active family", async () => {
+    it("returns 400 when user has no active group", async () => {
         vi.mocked(getServerSession).mockResolvedValue({
-            user: { id: "u1", activeFamilyId: null },
+            user: { id: "u1", activeGroupId: null },
         } as never);
 
         const res = await POST(makeRequest({ date: new Date().toISOString() }));

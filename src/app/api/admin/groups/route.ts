@@ -11,11 +11,11 @@ export async function POST(req: Request) {
     try {
         const { name } = await req.json();
 
-        const family = await prisma.family.create({
+        const group = await prisma.group.create({
             data: { name }
         });
 
-        return NextResponse.json(family);
+        return NextResponse.json(group);
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : "Unknown error";
         return NextResponse.json({ error: msg }, { status: 400 });

@@ -32,9 +32,9 @@ import { getServerSession } from "next-auth";
 describe("GET /api/proposals", () => {
     beforeEach(() => vi.clearAllMocks());
 
-    it("returns proposals for the current user and active family", async () => {
+    it("returns proposals for the current user and active group", async () => {
         vi.mocked(getServerSession).mockResolvedValue({
-            user: { id: "u1", activeFamilyId: "f1" },
+            user: { id: "u1", activeGroupId: "g1" },
         } as never);
 
         const fakeProposals = [{ id: "p1", filmId: "film1", film: {}, user: {} }];
@@ -47,13 +47,13 @@ describe("GET /api/proposals", () => {
         const data = await res.json();
         expect(data).toHaveLength(1);
         expect(mockProposalFindMany).toHaveBeenCalledWith(
-            expect.objectContaining({ where: expect.objectContaining({ userId: "u1", familyId: "f1" }) })
+            expect.objectContaining({ where: expect.objectContaining({ userId: "u1", groupId: "g1" }) })
         );
     });
 
-    it("returns all family proposals with scope=all", async () => {
+    it("returns all group proposals with scope=all", async () => {
         vi.mocked(getServerSession).mockResolvedValue({
-            user: { id: "u1", activeFamilyId: "f1" },
+            user: { id: "u1", activeGroupId: "g1" },
         } as never);
 
         mockProposalFindMany.mockResolvedValue([]);
@@ -63,7 +63,7 @@ describe("GET /api/proposals", () => {
 
         expect(res.status).toBe(200);
         expect(mockProposalFindMany).toHaveBeenCalledWith(
-            expect.objectContaining({ where: { familyId: "f1" } })
+            expect.objectContaining({ where: { groupId: "g1" } })
         );
     });
 
@@ -89,12 +89,12 @@ describe("POST /api/proposals", () => {
 
     it("creates a proposal after upserting the film", async () => {
         vi.mocked(getServerSession).mockResolvedValue({
-            user: { id: "u1", activeFamilyId: "f1" },
+            user: { id: "u1", activeGroupId: "g1" },
         } as never);
 
         mockFilmUpsert.mockResolvedValue({ id: "film1", tmdbId: 12345, title: "Oppenheimer" });
         mockProposalFindFirst.mockResolvedValue(null);
-        mockProposalCreate.mockResolvedValue({ id: "p1", userId: "u1", filmId: "film1", familyId: "f1" });
+        mockProposalCreate.mockResolvedValue({ id: "p1", userId: "u1", filmId: "film1", groupId: "g1" });
 
         const res = await POST(makeRequest({ tmdbId: 12345, title: "Oppenheimer", overview: "...", posterPath: "/x.jpg" }));
 
@@ -107,7 +107,7 @@ describe("POST /api/proposals", () => {
 
     it("returns existing proposal without creating duplicate", async () => {
         vi.mocked(getServerSession).mockResolvedValue({
-            user: { id: "u1", activeFamilyId: "f1" },
+            user: { id: "u1", activeGroupId: "g1" },
         } as never);
 
         mockFilmUpsert.mockResolvedValue({ id: "film1", tmdbId: 12345 });
@@ -119,9 +119,9 @@ describe("POST /api/proposals", () => {
         expect(mockProposalCreate).not.toHaveBeenCalled();
     });
 
-    it("returns 400 when no active family", async () => {
+    it("returns 400 when no active group", async () => {
         vi.mocked(getServerSession).mockResolvedValue({
-            user: { id: "u1", activeFamilyId: null },
+            user: { id: "u1", activeGroupId: null },
         } as never);
 
         mockFilmUpsert.mockResolvedValue({ id: "film1", tmdbId: 12345 });
@@ -134,7 +134,7 @@ describe("POST /api/proposals", () => {
 
     it("returns 400 when required fields are missing", async () => {
         vi.mocked(getServerSession).mockResolvedValue({
-            user: { id: "u1", activeFamilyId: "f1" },
+            user: { id: "u1", activeGroupId: "g1" },
         } as never);
 
         const res = await POST(makeRequest({ overview: "..." }));

@@ -29,22 +29,22 @@ export default function Navbar() {
                             <Link href="/meetings" className={styles.link}>
                                 Reuniones
                             </Link>
-                            {session.user?.activeFamilyId && (
-                                <Link href={`/groups/${session.user.activeFamilyId}`} className={styles.link}>
+                            {session.user?.activeGroupId && (
+                                <Link href={`/groups/${session.user.activeGroupId}`} className={styles.link}>
                                     Mi Grupo
                                 </Link>
                             )}
                             <div className={styles.userMenu}>
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginRight: '1rem' }}>
                                     <span className={styles.username}>{session.user?.name || session.user?.email}</span>
-                                    {session.user?.families?.length > 0 && (
-                                        <select 
-                                            value={session.user.activeFamilyId || ""}
+                                    {session.user?.groups?.length > 0 && (
+                                        <select
+                                            value={session.user.activeGroupId || ""}
                                             onChange={async (e) => {
-                                                await fetch('/api/users/activeFamily', {
+                                                await fetch('/api/users/activeGroup', {
                                                     method: 'POST',
                                                     headers: { 'Content-Type': 'application/json' },
-                                                    body: JSON.stringify({ familyId: e.target.value })
+                                                    body: JSON.stringify({ groupId: e.target.value })
                                                 });
                                                 window.location.reload();
                                             }}
@@ -58,9 +58,9 @@ export default function Navbar() {
                                             }}
                                         >
                                             <option value="" disabled>Selecciona Grupo</option>
-                                            {session.user.families.map(f => (
-                                                <option key={f.id} value={f.id} style={{ color: 'black' }}>
-                                                    {f.name}
+                                            {session.user.groups.map(g => (
+                                                <option key={g.id} value={g.id} style={{ color: 'black' }}>
+                                                    {g.name}
                                                 </option>
                                             ))}
                                         </select>
@@ -114,9 +114,9 @@ export default function Navbar() {
                                 >
                                     Reuniones
                                 </Link>
-                                {session.user?.activeFamilyId && (
+                                {session.user?.activeGroupId && (
                                     <Link
-                                        href={`/groups/${session.user.activeFamilyId}`}
+                                        href={`/groups/${session.user.activeGroupId}`}
                                         className={styles.link}
                                         onClick={() => setIsMenuOpen(false)}
                                     >
@@ -126,14 +126,14 @@ export default function Navbar() {
                                 <div className={styles.userMenu}>
                                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginRight: '1rem' }}>
                                         <span className={styles.username}>{session.user?.name || session.user?.email}</span>
-                                        {session.user?.families?.length > 0 && (
-                                            <select 
-                                                value={session.user.activeFamilyId || ""}
+                                        {session.user?.groups?.length > 0 && (
+                                            <select
+                                                value={session.user.activeGroupId || ""}
                                                 onChange={async (e) => {
-                                                    await fetch('/api/users/activeFamily', {
+                                                    await fetch('/api/users/activeGroup', {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({ familyId: e.target.value })
+                                                        body: JSON.stringify({ groupId: e.target.value })
                                                     });
                                                     window.location.reload();
                                                 }}
@@ -149,9 +149,9 @@ export default function Navbar() {
                                                 }}
                                             >
                                                 <option value="" disabled>Selecciona Grupo</option>
-                                                {session.user.families.map(f => (
-                                                    <option key={f.id} value={f.id} style={{ color: 'black' }}>
-                                                        {f.name}
+                                                {session.user.groups.map(g => (
+                                                    <option key={g.id} value={g.id} style={{ color: 'black' }}>
+                                                        {g.name}
                                                     </option>
                                                 ))}
                                             </select>
