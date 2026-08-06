@@ -179,4 +179,13 @@ describe("POST /api/proposals", () => {
 
         expect(res.status).toBe(400);
     });
+
+    it("returns 400 when tmdbId is not a number", async () => {
+        asMember();
+
+        const res = await POST(makeRequest({ tmdbId: "not-a-number", title: "Oppenheimer" }));
+
+        expect(res.status).toBe(400);
+        expect(mockFilmUpsert).not.toHaveBeenCalled();
+    });
 });

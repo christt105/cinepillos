@@ -27,6 +27,8 @@ import { GET, POST } from "@/app/api/meetings/route";
 import { getServerSession } from "next-auth";
 import { group, memberUser, outsiderUser } from "../../helpers/fixtures";
 
+const FUTURE_DATE = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
 const asMember = () => {
     vi.mocked(getServerSession).mockResolvedValue({
         user: { id: "u1", activeGroupId: "g1" },
@@ -105,7 +107,7 @@ describe("POST /api/meetings", () => {
     it("creates a meeting for the active group", async () => {
         asMember();
 
-        const date = new Date("2026-09-01T20:00:00Z").toISOString();
+        const date = FUTURE_DATE;
         mockCreate.mockResolvedValue({ id: "m2", date, status: "VOTING", groupId: "g1" });
 
         const res = await POST(makeRequest({ date }));
@@ -121,7 +123,7 @@ describe("POST /api/meetings", () => {
     it("returns 403 when the user is not a member of the active group", async () => {
         asOutsider();
 
-        const res = await POST(makeRequest({ date: new Date("2026-09-01T20:00:00Z").toISOString() }));
+        const res = await POST(makeRequest({ date: FUTURE_DATE }));
 
         expect(res.status).toBe(403);
         expect(mockCreate).not.toHaveBeenCalled();
@@ -135,12 +137,30 @@ describe("POST /api/meetings", () => {
         expect(res.status).toBe(400);
     });
 
+    it("returns 400 when the date is not a real date", async () => {
+        asMember();
+
+        const res = await POST(makeRequest({ date: "next friday" }));
+
+        expect(res.status).toBe(400);
+        expect(mockCreate).not.toHaveBeenCalled();
+    });
+
+    it("returns 400 when the date is in the past", async () => {
+        asMember();
+
+        const res = await POST(makeRequest({ date: "2020-01-01T20:00:00Z" }));
+
+        expect(res.status).toBe(400);
+        expect(mockCreate).not.toHaveBeenCalled();
+    });
+
     it("returns 400 when user has no active group", async () => {
         vi.mocked(getServerSession).mockResolvedValue({
             user: { id: "u1", activeGroupId: null },
         } as never);
 
-        const res = await POST(makeRequest({ date: new Date().toISOString() }));
+        const res = await POST(makeRequest({ date: FUTURE_DATE }));
 
         expect(res.status).toBe(400);
     });
@@ -148,7 +168,7 @@ describe("POST /api/meetings", () => {
     it("returns 401 when not authenticated", async () => {
         vi.mocked(getServerSession).mockResolvedValue(null);
 
-        const res = await POST(makeRequest({ date: new Date().toISOString() }));
+        const res = await POST(makeRequest({ date: FUTURE_DATE }));
 
         expect(res.status).toBe(401);
     });

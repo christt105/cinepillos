@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireMeetingMember } from "@/lib/auth-guards";
+import { candidateSchema } from "@/lib/schemas";
+import { parseBody } from "@/lib/validation";
 import { NextResponse } from "next/server";
 
 export async function POST(
@@ -12,12 +14,10 @@ export async function POST(
         const auth = await requireMeetingMember(meetingId);
         if (!auth.ok) return auth.response;
 
-        const body = await request.json();
-        const { filmId } = body;
+        const body = await parseBody(request, candidateSchema);
+        if (!body.ok) return body.response;
 
-        if (!filmId) {
-            return NextResponse.json({ error: "Film ID is required" }, { status: 400 });
-        }
+        const { filmId } = body.data;
 
         const existing = await prisma.meetingCandidate.findUnique({
             where: { meetingId_filmId: { meetingId, filmId } }

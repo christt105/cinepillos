@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireGroupMember, requireSession } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { proposalSchema } from "@/lib/schemas";
+import { parseBody } from "@/lib/validation";
 import { Prisma } from "@prisma/client";
 
 export async function GET(request: Request) {
@@ -46,17 +48,14 @@ export async function POST(request: Request) {
         const access = await requireGroupMember(auth.session.user.activeGroupId, auth.session);
         if (!access.ok) return access.response;
 
-        const body = await request.json();
-        const { tmdbId, title, overview, posterPath, releaseDate } = body;
+        const body = await parseBody(request, proposalSchema);
+        if (!body.ok) return body.response;
 
-        // Basic validation
-        if (!tmdbId || !title) {
-            return new NextResponse("Missing required fields", { status: 400 });
-        }
+        const { tmdbId, title, overview, posterPath, releaseDate } = body.data;
 
         // 1. Ensure Film exists
         const film = await prisma.film.upsert({
-            where: { tmdbId: Number(tmdbId) },
+            where: { tmdbId },
             update: {
                 title,
                 overview,
@@ -64,7 +63,7 @@ export async function POST(request: Request) {
                 releaseDate,
             },
             create: {
-                tmdbId: Number(tmdbId),
+                tmdbId,
                 title,
                 overview,
                 posterPath,

@@ -71,6 +71,15 @@ describe("POST /api/users/activeGroup", () => {
         expect(mockUserUpdate).not.toHaveBeenCalled();
     });
 
+    it("returns 400 when groupId is missing", async () => {
+        vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1" } } as never);
+
+        const res = await POST(makeRequest({}));
+
+        expect(res.status).toBe(400);
+        expect(mockUserUpdate).not.toHaveBeenCalled();
+    });
+
     it("returns 401 when not authenticated", async () => {
         vi.mocked(getServerSession).mockResolvedValue(null);
 

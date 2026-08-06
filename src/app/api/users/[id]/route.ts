@@ -2,6 +2,9 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import { userUpdateSchema } from "@/lib/schemas";
+import { parseBody } from "@/lib/validation";
+import { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 export async function PATCH(
@@ -17,11 +20,13 @@ export async function PATCH(
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    try {
-        const body = await request.json();
-        const { name, image, currentPassword, newPassword } = body;
+    const body = await parseBody(request, userUpdateSchema);
+    if (!body.ok) return body.response;
 
-        const data: Record<string, unknown> = {};
+    try {
+        const { name, image, currentPassword, newPassword } = body.data;
+
+        const data: Prisma.UserUpdateInput = {};
         if (name !== undefined) {
             const existing = await prisma.user.findFirst({ where: { name, NOT: { id } } });
             if (existing) return NextResponse.json({ error: "name_taken" }, { status: 409 });

@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireGroupMember, requireSession } from "@/lib/auth-guards";
+import { meetingSchema } from "@/lib/schemas";
+import { parseBody } from "@/lib/validation";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -44,14 +46,10 @@ export async function POST(request: Request) {
     const auth = await requireSession();
     if (!auth.ok) return auth.response;
 
+    const body = await parseBody(request, meetingSchema);
+    if (!body.ok) return body.response;
+
     try {
-        const body = await request.json();
-        const { date } = body;
-
-        if (!date) {
-            return NextResponse.json({ error: "Date is required" }, { status: 400 });
-        }
-
         if (!auth.session.user.activeGroupId) {
             return NextResponse.json({ error: "No active group selected" }, { status: 400 });
         }
@@ -61,7 +59,7 @@ export async function POST(request: Request) {
 
         const meeting = await prisma.meeting.create({
             data: {
-                date: new Date(date),
+                date: body.data.date,
                 status: "VOTING",
                 groupId: access.group.id,
             }

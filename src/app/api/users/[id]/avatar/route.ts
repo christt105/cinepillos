@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { AVATAR_MAX_BYTES, AVATAR_MIME_TYPES } from "@/lib/schemas";
 import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
@@ -20,13 +21,21 @@ export async function POST(
 
     try {
         const formData = await request.formData();
-        const file = formData.get("file") as File | null;
+        const file = formData.get("file");
 
-        if (!file) {
+        if (!(file instanceof File)) {
             return NextResponse.json({ error: "No file provided" }, { status: 400 });
         }
 
-        const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+        const ext = AVATAR_MIME_TYPES[file.type];
+        if (!ext) {
+            return NextResponse.json({ error: "unsupported_image_type" }, { status: 400 });
+        }
+
+        if (file.size > AVATAR_MAX_BYTES) {
+            return NextResponse.json({ error: "image_too_large" }, { status: 400 });
+        }
+
         const filename = `${id}.${ext}`;
         const uploadsDir = join(process.cwd(), "public", "uploads", "avatars");
 

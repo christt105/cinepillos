@@ -1,16 +1,16 @@
 import { prisma } from "@/lib/prisma";
 import { requireCandidateMember } from "@/lib/auth-guards";
+import { voteSchema } from "@/lib/schemas";
+import { parseBody } from "@/lib/validation";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
+    const body = await parseBody(request, voteSchema);
+    if (!body.ok) return body.response;
+
+    const { candidateId } = body.data;
+
     try {
-        const body = await request.json();
-        const { candidateId } = body;
-
-        if (!candidateId) {
-            return NextResponse.json({ error: "Candidate ID is required" }, { status: 400 });
-        }
-
         const auth = await requireCandidateMember(candidateId);
         if (!auth.ok) return auth.response;
 
