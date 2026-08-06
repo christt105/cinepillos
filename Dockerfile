@@ -37,9 +37,10 @@ COPY --from=deps --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/p
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/@prisma/engines ./node_modules/@prisma/engines
 
 RUN mkdir -p public/uploads/avatars && chown -R nextjs:nodejs public/uploads
+RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
 
 USER nextjs
 
 EXPOSE 6889
 
-CMD ["sh", "-c", "prisma migrate deploy 2>/dev/null || true && node server.js"]
+CMD ["sh", "-c", "prisma migrate deploy && node server.js"]
