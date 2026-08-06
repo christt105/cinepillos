@@ -1,20 +1,24 @@
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireGroupMember, requireSession } from "@/lib/auth-guards";
 import { NextResponse } from "next/server";
 
 export async function GET() {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.activeGroupId) {
+        const auth = await requireSession();
+        if (!auth.ok) return auth.response;
+
+        if (!auth.session.user.activeGroupId) {
             return NextResponse.json([]);
         }
+
+        const access = await requireGroupMember(auth.session.user.activeGroupId, auth.session);
+        if (!access.ok) return access.response;
 
         const meetings = await prisma.meeting.findMany({
             orderBy: { date: 'asc' },
             where: {
                 date: { gt: new Date(Date.now() - 86400000) },
-                groupId: session.user.activeGroupId
+                groupId: access.group.id
             },
             include: {
                 candidates: {
@@ -37,10 +41,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const auth = await requireSession();
+    if (!auth.ok) return auth.response;
 
     try {
         const body = await request.json();
@@ -50,15 +52,18 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Date is required" }, { status: 400 });
         }
 
-        if (!session.user.activeGroupId) {
+        if (!auth.session.user.activeGroupId) {
             return NextResponse.json({ error: "No active group selected" }, { status: 400 });
         }
+
+        const access = await requireGroupMember(auth.session.user.activeGroupId, auth.session);
+        if (!access.ok) return access.response;
 
         const meeting = await prisma.meeting.create({
             data: {
                 date: new Date(date),
                 status: "VOTING",
-                groupId: session.user.activeGroupId,
+                groupId: access.group.id,
             }
         });
 

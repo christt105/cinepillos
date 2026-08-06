@@ -1,13 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mockFindMany, mockCreate } = vi.hoisted(() => ({
+const { mockFindMany, mockCreate, mockUserFindUnique, mockGroupFindUnique } = vi.hoisted(() => ({
     mockFindMany: vi.fn(),
     mockCreate: vi.fn(),
+    mockUserFindUnique: vi.fn(),
+    mockGroupFindUnique: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({
     prisma: {
         meeting: { findMany: mockFindMany, create: mockCreate },
+        user: { findUnique: mockUserFindUnique },
+        group: { findUnique: mockGroupFindUnique },
     },
 }));
 
@@ -21,14 +25,29 @@ vi.mock("@/lib/auth", () => ({
 
 import { GET, POST } from "@/app/api/meetings/route";
 import { getServerSession } from "next-auth";
+import { group, memberUser, outsiderUser } from "../../helpers/fixtures";
+
+const asMember = () => {
+    vi.mocked(getServerSession).mockResolvedValue({
+        user: { id: "u1", activeGroupId: "g1" },
+    } as never);
+    mockUserFindUnique.mockResolvedValue(memberUser());
+    mockGroupFindUnique.mockResolvedValue(group);
+};
+
+const asOutsider = () => {
+    vi.mocked(getServerSession).mockResolvedValue({
+        user: { id: "u2", activeGroupId: "g1" },
+    } as never);
+    mockUserFindUnique.mockResolvedValue(outsiderUser());
+    mockGroupFindUnique.mockResolvedValue(group);
+};
 
 describe("GET /api/meetings", () => {
     beforeEach(() => vi.clearAllMocks());
 
     it("returns meetings for the active group", async () => {
-        vi.mocked(getServerSession).mockResolvedValue({
-            user: { id: "u1", activeGroupId: "g1" },
-        } as never);
+        asMember();
 
         const fakeMeetings = [{ id: "m1", date: new Date().toISOString(), status: "VOTING", candidates: [] }];
         mockFindMany.mockResolvedValue(fakeMeetings);
@@ -53,6 +72,24 @@ describe("GET /api/meetings", () => {
         expect(data).toEqual([]);
         expect(mockFindMany).not.toHaveBeenCalled();
     });
+
+    it("returns 403 when the user is not a member of the active group", async () => {
+        asOutsider();
+
+        const res = await GET();
+
+        expect(res.status).toBe(403);
+        expect(mockFindMany).not.toHaveBeenCalled();
+    });
+
+    it("returns 401 when not authenticated", async () => {
+        vi.mocked(getServerSession).mockResolvedValue(null);
+
+        const res = await GET();
+
+        expect(res.status).toBe(401);
+        expect(mockFindMany).not.toHaveBeenCalled();
+    });
 });
 
 describe("POST /api/meetings", () => {
@@ -66,9 +103,7 @@ describe("POST /api/meetings", () => {
     beforeEach(() => vi.clearAllMocks());
 
     it("creates a meeting for the active group", async () => {
-        vi.mocked(getServerSession).mockResolvedValue({
-            user: { id: "u1", activeGroupId: "g1" },
-        } as never);
+        asMember();
 
         const date = new Date("2026-09-01T20:00:00Z").toISOString();
         mockCreate.mockResolvedValue({ id: "m2", date, status: "VOTING", groupId: "g1" });
@@ -83,10 +118,17 @@ describe("POST /api/meetings", () => {
         );
     });
 
+    it("returns 403 when the user is not a member of the active group", async () => {
+        asOutsider();
+
+        const res = await POST(makeRequest({ date: new Date("2026-09-01T20:00:00Z").toISOString() }));
+
+        expect(res.status).toBe(403);
+        expect(mockCreate).not.toHaveBeenCalled();
+    });
+
     it("returns 400 when date is missing", async () => {
-        vi.mocked(getServerSession).mockResolvedValue({
-            user: { id: "u1", activeGroupId: "g1" },
-        } as never);
+        asMember();
 
         const res = await POST(makeRequest({}));
 

@@ -1,19 +1,17 @@
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireMeetingMember } from "@/lib/auth-guards";
 import { NextResponse } from "next/server";
 
 export async function POST(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     try {
         const { id: meetingId } = await params;
+
+        const auth = await requireMeetingMember(meetingId);
+        if (!auth.ok) return auth.response;
+
         const body = await request.json();
         const { filmId } = body;
 
@@ -30,7 +28,7 @@ export async function POST(
         }
 
         const userCandidate = await prisma.meetingCandidate.findFirst({
-            where: { meetingId, userId: session.user.id }
+            where: { meetingId, userId: auth.user.id }
         });
 
         if (userCandidate) {
@@ -38,7 +36,7 @@ export async function POST(
         }
 
         const candidate = await prisma.meetingCandidate.create({
-            data: { meetingId, filmId, userId: session.user.id },
+            data: { meetingId, filmId, userId: auth.user.id },
             include: {
                 film: true,
                 votes: true,

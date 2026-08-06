@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireGroupMember, requireSession } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 
 // Correctly typing params for Next.js App Router API routes
@@ -11,15 +10,11 @@ export async function DELETE(
 ) {
     const params = await props.params;
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session || !session.user) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
+        const auth = await requireSession();
+        if (!auth.ok) return auth.response;
 
         const { id } = params;
 
-        // Verify ownership
         const proposal = await prisma.proposal.findUnique({
             where: { id },
         });
@@ -28,7 +23,10 @@ export async function DELETE(
             return new NextResponse("Not Found", { status: 404 });
         }
 
-        if (proposal.userId !== session.user.id) {
+        const access = await requireGroupMember(proposal.groupId, auth.session);
+        if (!access.ok) return access.response;
+
+        if (proposal.userId !== auth.session.user.id) {
             return new NextResponse("Forbidden", { status: 403 });
         }
 

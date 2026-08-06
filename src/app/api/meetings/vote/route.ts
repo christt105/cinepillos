@@ -1,32 +1,25 @@
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireCandidateMember } from "@/lib/auth-guards";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user?.email) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     try {
         const body = await request.json();
         const { candidateId } = body;
 
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email }
-        });
-
-        if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        if (!candidateId) {
+            return NextResponse.json({ error: "Candidate ID is required" }, { status: 400 });
         }
+
+        const auth = await requireCandidateMember(candidateId);
+        if (!auth.ok) return auth.response;
 
         // Check if vote exists
         const existingVote = await prisma.vote.findUnique({
             where: {
                 candidateId_userId: {
                     candidateId,
-                    userId: user.id
+                    userId: auth.user.id
                 }
             }
         });
@@ -42,7 +35,7 @@ export async function POST(request: Request) {
             await prisma.vote.create({
                 data: {
                     candidateId,
-                    userId: user.id
+                    userId: auth.user.id
                 }
             });
             return NextResponse.json({ voted: true });

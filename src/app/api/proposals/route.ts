@@ -1,27 +1,23 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireGroupMember, requireSession } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 export async function GET(request: Request) {
     try {
-        const session = await getServerSession(authOptions);
+        const auth = await requireSession();
+        if (!auth.ok) return auth.response;
 
-        if (!session || !session.user) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
+        const access = await requireGroupMember(auth.session.user.activeGroupId, auth.session);
+        if (!access.ok) return access.response;
 
         const { searchParams } = new URL(request.url);
         const scope = searchParams.get("scope");
 
-        let whereClause: any = {
-            userId: session.user.id,
-            groupId: session.user.activeGroupId
-        };
-
-        if (scope === "all") {
-            whereClause = { groupId: session.user.activeGroupId }; // Fetch all proposals for group
-        }
+        const whereClause: Prisma.ProposalWhereInput =
+            scope === "all"
+                ? { groupId: access.group.id }
+                : { groupId: access.group.id, userId: access.user.id };
 
         const proposals = await prisma.proposal.findMany({
             where: whereClause,
@@ -40,11 +36,15 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const session = await getServerSession(authOptions);
+        const auth = await requireSession();
+        if (!auth.ok) return auth.response;
 
-        if (!session || !session.user) {
-            return new NextResponse("Unauthorized", { status: 401 });
+        if (!auth.session.user.activeGroupId) {
+            return new NextResponse("No active group", { status: 400 });
         }
+
+        const access = await requireGroupMember(auth.session.user.activeGroupId, auth.session);
+        if (!access.ok) return access.response;
 
         const body = await request.json();
         const { tmdbId, title, overview, posterPath, releaseDate } = body;
@@ -73,19 +73,11 @@ export async function POST(request: Request) {
         });
 
         // 2. Create Proposal if not exists
-        // The proposal model has a unique constraint @@unique([userId, filmId])
-        // So if it exists, it might throw, or we can check first.
-        // Let's check first to return a friendly message or just return the existing one.
-
-        if (!session.user.activeGroupId) {
-            return new NextResponse("No active group", { status: 400 });
-        }
-
         const existingProposal = await prisma.proposal.findFirst({
             where: {
-                userId: session.user.id,
+                userId: access.user.id,
                 filmId: film.id,
-                groupId: session.user.activeGroupId
+                groupId: access.group.id
             }
         });
 
@@ -95,9 +87,9 @@ export async function POST(request: Request) {
 
         const proposal = await prisma.proposal.create({
             data: {
-                userId: session.user.id,
+                userId: access.user.id,
                 filmId: film.id,
-                groupId: session.user.activeGroupId,
+                groupId: access.group.id,
             },
         });
 
