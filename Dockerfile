@@ -31,10 +31,13 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
-# Copy prisma CLI and engine for runtime migrations
-COPY --from=deps --chown=nextjs:nodejs /app/node_modules/.bin/prisma /usr/local/bin/prisma
+# Prisma CLI and engine for runtime migrations, invoked via node so module
+# resolution walks up from /app/node_modules instead of a standalone binary.
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
-COPY --from=deps --chown=nextjs:nodejs /app/node_modules/@prisma/engines ./node_modules/@prisma/engines
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+
+COPY --chown=nextjs:nodejs entrypoint.sh ./entrypoint.sh
+RUN chmod +x entrypoint.sh
 
 RUN mkdir -p public/uploads/avatars && chown -R nextjs:nodejs public/uploads
 RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
@@ -43,4 +46,4 @@ USER nextjs
 
 EXPOSE 6889
 
-CMD ["sh", "-c", "prisma migrate deploy && node server.js"]
+CMD ["./entrypoint.sh"]
