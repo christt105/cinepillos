@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Link as LinkIcon } from "lucide-react";
 import { ProposalButton } from "./ProposalButton";
+import styles from "./movie.module.css";
 
 interface PageProps {
     params: Promise<{ groupId: string; id: string }>;
@@ -52,37 +53,37 @@ export default async function MovieDetailsPage(props: PageProps) {
     const allProposals = dbFilm?.proposals || [];
 
     return (
-        <div style={{ paddingBottom: '4rem' }}>
-            <Link href={`/g/${groupId}`} className="btn btn-ghost" style={{ marginBottom: '1rem', display: 'inline-flex', alignItems: 'center' }}>
-                <ArrowLeft size={16} style={{ marginRight: 8 }} /> Volver al Inicio
+        <div className="page">
+            <Link href={`/g/${groupId}`} className={`btn btn-ghost ${styles.back}`}>
+                <ArrowLeft size={16} /> Volver al Inicio
             </Link>
 
-            <div className="glass-card" style={{ padding: '2rem', display: 'flex', gap: '2rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                <div style={{ flex: '0 0 300px', maxWidth: '100%', position: 'relative', aspectRatio: '2/3', borderRadius: '0.5rem', overflow: 'hidden' }}>
+            <div className={`glass-card ${styles.card}`}>
+                <div className={styles.poster}>
                     {movie.poster_path ? (
                         <Image
                             src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
                             alt={movie.title}
                             fill
-                            style={{ objectFit: 'cover' }}
+                            className={styles.posterImage}
                         />
                     ) : (
-                        <div style={{ width: '100%', height: '100%', background: '#333' }} />
+                        <div className="poster-placeholder">Sin poster</div>
                     )}
                 </div>
 
-                <div style={{ flex: 1, minWidth: '300px' }}>
-                    <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>{movie.title}</h1>
-                    <div style={{ display: 'flex', gap: '1rem', opacity: 0.7, marginBottom: '2rem' }}>
+                <div className={styles.details}>
+                    <h1 className={styles.title}>{movie.title}</h1>
+                    <div className={styles.meta}>
                         <span>{new Date(movie.release_date).getFullYear()}</span>
                         <span>⭐ {movie.vote_average.toFixed(1)}</span>
                     </div>
 
-                    <p style={{ lineHeight: 1.6, marginBottom: '2rem', fontSize: '1.1rem', opacity: 0.9 }}>
+                    <p className={styles.overview}>
                         {movie.overview}
                     </p>
 
-                    <div style={{ marginBottom: '2rem' }}>
+                    <div className={styles.block}>
                         <ProposalButton
                             tmdbId={movie.id}
                             title={movie.title}
@@ -93,7 +94,7 @@ export default async function MovieDetailsPage(props: PageProps) {
                         />
                     </div>
 
-                    <div style={{ marginBottom: '2rem' }}>
+                    <div className={styles.block}>
                         <a
                             href={`https://www.themoviedb.org/movie/${movie.id}`}
                             target="_blank"
@@ -105,18 +106,18 @@ export default async function MovieDetailsPage(props: PageProps) {
                     </div>
 
                     {allProposals.length > 0 && (
-                        <div style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: '0.5rem' }}>
-                            <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', fontWeight: 600 }}>Propuesta por:</h3>
-                            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                        <div className={styles.proposers}>
+                            <h3 className={styles.proposersTitle}>Propuesta por:</h3>
+                            <div className={styles.proposersList}>
                                 {allProposals.map(p => (
-                                    <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden', position: 'relative', background: '#333' }}>
+                                    <div key={p.id} className={styles.proposer}>
+                                        <div className={`avatar ${styles.proposerAvatar}`}>
                                             {p.user.image && (
                                                 <Image
                                                     src={p.user.image}
                                                     alt={p.user.name || "User"}
                                                     fill
-                                                    style={{ objectFit: 'cover' }}
+                                                    className={styles.posterImage}
                                                     unoptimized
                                                 />
                                             )}

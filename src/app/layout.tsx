@@ -21,7 +21,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <Providers>
           <Navbar />
-          <main className="container" style={{ padding: '2rem 1rem' }}>
+          <main className="container main-content">
             {children}
           </main>
         </Providers>

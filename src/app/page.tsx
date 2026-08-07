@@ -12,10 +12,10 @@ export default async function Home() {
   }
 
   return (
-    <div className="glass-card" style={{ padding: '2rem', textAlign: 'center', marginBottom: '2rem' }}>
-      <h2>¡Bienvenido!</h2>
-      <p style={{ opacity: 0.8, marginTop: '1rem' }}>No tienes ningún grupo de cine activo.</p>
-      <p style={{ opacity: 0.8 }}>Pide a un administrador que te añada a uno.</p>
+    <div className="glass-card notice">
+      <h2 className="notice-title">¡Bienvenido!</h2>
+      <p className="notice-text">No tienes ningún grupo de cine activo.</p>
+      <p className="notice-text">Pide a un administrador que te añada a uno.</p>
     </div>
   );
 }

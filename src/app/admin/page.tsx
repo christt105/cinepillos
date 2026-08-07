@@ -27,7 +27,7 @@ export default async function AdminPage() {
 
     return (
         <div>
-            <h1 style={{ fontSize: '2rem', marginBottom: '2rem' }}>Panel de Administración</h1>
+            <h1 className="page-title">Panel de Administración</h1>
             <AdminClient initialUsers={users} initialGroups={groups} />
         </div>
     );

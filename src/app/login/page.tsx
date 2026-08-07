@@ -3,6 +3,8 @@
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { Film, LogIn } from "lucide-react";
+import clsx from "clsx";
+import styles from "./login.module.css";
 
 export default function LoginPage() {
     const [identifier, setIdentifier] = useState("");
@@ -31,67 +33,55 @@ export default function LoginPage() {
     };
 
     return (
-        <div style={{
-            display: "flex", flexDirection: "column", alignItems: "center",
-            justifyContent: "center", minHeight: "100vh", background: "#141414", padding: "2rem"
-        }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "3rem" }}>
-                <Film size={36} color="hsl(260 80% 65%)" />
-                <h1 style={{ fontSize: "2rem", fontWeight: "700", color: "#fff" }}>Zorropillos</h1>
+        <div className={styles.screen}>
+            <div className={styles.brand}>
+                <Film size={36} className={styles.brandIcon} />
+                <h1 className={styles.brandName}>Zorropillos</h1>
             </div>
 
-            <div className="glass-card" style={{ padding: "2.5rem", borderRadius: "1rem", width: "100%", maxWidth: "380px" }}>
-                <h2 style={{ fontSize: "1.5rem", marginBottom: "1.5rem", textAlign: "center" }}>Entrar</h2>
+            <div className={clsx("glass-card", styles.card)}>
+                <h2 className={styles.title}>Entrar</h2>
 
-                <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <form onSubmit={handleSubmit} className={styles.form}>
                     <div>
-                        <label style={{ display: "block", marginBottom: "0.4rem", opacity: 0.7, fontSize: "0.9rem" }}>
+                        <label className="field-label" htmlFor="identifier">
                             Email o nombre
                         </label>
                         <input
+                            id="identifier"
                             type="text"
                             value={identifier}
                             onChange={e => setIdentifier(e.target.value)}
                             autoFocus
                             autoComplete="username"
-                            style={{
-                                width: "100%", padding: "0.75rem 1rem",
-                                background: "rgba(255,255,255,0.07)", border: error ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.15)",
-                                borderRadius: "0.5rem", color: "white", fontSize: "1rem", outline: "none",
-                                boxSizing: "border-box"
-                            }}
+                            className={clsx("input", error && "input-invalid")}
                         />
                     </div>
 
                     <div>
-                        <label style={{ display: "block", marginBottom: "0.4rem", opacity: 0.7, fontSize: "0.9rem" }}>
+                        <label className="field-label" htmlFor="password">
                             PIN
                         </label>
                         <input
+                            id="password"
                             type="password"
                             value={password}
                             onChange={e => setPassword(e.target.value)}
                             autoComplete="current-password"
-                            style={{
-                                width: "100%", padding: "0.75rem 1rem",
-                                background: "rgba(255,255,255,0.07)", border: error ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.15)",
-                                borderRadius: "0.5rem", color: "white", fontSize: "1rem", outline: "none",
-                                letterSpacing: "0.3rem", boxSizing: "border-box"
-                            }}
+                            className={clsx("input input-pin", error && "input-invalid")}
                         />
                     </div>
 
                     {error && (
-                        <p style={{ color: "#ef4444", fontSize: "0.85rem", textAlign: "center" }}>
+                        <p className={styles.error}>
                             Email/nombre o PIN incorrectos
                         </p>
                     )}
 
                     <button
                         type="submit"
-                        className="btn btn-primary"
+                        className={clsx("btn btn-primary", styles.submit)}
                         disabled={loading || !identifier || !password}
-                        style={{ marginTop: "0.5rem", padding: "0.75rem", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
                     >
                         <LogIn size={18} />
                         {loading ? "Entrando..." : "Entrar"}

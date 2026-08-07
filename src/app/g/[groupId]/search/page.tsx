@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import MovieCard from "@/components/MovieCard";
 import { Search } from "lucide-react";
 import { TMDBMovie } from "@/lib/tmdb";
+import styles from "./search.module.css";
 
 export default function SearchPage() {
     const { groupId } = useParams<{ groupId: string }>();
@@ -106,32 +107,23 @@ export default function SearchPage() {
     };
 
     return (
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-            <div style={{ marginBottom: '2rem', display: 'flex', gap: '1rem' }}>
-                <div style={{ position: 'relative', flexGrow: 1 }}>
-                    <Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
+        <div className="page">
+            <div className={styles.searchBar}>
+                <div className={styles.searchField}>
+                    <Search className={styles.searchIcon} />
                     <input
                         type="text"
                         placeholder="Buscar una película..."
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        style={{
-                            width: '100%',
-                            padding: '1rem 1rem 1rem 3rem',
-                            borderRadius: 'var(--radius)',
-                            border: '1px solid var(--border)',
-                            background: 'hsl(var(--input))',
-                            color: 'hsl(var(--foreground))',
-                            fontSize: '1rem',
-                            outline: 'none'
-                        }}
+                        className={`input ${styles.searchInput}`}
                     />
                 </div>
             </div>
 
-            {loading && <p style={{ textAlign: 'center', opacity: 0.5 }}>Cargando...</p>}
+            {loading && <p className={styles.status}>Cargando...</p>}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '2rem' }}>
+            <div className={styles.results}>
                 {movies.map((movie) => (
                     <MovieCard
                         key={movie.id}
@@ -144,7 +136,7 @@ export default function SearchPage() {
             </div>
 
             {!loading && movies.length === 0 && (
-                <p style={{ textAlign: 'center', opacity: 0.5, marginTop: '2rem' }}>No se encontraron películas.</p>
+                <p className={styles.emptyStatus}>No se encontraron películas.</p>
             )}
         </div>
     );

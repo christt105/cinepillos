@@ -5,6 +5,8 @@ import { Calendar as CalendarIcon, ThumbsUp, Plus, Trash2, User, Trophy } from "
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import DateTimePicker from "@/components/DateTimePicker";
+import clsx from "clsx";
+import styles from "./meetings.module.css";
 
 interface Meeting {
     id: string;
@@ -181,28 +183,25 @@ export default function MeetingsPage() {
     };
 
     if (loading) {
-        return <div className="container" style={{ paddingTop: '2rem', textAlign: 'center' }}>Cargando reuniones...</div>;
+        return <div className={clsx("container", styles.loading)}>Cargando reuniones...</div>;
     }
 
     return (
-        <div style={{ maxWidth: '1000px', margin: '0 auto', paddingBottom: '4rem' }}>
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <div className="page page-narrow">
+            <header className={styles.header}>
                 <h1>Sesiones de Cine</h1>
                 <button className="btn btn-primary" onClick={() => setShowDateModal(true)}>
-                    <Plus size={16} style={{ marginRight: '0.5rem' }} /> Programar Reunión
+                    <Plus size={16} /> Programar Reunión
                 </button>
             </header>
 
             {/* Date Selection Modal */}
             {showDateModal && (
-                <div style={{
-                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100,
-                    display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem'
-                }} onClick={() => setShowDateModal(false)}>
-                    <div className="glass-card" style={{ padding: '2rem', maxWidth: '600px', width: '100%' }} onClick={e => e.stopPropagation()}>
-                        <h3 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>Programar Sesión</h3>
+                <div className="modal-overlay" onClick={() => setShowDateModal(false)}>
+                    <div className="glass-card modal" onClick={e => e.stopPropagation()}>
+                        <h3 className={styles.modalTitle}>Programar Sesión</h3>
                         <DateTimePicker value={newMeetingDate} onChange={setNewMeetingDate} />
-                        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2rem' }}>
+                        <div className={styles.modalActions}>
                             <button className="btn btn-ghost" onClick={() => setShowDateModal(false)}>Cancelar</button>
                             <button className="btn btn-primary" onClick={handleCreateMeeting}>Programar</button>
                         </div>
@@ -210,47 +209,39 @@ export default function MeetingsPage() {
                 </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div className={styles.list}>
                 {meetings.length === 0 ? (
-                    <div className="glass-card" style={{ padding: '3rem', textAlign: 'center', opacity: 0.7 }}>
-                        <CalendarIcon size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+                    <div className={clsx("glass-card", styles.empty)}>
+                        <CalendarIcon size={48} className={styles.emptyIcon} />
                         <p>No hay sesiones programadas.</p>
-                        <button className="btn btn-ghost" onClick={() => setShowDateModal(true)} style={{ marginTop: '1rem' }}>
+                        <button className={clsx("btn btn-ghost", styles.emptyAction)} onClick={() => setShowDateModal(true)}>
                             Programar Una
                         </button>
                     </div>
                 ) : (
                     meetings.map((meeting) => (
-                        <div key={meeting.id} className="glass-card" style={{ padding: '1.5rem', borderRadius: '1rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
-                                <div style={{ background: 'hsl(var(--primary))', padding: '0.75rem', borderRadius: '0.5rem', textAlign: 'center', minWidth: '60px' }}>
-                                    <span style={{ display: 'block', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                        <div key={meeting.id} className={clsx("glass-card", styles.meeting)}>
+                            <div className={styles.meetingHeader}>
+                                <div className={styles.dateBadge}>
+                                    <span className={styles.dateDay}>
                                         {new Date(meeting.date).getDate()}
                                     </span>
-                                    <span style={{ fontSize: '0.8rem', textTransform: 'uppercase' }}>
+                                    <span className={styles.dateMonth}>
                                         {new Date(meeting.date).toLocaleString('default', { month: 'short' })}
                                     </span>
                                 </div>
-                                <div style={{ flex: 1 }}>
-                                    <h3 style={{ fontSize: '1.2rem' }}>
+                                <div className={styles.meetingInfo}>
+                                    <h3 className={styles.meetingDate}>
                                         {new Date(meeting.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                                         {' '}{new Date(meeting.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </h3>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.2rem' }}>
-                                        <span style={{
-                                            fontSize: '0.8rem',
-                                            padding: '0.2rem 0.6rem',
-                                            borderRadius: '1rem',
-                                            background: meeting.status === 'VOTING' ? 'hsl(var(--accent))' : 'hsl(var(--secondary))',
-                                            color: '#fff',
-                                            fontWeight: 'bold'
-                                        }}>
+                                    <div className={styles.meetingMeta}>
+                                        <span className={clsx(styles.status, meeting.status === 'VOTING' && styles.statusVoting)}>
                                             {meeting.status}
                                         </span>
                                         {meeting.status === 'VOTING' && (
                                             <button
-                                                className="btn btn-ghost"
-                                                style={{ fontSize: '0.8rem', padding: '0.2rem 0.5rem', opacity: 0.7 }}
+                                                className={clsx("btn btn-ghost", styles.smallAction)}
                                                 onClick={() => handleConcludeVoting(meeting.id)}
                                             >
                                                 Finalizar Votación
@@ -262,31 +253,31 @@ export default function MeetingsPage() {
 
                             {meeting.status === 'VOTING' && (
                                 <div>
-                                    <h4 style={{ marginBottom: '1rem', opacity: 0.8 }}>Películas Propuestas</h4>
-                                    <div style={{ display: 'grid', gap: '1rem' }}>
+                                    <h4 className={styles.candidatesTitle}>Películas Propuestas</h4>
+                                    <div className={styles.candidates}>
                                         {meeting.candidates.map((candidate) => (
-                                            <div key={candidate.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '0.5rem' }}>
+                                            <div key={candidate.id} className={styles.candidate}>
                                                 <div>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                        <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{candidate.film.title}</span>
-                                                        <span style={{ opacity: 0.6, fontSize: '0.9rem' }}>
+                                                    <div className={styles.candidateTitle}>
+                                                        <span className={styles.filmName}>{candidate.film.title}</span>
+                                                        <span className={styles.filmYear}>
                                                             ({candidate.film.releaseDate ? new Date(candidate.film.releaseDate).getFullYear() : 'N/A'})
                                                         </span>
                                                     </div>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem', opacity: 0.7, fontSize: '0.8rem' }}>
+                                                    <div className={styles.proposer}>
                                                         <User size={14} />
                                                         <span>Propuesta por {candidate.user?.name || "Desconocido"}</span>
                                                     </div>
                                                 </div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                                    <span style={{ fontSize: '0.9rem', opacity: 0.8 }}>{candidate.votes.length} votos</span>
+                                                <div className={styles.candidateActions}>
+                                                    <span className={styles.voteCount}>{candidate.votes.length} votos</span>
 
-                                                    <button className="btn btn-ghost" onClick={() => handleVote(meeting.id, candidate.id)} style={{ color: 'hsl(var(--primary))' }}>
+                                                    <button className={clsx("btn btn-ghost", styles.voteButton)} onClick={() => handleVote(meeting.id, candidate.id)}>
                                                         <ThumbsUp size={18} />
                                                     </button>
 
                                                     {candidate.userId === session?.user?.id && (
-                                                        <button className="btn btn-ghost" onClick={() => handleRemoveCandidate(meeting.id, candidate.id)} style={{ color: '#ef4444' }}>
+                                                        <button className={clsx("btn btn-ghost", styles.removeButton)} onClick={() => handleRemoveCandidate(meeting.id, candidate.id)}>
                                                             <Trash2 size={18} />
                                                         </button>
                                                     )}
@@ -295,29 +286,27 @@ export default function MeetingsPage() {
                                         ))}
 
                                         {showAddModal === meeting.id ? (
-                                            <div style={{ background: 'rgba(0,0,0,0.5)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                                            <div className={styles.picker}>
+                                                <div className={styles.pickerHeader}>
                                                     <h5>Elige película a proponer:</h5>
-                                                    <button onClick={() => setShowAddModal(null)} className="btn btn-ghost" style={{ padding: '0.2rem' }}>Cerrar</button>
+                                                    <button onClick={() => setShowAddModal(null)} className={clsx("btn btn-ghost", styles.smallAction)}>Cerrar</button>
                                                 </div>
-                                                <div style={{ display: 'grid', gap: '0.5rem', maxHeight: '300px', overflowY: 'auto' }}>
+                                                <div className={styles.pickerList}>
                                                     {proposedFilms.map(film => (
                                                         <button
                                                             key={film.id}
-                                                            className="btn btn-ghost"
-                                                            style={{ justifyContent: 'flex-start', textAlign: 'left' }}
+                                                            className={clsx("btn btn-ghost", styles.pickerOption)}
                                                             onClick={() => handleAddCandidate(meeting.id, film.id)}
                                                         >
                                                             <span>{film.title}</span>
                                                         </button>
                                                     ))}
-                                                    {proposedFilms.length === 0 && <p style={{ opacity: 0.5 }}>No se encontraron propuestas.</p>}
+                                                    {proposedFilms.length === 0 && <p className={styles.pickerEmpty}>No se encontraron propuestas.</p>}
                                                 </div>
                                             </div>
                                         ) : (
                                             <button
-                                                className="btn btn-ghost"
-                                                style={{ width: '100%', border: '1px dashed rgba(255,255,255,0.2)' }}
+                                                className="btn btn-ghost btn-dashed"
                                                 onClick={() => openAddModal(meeting.id)}
                                             >
                                                 + Proponer película
@@ -328,22 +317,22 @@ export default function MeetingsPage() {
                             )}
 
                             {meeting.status === 'PLANNING' && (
-                                <div style={{ textAlign: 'center', padding: '2rem', opacity: 0.6 }}>
+                                <div className={styles.pending}>
                                     <p>La votación aún no ha comenzado.</p>
                                 </div>
                             )}
 
                             {meeting.status === 'CONCLUDED' && (
-                                <div style={{ textAlign: 'center', padding: '2rem', background: 'rgba(255,255,255,0.02)', borderRadius: '1rem' }}>
-                                    <Trophy size={48} style={{ color: 'gold', marginBottom: '1rem' }} />
+                                <div className={styles.concluded}>
+                                    <Trophy size={48} className={styles.trophy} />
                                     <h3>¡Ganador Seleccionado!</h3>
                                     {(() => {
                                         const winner = meeting.candidates.find(c => c.film.id === meeting.selectedFilmId);
                                         return winner ? (
-                                            <div style={{ marginTop: '1rem' }}>
-                                                <h2 style={{ fontSize: '1.5rem', color: 'hsl(var(--primary))' }}>{winner.film.title}</h2>
-                                                <p style={{ opacity: 0.7 }}>Propuesta por {winner.user?.name || "Desconocido"}</p>
-                                                <p style={{ marginTop: '0.5rem', fontWeight: 'bold' }}>{winner.votes.length} votos</p>
+                                            <div className={styles.winner}>
+                                                <h2 className={styles.winnerTitle}>{winner.film.title}</h2>
+                                                <p className={styles.winnerProposer}>Propuesta por {winner.user?.name || "Desconocido"}</p>
+                                                <p className={styles.winnerVotes}>{winner.votes.length} votos</p>
                                             </div>
                                         ) : (
                                             <p>No hay ganador (Empate o sin votos)</p>

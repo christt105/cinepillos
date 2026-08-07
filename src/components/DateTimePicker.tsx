@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import clsx from "clsx";
+import styles from "./DateTimePicker.module.css";
 
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const DAYS_SHORT = ["L","M","X","J","V","S","D"];
@@ -14,7 +16,6 @@ function useDebouncedCallback<T extends unknown[]>(fn: (...args: T) => void, del
     return useCallback((...args: T) => {
         if (timer.current) clearTimeout(timer.current);
         timer.current = setTimeout(() => fnRef.current(...args), delay);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [delay]);
 }
 
@@ -41,42 +42,23 @@ function DrumColumn({
     }, 120);
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+        <div className={styles.column}>
             <div
                 ref={ref}
-                className="drum-col"
+                className={clsx("drum-col", styles.drum)}
                 onScroll={() => { isUserScrolling.current = true; onScrollEnd(); }}
-                style={{
-                    height: ITEM_H * 3,
-                    overflowY: "scroll",
-                    scrollSnapType: "y mandatory",
-                    WebkitOverflowScrolling: "touch" as never,
-                    scrollbarWidth: "none",
-                    position: "relative",
-                    width: 72,
-                }}
             >
-                <div style={{ height: ITEM_H }} />
+                <div className={styles.spacer} />
                 {values.map(v => (
                     <div
                         key={v}
                         onClick={() => { isUserScrolling.current = false; onSelect(v); }}
-                        style={{
-                            height: ITEM_H,
-                            scrollSnapAlign: "center",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: v === selected ? "1.6rem" : "1.1rem",
-                            fontWeight: v === selected ? 700 : 400,
-                            opacity: v === selected ? 1 : 0.35,
-                            cursor: "pointer",
-                            transition: "opacity 0.15s, font-size 0.15s",
-                            userSelect: "none",
-                        }}
+                        className={clsx(styles.item, v === selected && styles.itemSelected)}
                     >
                         {fmt(v)}
                     </div>
                 ))}
-                <div style={{ height: ITEM_H }} />
+                <div className={styles.spacer} />
             </div>
         </div>
     );
@@ -92,23 +74,15 @@ function TimePicker({ selected, onSelect }: { selected: Date; onSelect: (d: Date
     const currentMinute = Math.round(selected.getMinutes() / 5) * 5 % 60;
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
-            <p style={{ opacity: 0.5, fontSize: "0.8rem", marginBottom: "0.25rem" }}>Hora</p>
+        <div className={styles.time}>
+            <p className={styles.timeLabel}>Hora</p>
 
-            <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <div className={styles.drums}>
                 {/* Selection highlight */}
-                <div style={{
-                    position: "absolute", left: 0, right: 0,
-                    top: ITEM_H, height: ITEM_H,
-                    background: "rgba(255,255,255,0.07)",
-                    borderRadius: "0.5rem",
-                    borderTop: "1px solid rgba(255,255,255,0.15)",
-                    borderBottom: "1px solid rgba(255,255,255,0.15)",
-                    pointerEvents: "none",
-                }} />
+                <div className={styles.highlight} />
 
                 <DrumColumn values={hours} selected={selected.getHours()} onSelect={setHour} />
-                <span style={{ fontSize: "1.8rem", fontWeight: 700, opacity: 0.6, marginTop: -4 }}>:</span>
+                <span className={styles.separator}>:</span>
                 <DrumColumn values={minutes} selected={currentMinute} onSelect={setMinute} />
             </div>
         </div>
@@ -134,37 +108,31 @@ function CalendarPicker({ selected, onSelect }: { selected: Date; onSelect: (d: 
     };
 
     return (
-        <div style={{ userSelect: "none" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
-                <button className="btn btn-ghost" style={{ padding: "0.5rem" }} onClick={() => setView(new Date(year, month - 1, 1))}>
+        <div className={styles.calendar}>
+            <div className={styles.calendarHeader}>
+                <button className={clsx("btn btn-ghost", styles.calendarNav)} onClick={() => setView(new Date(year, month - 1, 1))}>
                     <ChevronLeft size={20} />
                 </button>
-                <span style={{ fontWeight: 600 }}>{MONTHS[month]} {year}</span>
-                <button className="btn btn-ghost" style={{ padding: "0.5rem" }} onClick={() => setView(new Date(year, month + 1, 1))}>
+                <span className={styles.calendarMonth}>{MONTHS[month]} {year}</span>
+                <button className={clsx("btn btn-ghost", styles.calendarNav)} onClick={() => setView(new Date(year, month + 1, 1))}>
                     <ChevronRight size={20} />
                 </button>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px" }}>
+            <div className={styles.days}>
                 {DAYS_SHORT.map(d => (
-                    <div key={d} style={{ textAlign: "center", fontSize: "0.75rem", opacity: 0.45, padding: "0.4rem 0", fontWeight: 600 }}>{d}</div>
+                    <div key={d} className={styles.dayName}>{d}</div>
                 ))}
                 {cells.map((day, i) => (
                     <div
                         key={i}
                         onClick={() => day && pick(day)}
-                        style={{
-                            minHeight: 44,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            borderRadius: "50%",
-                            cursor: day ? "pointer" : "default",
-                            fontSize: "0.95rem",
-                            background: day && isSel(day) ? "hsl(var(--primary))" : "transparent",
-                            color: day && isSel(day) ? "#fff" : day && isToday(day) ? "hsl(var(--secondary))" : "inherit",
-                            fontWeight: (day && isSel(day)) || (day && isToday(day)) ? 700 : 400,
-                            opacity: day ? 1 : 0,
-                            WebkitTapHighlightColor: "transparent",
-                        }}
+                        className={clsx(
+                            styles.day,
+                            !day && styles.dayEmpty,
+                            day && isToday(day) && styles.dayToday,
+                            day && isSel(day) && styles.daySelected,
+                        )}
                     >
                         {day}
                     </div>
@@ -181,26 +149,24 @@ export default function DateTimePicker({ value, onChange }: { value: Date; onCha
     const fmtTime = (d: Date) => `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div className={styles.picker}>
             {/* Tabs */}
-            <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
+            <div className={styles.tabs}>
                 <button
-                    className={tab === "date" ? "btn btn-primary" : "btn btn-ghost"}
+                    className={clsx("btn", styles.tab, tab === "date" ? "btn-primary" : "btn-ghost")}
                     onClick={() => setTab("date")}
-                    style={{ flex: 1, fontSize: "0.95rem" }}
                 >
                     📅 {fmtDate(value)}
                 </button>
                 <button
-                    className={tab === "time" ? "btn btn-primary" : "btn btn-ghost"}
+                    className={clsx("btn", styles.tab, tab === "time" ? "btn-primary" : "btn-ghost")}
                     onClick={() => setTab("time")}
-                    style={{ flex: 1, fontSize: "0.95rem" }}
                 >
                     🕐 {fmtTime(value)}
                 </button>
             </div>
 
-            <div style={{ minHeight: 260, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div className={styles.panel}>
                 {tab === "date"
                     ? <CalendarPicker selected={value} onSelect={onChange} />
                     : <TimePicker selected={value} onSelect={onChange} />

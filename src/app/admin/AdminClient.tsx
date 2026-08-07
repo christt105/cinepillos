@@ -2,8 +2,24 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import clsx from "clsx";
+import styles from "./admin.module.css";
 
-export default function AdminClient({ initialUsers, initialGroups }: { initialUsers: any[], initialGroups: any[] }) {
+type AdminUser = {
+    id: string;
+    name: string | null;
+    email: string | null;
+    isAdmin: boolean;
+    memberships: { group: { name: string } }[];
+};
+
+type AdminGroup = {
+    id: string;
+    name: string;
+    memberships: unknown[];
+};
+
+export default function AdminClient({ initialUsers, initialGroups }: { initialUsers: AdminUser[], initialGroups: AdminGroup[] }) {
     const router = useRouter();
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -59,41 +75,39 @@ export default function AdminClient({ initialUsers, initialGroups }: { initialUs
     };
 
     return (
-        <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
-            <div className="glass-card" style={{ padding: "2rem", flex: 1, minWidth: "300px" }}>
+        <div className={styles.columns}>
+            <div className={clsx("glass-card", styles.column)}>
                 <h2>Crear Usuario</h2>
-                <form onSubmit={handleCreateUser} style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1rem" }}>
+                <form onSubmit={handleCreateUser} className={styles.form}>
                     <input className="input" placeholder="Nombre *" value={name} onChange={e => setName(e.target.value)} required />
                     <input className="input" placeholder="Email (opcional)" value={email} onChange={e => setEmail(e.target.value)} />
                     <input className="input" type="password" placeholder="PIN *" value={password} onChange={e => setPassword(e.target.value)} required />
                     <button className="btn btn-primary" type="submit">Crear</button>
-                    {msg && <p style={{ fontSize: "0.85rem", opacity: 0.8 }}>{msg}</p>}
+                    {msg && <p className={styles.message}>{msg}</p>}
                 </form>
 
-                <h3 style={{ marginTop: "2rem" }}>Usuarios ({initialUsers.length})</h3>
-                <ul style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <h3 className={styles.listTitle}>Usuarios ({initialUsers.length})</h3>
+                <ul className={styles.list}>
                     {initialUsers.map(u => (
-                        <li key={u.id} style={{ background: "rgba(255,255,255,0.05)", padding: "1rem", borderRadius: "0.5rem" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <li key={u.id} className={styles.item}>
+                            <div className={styles.itemHeader}>
                                 <div>
                                     <strong>{u.name}</strong>
-                                    {u.email && <span style={{ opacity: 0.6, fontSize: "0.85rem" }}> ({u.email})</span>}
-                                    {u.isAdmin && <span style={{ marginLeft: "0.5rem", fontSize: "0.75rem", background: "hsl(var(--primary))", borderRadius: "0.25rem", padding: "0.1rem 0.4rem" }}>admin</span>}
+                                    {u.email && <span className={styles.email}> ({u.email})</span>}
+                                    {u.isAdmin && <span className={styles.adminTag}>admin</span>}
                                 </div>
                                 <button
-                                    className="btn btn-ghost"
-                                    style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", opacity: 0.7 }}
+                                    className={clsx("btn btn-ghost", styles.smallAction)}
                                     onClick={() => handleToggleAdmin(u.id, u.isAdmin)}
                                 >
                                     {u.isAdmin ? "Quitar admin" : "Hacer admin"}
                                 </button>
                             </div>
-                            <div style={{ marginTop: "0.5rem" }}>
+                            <div className={styles.itemRow}>
                                 <select
-                                    className="input"
+                                    className={clsx("input", styles.groupSelect)}
                                     onChange={(e) => handleAssignGroup(u.id, e.target.value)}
                                     defaultValue=""
-                                    style={{ width: "100%", fontSize: "0.85rem" }}
                                 >
                                     <option value="" disabled>Añadir a grupo...</option>
                                     {initialGroups.map(g => (
@@ -101,26 +115,26 @@ export default function AdminClient({ initialUsers, initialGroups }: { initialUs
                                     ))}
                                 </select>
                             </div>
-                            <div style={{ marginTop: "0.5rem", fontSize: "0.8rem", opacity: 0.7 }}>
-                                Grupos: {u.memberships.map((m: any) => m.group.name).join(", ") || "—"}
+                            <div className={styles.groups}>
+                                Grupos: {u.memberships.map(m => m.group.name).join(", ") || "—"}
                             </div>
                         </li>
                     ))}
                 </ul>
             </div>
 
-            <div className="glass-card" style={{ padding: "2rem", flex: 1, minWidth: "300px" }}>
+            <div className={clsx("glass-card", styles.column)}>
                 <h2>Crear Grupo</h2>
-                <form onSubmit={handleCreateGroup} style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1rem" }}>
+                <form onSubmit={handleCreateGroup} className={styles.form}>
                     <input className="input" placeholder="Nombre del grupo *" value={groupName} onChange={e => setGroupName(e.target.value)} required />
                     <button className="btn btn-primary" type="submit">Crear</button>
                 </form>
 
-                <h3 style={{ marginTop: "2rem" }}>Grupos ({initialGroups.length})</h3>
-                <ul style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                <h3 className={styles.listTitle}>Grupos ({initialGroups.length})</h3>
+                <ul className={styles.listTight}>
                     {initialGroups.map(g => (
-                        <li key={g.id} style={{ background: "rgba(255,255,255,0.05)", padding: "1rem", borderRadius: "0.5rem" }}>
-                            <strong>{g.name}</strong> <span style={{ opacity: 0.6, fontSize: "0.85rem" }}>({g.memberships.length} miembros)</span>
+                        <li key={g.id} className={styles.item}>
+                            <strong>{g.name}</strong> <span className={styles.email}>({g.memberships.length} miembros)</span>
                         </li>
                     ))}
                 </ul>

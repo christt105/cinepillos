@@ -1,0 +1,192 @@
+.section {
+    margin-bottom: var(--space-7);
+}
+
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+}
+
+.headerTitle {
+    font-size: var(--text-xl);
+    font-weight: 600;
+}
+
+.hero {
+    padding: var(--space-6);
+    border-radius: var(--radius-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+.heroContent {
+    position: relative;
+    z-index: 10;
+}
+
+.heroDate {
+    font-size: var(--text-2xl);
+    margin-bottom: var(--space-2);
+}
+
+.heroStatus {
+    opacity: 0.7;
+    margin-bottom: var(--space-6);
+}
+
+.heroSubtitle {
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-4);
+}
+
+.heroActions {
+    margin-top: var(--space-6);
+}
+
+.candidate {
+    padding: var(--space-2);
+}
+
+.winnerTitle {
+    composes: heroSubtitle;
+    color: hsl(var(--gold));
+}
+
+/* The poster keeps its 200px, the text column is allowed to shrink below its
+   min-content width so a long film title wraps instead of being clipped by the
+   hero's `overflow: hidden`. */
+.winner {
+    display: flex;
+    gap: var(--space-6);
+    flex-wrap: wrap;
+}
+
+.winnerPoster {
+    flex: 0 0 200px;
+    max-width: 100%;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-raised);
+}
+
+.winnerPosterImage {
+    object-fit: cover;
+    width: 100%;
+    height: auto;
+}
+
+.winnerBody {
+    flex: 1 1 16rem;
+    min-width: 0;
+}
+
+.winnerFilm {
+    font-size: var(--text-display);
+    font-weight: bold;
+    line-height: 1.1;
+    margin-bottom: var(--space-2);
+}
+
+.winnerOverview {
+    font-size: var(--text-md);
+    opacity: 0.8;
+    margin-bottom: var(--space-6);
+    max-width: 600px;
+}
+
+.winnerProposer {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-6);
+    background: var(--hairline);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-pill);
+    width: fit-content;
+    max-width: 100%;
+}
+
+.proposerLabel {
+    opacity: 0.7;
+}
+
+.proposerName {
+    font-weight: 600;
+}
+
+.proposerAvatar {
+    border-radius: var(--radius-round);
+}
+
+.extraProposers {
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+.heroBackdrop {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.6) 100%);
+    z-index: 1;
+}
+
+.heroArt {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.3;
+}
+
+.heroArtImage {
+    object-fit: cover;
+    filter: blur(20px);
+}
+
+.emptyCard {
+    padding: var(--space-6);
+    border-radius: var(--radius-lg);
+    text-align: center;
+}
+
+.emptyText {
+    opacity: 0.6;
+    margin-bottom: var(--space-4);
+}
+
+.emptyProposals {
+    padding: var(--space-7);
+    text-align: center;
+    border: 1px dashed var(--hairline);
+    border-radius: var(--radius-lg);
+}
+
+.emptyProposalsText {
+    opacity: 0.5;
+    margin-bottom: var(--space-4);
+}
+
+.proposerStack {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin-top: var(--space-1);
+}
+
+.stackAvatar {
+    --avatar-size: 20px;
+    border: 1px solid hsl(var(--background));
+}
+
+.stackMore {
+    font-size: var(--text-xs);
+    opacity: 0.6;
+    margin-left: var(--space-1);
+}
+
+.miniAvatar {
+    --avatar-size: 20px;
+}

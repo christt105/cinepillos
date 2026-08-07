@@ -4,6 +4,8 @@ import { useState, useRef } from "react";
 import Image from "next/image";
 import { Check, Upload, Link as LinkIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
+import clsx from "clsx";
+import styles from "./settings.module.css";
 
 interface User {
     id: string;
@@ -106,59 +108,48 @@ export default function SettingsClient({ user }: { user: User }) {
     };
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+        <div className={styles.form}>
             {/* Avatar preview */}
-            <div className="glass-card" style={{ padding: "2rem", display: "flex", alignItems: "center", gap: "1.5rem" }}>
-                <div style={{
-                    width: "80px", height: "80px", borderRadius: "50%",
-                    overflow: "hidden", flexShrink: 0, position: "relative", background: "#333"
-                }}>
+            <div className={clsx("glass-card", styles.identity)}>
+                <div className={clsx("avatar", styles.identityAvatar)}>
                     {currentImage ? (
-                        <Image src={currentImage} alt={name} fill style={{ objectFit: "cover" }} unoptimized />
+                        <Image src={currentImage} alt={name} fill className={styles.identityImage} unoptimized />
                     ) : (
-                        <div style={{
-                            width: "100%", height: "100%", display: "flex",
-                            alignItems: "center", justifyContent: "center",
-                            background: "hsl(var(--primary))", color: "#fff",
-                            fontSize: "2rem", fontWeight: "bold"
-                        }}>
+                        <div className={styles.identityFallback}>
                             {(name || "?")[0].toUpperCase()}
                         </div>
                     )}
                 </div>
                 <div>
-                    <h2 style={{ fontSize: "1.3rem" }}>{name || "Sin nombre"}</h2>
-                    {user.email && <p style={{ opacity: 0.6, fontSize: "0.9rem" }}>{user.email}</p>}
+                    <h2 className={styles.identityName}>{name || "Sin nombre"}</h2>
+                    {user.email && <p className={styles.identityEmail}>{user.email}</p>}
                 </div>
             </div>
 
             {/* Name */}
-            <div className="glass-card" style={{ padding: "1.5rem" }}>
-                <h3 style={{ marginBottom: "1rem" }}>Nombre</h3>
+            <div className={clsx("glass-card", styles.card)}>
+                <h3 className={styles.cardTitle}>Nombre</h3>
                 <input
                     className="input"
                     value={name}
                     onChange={e => setName(e.target.value)}
-                    style={{ width: "100%", padding: "0.75rem 1rem", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0.5rem", color: "white", fontSize: "1rem", outline: "none", boxSizing: "border-box" }}
                 />
             </div>
 
             {/* Image */}
-            <div className="glass-card" style={{ padding: "1.5rem" }}>
-                <h3 style={{ marginBottom: "1rem" }}>Imagen de perfil</h3>
+            <div className={clsx("glass-card", styles.card)}>
+                <h3 className={styles.cardTitle}>Imagen de perfil</h3>
 
-                <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
+                <div className={styles.modeSwitch}>
                     <button
-                        className={imageMode === "url" ? "btn btn-primary" : "btn btn-ghost"}
+                        className={clsx("btn", styles.modeButton, imageMode === "url" ? "btn-primary" : "btn-ghost")}
                         onClick={() => setImageMode("url")}
-                        style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem" }}
                     >
                         <LinkIcon size={16} /> URL
                     </button>
                     <button
-                        className={imageMode === "upload" ? "btn btn-primary" : "btn btn-ghost"}
+                        className={clsx("btn", styles.modeButton, imageMode === "upload" ? "btn-primary" : "btn-ghost")}
                         onClick={() => setImageMode("upload")}
-                        style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem" }}
                     >
                         <Upload size={16} /> Subir foto
                     </button>
@@ -167,10 +158,10 @@ export default function SettingsClient({ user }: { user: User }) {
                 {imageMode === "url" && (
                     <input
                         type="text"
+                        className="input"
                         placeholder="https://..."
                         value={imageUrl}
                         onChange={e => setImageUrl(e.target.value)}
-                        style={{ width: "100%", padding: "0.75rem 1rem", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0.5rem", color: "white", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" }}
                     />
                 )}
 
@@ -180,13 +171,12 @@ export default function SettingsClient({ user }: { user: User }) {
                             ref={fileInputRef}
                             type="file"
                             accept="image/*"
-                            style={{ display: "none" }}
+                            className={styles.hiddenInput}
                             onChange={handleFileChange}
                         />
                         <button
-                            className="btn btn-ghost"
+                            className={clsx("btn btn-ghost", styles.uploadButton)}
                             onClick={() => fileInputRef.current?.click()}
-                            style={{ width: "100%", border: "1px dashed rgba(255,255,255,0.3)", padding: "1rem" }}
                         >
                             {selectedFile ? selectedFile.name : "Elegir imagen..."}
                         </button>
@@ -195,51 +185,50 @@ export default function SettingsClient({ user }: { user: User }) {
             </div>
 
             {/* PIN change */}
-            <div className="glass-card" style={{ padding: "1.5rem" }}>
-                <h3 style={{ marginBottom: "1rem" }}>Cambiar PIN</h3>
-                <div style={{ marginBottom: "1rem" }}>
-                    <label style={{ display: "block", marginBottom: "0.4rem", opacity: 0.7, fontSize: "0.85rem" }}>PIN actual</label>
+            <div className={clsx("glass-card", styles.card)}>
+                <h3 className={styles.cardTitle}>Cambiar PIN</h3>
+                <div className={styles.field}>
+                    <label className="field-label">PIN actual</label>
                     <input
                         type="password"
                         maxLength={8}
                         value={currentPin}
                         onChange={e => setCurrentPin(e.target.value)}
                         autoComplete="current-password"
-                        style={{ width: "100%", padding: "0.75rem 1rem", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0.5rem", color: "white", fontSize: "1rem", outline: "none", letterSpacing: "0.3rem", boxSizing: "border-box" }}
+                        className="input input-pin"
                     />
                 </div>
-                <div style={{ display: "flex", gap: "1rem" }}>
-                    <div style={{ flex: 1 }}>
-                        <label style={{ display: "block", marginBottom: "0.4rem", opacity: 0.7, fontSize: "0.85rem" }}>Nuevo PIN</label>
+                <div className={styles.pinRow}>
+                    <div className={styles.pinCell}>
+                        <label className="field-label">Nuevo PIN</label>
                         <input
                             type="password"
                             maxLength={8}
                             value={newPin}
                             onChange={e => setNewPin(e.target.value)}
                             placeholder="Dejar vacío para no cambiar"
-                            style={{ width: "100%", padding: "0.75rem 1rem", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0.5rem", color: "white", fontSize: "1rem", outline: "none", letterSpacing: "0.3rem", boxSizing: "border-box" }}
+                            className="input input-pin"
                         />
                     </div>
-                    <div style={{ flex: 1 }}>
-                        <label style={{ display: "block", marginBottom: "0.4rem", opacity: 0.7, fontSize: "0.85rem" }}>Confirmar PIN</label>
+                    <div className={styles.pinCell}>
+                        <label className="field-label">Confirmar PIN</label>
                         <input
                             type="password"
                             maxLength={8}
                             value={confirmPin}
                             onChange={e => setConfirmPin(e.target.value)}
-                            style={{ width: "100%", padding: "0.75rem 1rem", background: "rgba(255,255,255,0.07)", border: newPin && confirmPin && newPin !== confirmPin ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.15)", borderRadius: "0.5rem", color: "white", fontSize: "1rem", outline: "none", letterSpacing: "0.3rem", boxSizing: "border-box" }}
+                            className={clsx("input input-pin", newPin && confirmPin && newPin !== confirmPin && "input-invalid")}
                         />
                     </div>
                 </div>
             </div>
 
-            {error && <p style={{ color: "#ef4444", fontSize: "0.9rem" }}>{error}</p>}
+            {error && <p className="form-error">{error}</p>}
 
             <button
-                className="btn btn-primary"
+                className={clsx("btn btn-primary", styles.save)}
                 onClick={handleSave}
                 disabled={saving}
-                style={{ padding: "0.85rem", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
             >
                 {saved ? <><Check size={18} /> Guardado</> : saving ? "Guardando..." : "Guardar cambios"}
             </button>

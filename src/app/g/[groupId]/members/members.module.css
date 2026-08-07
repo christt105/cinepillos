@@ -1,0 +1,39 @@
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-7);
+}
+
+.member {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+}
+
+.memberAvatar {
+    --avatar-size: 48px;
+}
+
+.memberImage {
+    object-fit: cover;
+}
+
+.memberName {
+    font-size: var(--text-lg);
+}
+
+.memberCount {
+    opacity: 0.6;
+    font-size: 0.9rem;
+}
+
+.posterYear {
+    font-size: var(--text-xs);
+    opacity: 0.6;
+}
+
+.empty {
+    opacity: 0.5;
+    padding: var(--space-4) 0;
+}

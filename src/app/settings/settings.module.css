@@ -1,0 +1,81 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.identity {
+    padding: var(--space-6);
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+}
+
+.identityAvatar {
+    --avatar-size: 80px;
+}
+
+.identityImage {
+    object-fit: cover;
+}
+
+.identityFallback {
+    composes: avatar-fallback from global;
+    font-size: var(--text-2xl);
+}
+
+.identityName {
+    font-size: 1.3rem;
+}
+
+.identityEmail {
+    opacity: 0.6;
+    font-size: 0.9rem;
+}
+
+.card {
+    padding: var(--space-5);
+}
+
+.cardTitle {
+    margin-bottom: var(--space-4);
+}
+
+.modeSwitch {
+    display: flex;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+}
+
+.modeButton {
+    flex: 1;
+}
+
+.uploadButton {
+    width: 100%;
+    border: 1px dashed var(--hairline-dashed);
+    padding: var(--space-4);
+}
+
+.hiddenInput {
+    display: none;
+}
+
+.field {
+    margin-bottom: var(--space-4);
+}
+
+.pinRow {
+    display: flex;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.pinCell {
+    flex: 1 1 10rem;
+}
+
+.save {
+    padding: 0.85rem;
+    font-size: 1rem;
+}

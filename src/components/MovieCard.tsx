@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Link as LinkIcon, Plus, Heart } from "lucide-react";
+import clsx from "clsx";
+import { Link as LinkIcon, Plus } from "lucide-react";
 import styles from "./MovieCard.module.css";
 import { TMDBMovie } from "@/lib/tmdb";
 
@@ -8,11 +9,10 @@ interface MovieCardProps {
     movie: TMDBMovie;
     onAdd?: (movie: TMDBMovie) => void;
     loading?: boolean;
-    disabled?: boolean;
     isProposed?: boolean;
 }
 
-export default function MovieCard({ movie, onAdd, loading = false, disabled = false, isProposed = false }: MovieCardProps) {
+export default function MovieCard({ movie, onAdd, loading = false, isProposed = false }: MovieCardProps) {
     const imageUrl = movie.poster_path
         ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
         : "https://via.placeholder.com/500x750?text=No+Image";
@@ -35,22 +35,14 @@ export default function MovieCard({ movie, onAdd, loading = false, disabled = fa
                     <p className={styles.overview}>{movie.overview.slice(0, 150)}...</p>
                     <div className={styles.actions}>
                         <button
-                            className={`btn ${isProposed ? 'btn-danger' : 'btn-primary'}`}
+                            className={clsx("btn", styles.toggle, isProposed ? "btn-danger" : "btn-primary")}
                             onClick={() => onAdd?.(movie)}
                             disabled={loading}
-                            style={{
-                                background: isProposed ? '#dc2626' : undefined,
-                                color: 'white',
-                                border: isProposed ? 'none' : undefined,
-                                opacity: loading ? 0.7 : 1,
-                                cursor: loading ? 'not-allowed' : 'pointer',
-                                minWidth: '100px'
-                            }}
                         >
                             {loading ? (
-                                <span style={{ marginRight: 4 }}>...</span>
+                                <span>...</span>
                             ) : (
-                                <Plus size={16} style={{ marginRight: 4, transform: isProposed ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s' }} />
+                                <Plus size={16} className={clsx(styles.toggleIcon, isProposed && styles.toggleIconOn)} />
                             )}
                             {isProposed ? "Quitar" : "Añadir"}
                         </button>

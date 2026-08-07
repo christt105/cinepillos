@@ -1,0 +1,166 @@
+.picker {
+    /* Kept in sync with ITEM_H in DateTimePicker.tsx, which needs it for the
+       scroll snapping maths. */
+    --item-height: 48px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.tabs {
+    display: flex;
+    gap: var(--space-2);
+    justify-content: center;
+}
+
+.tab {
+    flex: 1;
+    font-size: var(--text-base);
+}
+
+.panel {
+    min-height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.drum {
+    height: calc(var(--item-height) * 3);
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    position: relative;
+    width: 72px;
+}
+
+.spacer {
+    height: var(--item-height);
+}
+
+.item {
+    height: var(--item-height);
+    scroll-snap-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-md);
+    opacity: 0.35;
+    cursor: pointer;
+    transition: opacity 0.15s, font-size 0.15s;
+    user-select: none;
+}
+
+.itemSelected {
+    font-size: 1.6rem;
+    font-weight: 700;
+    opacity: 1;
+}
+
+.time {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.timeLabel {
+    opacity: 0.5;
+    font-size: 0.8rem;
+    margin-bottom: var(--space-1);
+}
+
+.drums {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.highlight {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: var(--item-height);
+    height: var(--item-height);
+    background: var(--surface-3);
+    border-radius: var(--radius-sm);
+    border-top: 1px solid var(--hairline-strong);
+    border-bottom: 1px solid var(--hairline-strong);
+    pointer-events: none;
+}
+
+.separator {
+    font-size: 1.8rem;
+    font-weight: 700;
+    opacity: 0.6;
+    margin-top: -4px;
+}
+
+.calendar {
+    user-select: none;
+}
+
+.calendarHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-3);
+}
+
+.calendarNav {
+    padding: var(--space-2);
+}
+
+.calendarMonth {
+    font-weight: 600;
+}
+
+.days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.dayName {
+    text-align: center;
+    font-size: var(--text-xs);
+    opacity: 0.45;
+    padding: 0.4rem 0;
+    font-weight: 600;
+}
+
+.day {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-round);
+    cursor: pointer;
+    font-size: var(--text-base);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.dayEmpty {
+    opacity: 0;
+    cursor: default;
+}
+
+.dayToday {
+    color: hsl(var(--secondary));
+    font-weight: 700;
+}
+
+.daySelected {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    font-weight: 700;
+}

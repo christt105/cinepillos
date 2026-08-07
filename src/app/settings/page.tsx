@@ -18,8 +18,8 @@ export default async function SettingsPage() {
     if (!user) redirect("/login");
 
     return (
-        <div style={{ maxWidth: "600px", margin: "0 auto", paddingBottom: "4rem" }}>
-            <h1 style={{ fontSize: "2rem", marginBottom: "2rem" }}>Mi perfil</h1>
+        <div className="page page-form">
+            <h1 className="page-title">Mi perfil</h1>
             <SettingsClient user={user} />
         </div>
     );

@@ -1,0 +1,88 @@
+.columns {
+    display: flex;
+    gap: var(--space-6);
+    flex-wrap: wrap;
+}
+
+.column {
+    padding: var(--space-6);
+    flex: 1 1 300px;
+    min-width: 0;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+}
+
+.message {
+    font-size: var(--text-sm);
+    opacity: 0.8;
+}
+
+.listTitle {
+    margin-top: var(--space-6);
+}
+
+.list {
+    margin-top: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    list-style: none;
+}
+
+.listTight {
+    composes: list;
+    gap: var(--space-2);
+}
+
+.item {
+    background: var(--surface-2);
+    padding: var(--space-4);
+    border-radius: var(--radius-sm);
+}
+
+.itemHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.email {
+    opacity: 0.6;
+    font-size: var(--text-sm);
+}
+
+.adminTag {
+    margin-left: var(--space-2);
+    font-size: var(--text-xs);
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-radius: 0.25rem;
+    padding: 0.1rem 0.4rem;
+}
+
+.smallAction {
+    font-size: var(--text-xs);
+    padding: 0.2rem var(--space-2);
+    opacity: 0.7;
+}
+
+.itemRow {
+    margin-top: var(--space-2);
+}
+
+.groupSelect {
+    font-size: var(--text-sm);
+}
+
+.groups {
+    margin-top: var(--space-2);
+    font-size: 0.8rem;
+    opacity: 0.7;
+}

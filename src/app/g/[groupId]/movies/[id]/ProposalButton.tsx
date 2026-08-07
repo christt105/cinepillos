@@ -74,13 +74,12 @@ export function ProposalButton({ tmdbId, title, overview, posterPath, releaseDat
         return (
             <button
                 onClick={handleRemove}
-                className="btn"
-                style={{ background: 'var(--destructive)', color: 'white', border: 'none' }}
+                className="btn btn-danger"
                 disabled={loading}
             >
                 {loading ? "Procesando..." : (
                     <>
-                        <Trash2 size={16} style={{ marginRight: 8 }} /> Quitar Propuesta
+                        <Trash2 size={16} /> Quitar Propuesta
                     </>
                 )}
             </button>
@@ -95,7 +94,7 @@ export function ProposalButton({ tmdbId, title, overview, posterPath, releaseDat
         >
             {loading ? "Procesando..." : (
                 <>
-                    <Plus size={16} style={{ marginRight: 8 }} /> Proponer Película
+                    <Plus size={16} /> Proponer Película
                 </>
             )}
         </button>

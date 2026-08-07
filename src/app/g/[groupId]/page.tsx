@@ -3,6 +3,7 @@ import { requireGroupPage } from "@/lib/group-page";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import Image from "next/image";
+import styles from "./home.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -43,22 +44,22 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
   });
 
   return (
-    <div style={{ paddingBottom: '4rem' }}>
+    <div className="page">
       {/* Hero / Next Session */}
-      <section style={{ marginBottom: '3rem' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem', color: '#e5e5e5' }}>Próxima Sesión</h2>
+      <section className={styles.section}>
+        <h2 className="section-title">Próxima Sesión</h2>
         {nextMeeting ? (
-          <div className="glass-card" style={{ padding: '2rem', borderRadius: '1rem', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'relative', zIndex: 10 }}>
-              <h3 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
+          <div className={`glass-card ${styles.hero}`}>
+            <div className={styles.heroContent}>
+              <h3 className={styles.heroDate}>
                 {new Date(nextMeeting.date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
               </h3>
-              <p style={{ opacity: 0.7, marginBottom: '2rem' }}>Estado: {nextMeeting.status}</p>
+              <p className={styles.heroStatus}>Estado: {nextMeeting.status}</p>
 
               {/* Status: VOTING */}
               {nextMeeting.status === 'VOTING' && (
                 <div>
-                  <h4 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Vota por la próxima película:</h4>
+                  <h4 className={styles.heroSubtitle}>Vota por la próxima película:</h4>
                   <div className="responsive-proposals">
                     {nextMeeting.candidates.map(candidate => {
                       // Use original proposers
@@ -66,32 +67,32 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
                       const mainProposer = proposers[0];
 
                       return (
-                        <div key={candidate.id} className="proposal-card glass-card" style={{ padding: '0.5rem' }}>
-                          <div style={{ aspectRatio: '2/3', position: 'relative', borderRadius: '0.5rem', overflow: 'hidden', marginBottom: '0.5rem' }}>
+                        <div key={candidate.id} className={`proposal-card glass-card ${styles.candidate}`}>
+                          <div className="poster">
                             <Image
                               src={`https://image.tmdb.org/t/p/w500${candidate.film.posterPath}`}
                               alt={candidate.film.title}
                               fill
-                              style={{ objectFit: 'cover' }}
+                              className="poster-image"
                             />
                           </div>
-                          <h4 style={{ fontSize: '0.9rem', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{candidate.film.title}</h4>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem', fontSize: '0.8rem', opacity: 0.8 }}>
+                          <h4 className="poster-title">{candidate.film.title}</h4>
+                          <div className="poster-meta">
                             {mainProposer?.image ? (
-                              <div style={{ width: '20px', height: '20px', borderRadius: '50%', overflow: 'hidden', position: 'relative' }}>
-                                <Image src={mainProposer.image} alt={mainProposer.name || 'User'} fill style={{ objectFit: 'cover' }} />
+                              <div className={`avatar ${styles.miniAvatar}`}>
+                                <Image src={mainProposer.image} alt={mainProposer.name || 'User'} fill className="poster-image" />
                               </div>
                             ) : (
-                              <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#555' }} />
+                              <div className={`avatar ${styles.miniAvatar}`} />
                             )}
                             <span>{mainProposer?.name || 'Unknown'}</span>
-                            {proposers.length > 1 && <span style={{ fontSize: '0.7em', opacity: 0.7 }}>+{proposers.length - 1}</span>}
+                            {proposers.length > 1 && <span className={styles.extraProposers}>+{proposers.length - 1}</span>}
                           </div>
                         </div>
                       );
                     })}
                   </div>
-                  <div style={{ marginTop: '2rem' }}>
+                  <div className={styles.heroActions}>
                     <Link href={`/g/${groupId}/meetings`} className="btn btn-primary">
                       Ir a la Sala de Votación
                     </Link>
@@ -102,7 +103,7 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
               {/* Status: CONCLUDED */}
               {nextMeeting.status === 'CONCLUDED' && (
                 <div>
-                  <h4 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#ffd700' }}>Película Ganadora</h4>
+                  <h4 className={styles.winnerTitle}>Película Ganadora</h4>
                   {(() => {
                     const winnerCandidate = nextMeeting.candidates.find(c => c.filmId === nextMeeting.selectedFilmId);
                     if (winnerCandidate) {
@@ -110,27 +111,27 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
                       const mainProposer = proposers[0];
 
                       return (
-                        <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-                          <div style={{ flex: '0 0 200px', borderRadius: '1rem', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+                        <div className={styles.winner}>
+                          <div className={styles.winnerPoster}>
                             <Image
                               src={`https://image.tmdb.org/t/p/w500${winnerCandidate.film.posterPath}`}
                               alt={winnerCandidate.film.title}
                               width={200}
                               height={300}
-                              style={{ objectFit: 'cover' }}
+                              className={styles.winnerPosterImage}
                             />
                           </div>
-                          <div style={{ flex: 1 }}>
-                            <h1 style={{ fontSize: '3rem', fontWeight: 'bold', lineHeight: 1.1, marginBottom: '0.5rem' }}>{winnerCandidate.film.title}</h1>
-                            <p style={{ fontSize: '1.1rem', opacity: 0.8, marginBottom: '2rem', maxWidth: '600px' }}>{winnerCandidate.film.overview.slice(0, 150)}...</p>
+                          <div className={styles.winnerBody}>
+                            <h1 className={styles.winnerFilm}>{winnerCandidate.film.title}</h1>
+                            <p className={styles.winnerOverview}>{winnerCandidate.film.overview.slice(0, 150)}...</p>
 
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', background: 'rgba(255,255,255,0.1)', padding: '0.5rem 1rem', borderRadius: '2rem', width: 'fit-content' }}>
-                              <span style={{ opacity: 0.7 }}>Propuesta por</span>
+                            <div className={styles.winnerProposer}>
+                              <span className={styles.proposerLabel}>Propuesta por</span>
                               {mainProposer?.image && (
-                                <Image src={mainProposer.image} alt={mainProposer.name || ''} width={24} height={24} style={{ borderRadius: '50%' }} />
+                                <Image src={mainProposer.image} alt={mainProposer.name || ''} width={24} height={24} className={styles.proposerAvatar} />
                               )}
-                              <span style={{ fontWeight: '600' }}>{mainProposer?.name}</span>
-                              {proposers.length > 1 && <span style={{ fontSize: '0.8em', opacity: 0.7 }}>+{proposers.length - 1} others</span>}
+                              <span className={styles.proposerName}>{mainProposer?.name}</span>
+                              {proposers.length > 1 && <span className={styles.extraProposers}>+{proposers.length - 1} others</span>}
                             </div>
 
                             <Link href={`/g/${groupId}/movies/${winnerCandidate.film.tmdbId}`} className="btn btn-primary">
@@ -147,44 +148,42 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
 
               {/* Status: PLANNING (Default) */}
               {(nextMeeting.status === 'PLANNING' || !nextMeeting.status) && (
-                <>
-                  <Link href={`/g/${groupId}/meetings`} className="btn btn-primary">
-                    Ir a la Sala de Votación
-                  </Link>
-                </>
+                <Link href={`/g/${groupId}/meetings`} className="btn btn-primary">
+                  Ir a la Sala de Votación
+                </Link>
               )}
 
             </div>
             {/* Background art */}
-            <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, background: 'linear-gradient(90deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 100%)', zIndex: 1 }} />
+            <div className={styles.heroBackdrop} />
             {/* Dynamic background if winner or candidates */}
             {nextMeeting.candidates.length > 0 && (
-              <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 0, opacity: 0.3 }}>
+              <div className={styles.heroArt}>
                 <Image
                   src={`https://image.tmdb.org/t/p/original${nextMeeting.status === 'CONCLUDED' && nextMeeting.selectedFilmId
                     ? nextMeeting.candidates.find(c => c.filmId === nextMeeting.selectedFilmId)?.film.posterPath
                     : nextMeeting.candidates[0]?.film.posterPath}`}
                   alt="Background"
                   fill
-                  style={{ objectFit: 'cover', filter: 'blur(20px)' }}
+                  className={styles.heroArtImage}
                 />
               </div>
             )}
           </div>
         ) : (
-          <div className="glass-card" style={{ padding: '2rem', borderRadius: '1rem', textAlign: 'center' }}>
-            <p style={{ opacity: 0.6, marginBottom: '1rem' }}>No hay sesiones programadas.</p>
+          <div className={`glass-card ${styles.emptyCard}`}>
+            <p className={styles.emptyText}>No hay sesiones programadas.</p>
             <Link href={`/g/${groupId}/meetings`} className="btn btn-ghost">Programar Una</Link>
           </div>
         )}
       </section>
 
       {/* Proposals Row */}
-      <section style={{ marginBottom: '3rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#e5e5e5' }}>Propuestas</h2>
-          <Link href={`/g/${groupId}/search`} className="btn btn-ghost" style={{ fontSize: '0.9rem' }}>
-            <Plus size={16} style={{ marginRight: 4 }} /> Añadir Nueva
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.headerTitle}>Propuestas</h2>
+          <Link href={`/g/${groupId}/search`} className="btn btn-ghost">
+            <Plus size={16} /> Añadir Nueva
           </Link>
         </div>
 
@@ -192,24 +191,24 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
           <div className="responsive-proposals">
             {filmsWithProposals.map((film) => (
               <Link key={film.id} href={`/g/${groupId}/movies/${film.tmdbId}`}>
-                <div className="movie-hover proposal-card">
-                  <div style={{ aspectRatio: '2/3', position: 'relative', borderRadius: '0.5rem', overflow: 'hidden', marginBottom: '0.5rem' }}>
+                <div className="proposal-card">
+                  <div className="poster">
                     <Image
                       src={`https://image.tmdb.org/t/p/w500${film.posterPath}`}
                       alt={film.title}
                       fill
-                      style={{ objectFit: 'cover' }}
+                      className="poster-image"
                     />
                   </div>
-                  <h4 style={{ fontSize: '0.9rem', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{film.title}</h4>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', marginTop: '0.2rem' }}>
+                  <h4 className="poster-title">{film.title}</h4>
+                  <div className={styles.proposerStack}>
                     {film.proposals.slice(0, 3).map((proposal) => (
-                      <div key={proposal.id} style={{ width: '20px', height: '20px', borderRadius: '50%', overflow: 'hidden', position: 'relative', background: '#333', border: '1px solid #000' }}>
+                      <div key={proposal.id} className={`avatar ${styles.stackAvatar}`}>
                         <Image src={proposal.user.image || ''} alt={proposal.user.name || ''} fill unoptimized />
                       </div>
                     ))}
                     {film.proposals.length > 3 && (
-                      <span style={{ fontSize: '0.7rem', opacity: 0.6, marginLeft: 4 }}>+{film.proposals.length - 3}</span>
+                      <span className={styles.stackMore}>+{film.proposals.length - 3}</span>
                     )}
                   </div>
                 </div>
@@ -217,8 +216,8 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
             ))}
           </div>
         ) : (
-          <div style={{ padding: '3rem', textAlign: 'center', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '1rem' }}>
-            <p style={{ opacity: 0.5, marginBottom: '1rem' }}>Aún no hay propuestas.</p>
+          <div className={styles.emptyProposals}>
+            <p className={styles.emptyProposalsText}>Aún no hay propuestas.</p>
             <Link href={`/g/${groupId}/search`} className="btn btn-primary">Empezar a Proponer</Link>
           </div>
         )}

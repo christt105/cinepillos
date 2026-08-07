@@ -50,3 +50,7 @@ next-env.d.ts
 *.db-wal
 *.sqlite
 *.sqlite-journal
+
+# playwright
+/test-results
+/playwright-report
