@@ -1,9 +1,10 @@
-# Club de Cine
+# CinePillos
 
-A small self-hosted web app for organising film nights with friends. A group
-keeps a shared board of film proposals, schedules a session, and votes on which
-of the proposed films to watch. One instance can host several independent
-groups; everything a group does is private to that group.
+CinePillos is a small self-hosted web app for organising film nights with
+friends. A group keeps a shared board of film proposals, schedules a session,
+and votes on which of the proposed films to watch. One instance can host
+several independent groups, and everything a group does stays private to
+that group.
 
 ![Home page](docs/screenshot-home.png)
 
@@ -23,7 +24,6 @@ Copy `.env.example` to `.env` and fill it in.
 | `TMDB_API_KEY` | TMDB v3 API key. Without it, search returns nothing instead of crashing. |
 | `NEXTAUTH_SECRET` | Signs the session cookies. `openssl rand -base64 32`. |
 | `NEXTAUTH_URL` | Public origin of the app, no trailing slash. |
-| `TUNNEL_TOKEN` | Optional, only for the Cloudflare tunnel in `docker-compose.yml`. |
 | `SEED_ADMIN_NAME`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | Read by `prisma db seed` to create the first administrator. There is no default password. |
 
 ## Running it locally
@@ -54,19 +54,26 @@ empty page.
 ## Deployment
 
 ```bash
-docker compose up -d --build
+docker compose up -d
 ```
 
-The stack is the app on port 6889 plus an optional `cloudflared` tunnel. Two
-host directories are mounted:
+This pulls the published image (`ghcr.io/christt105/cinepillos`) and starts
+the app on port 6889. To build from source instead, use
+`docker compose up -d --build`.
 
-- `data/` — holds `club.db`. This is the entire database; back it up.
-- `public/uploads/` — uploaded avatars.
+Two directories next to the compose file are mounted into the container:
+
+- `data/` holds `club.db`, which is the entire database. Back it up.
+- `public/uploads/` holds uploaded avatars.
 
 The container runs `prisma migrate deploy` on start, so a new migration is
 applied when the image restarts. `npm run backup` (`scripts/backup-db.sh`)
 writes a timestamped copy into `data/backups` and prunes copies older than a
 week.
+
+If you want to put the app behind a reverse proxy or a tunnel, add a
+`docker-compose.override.yml` (not tracked by git) instead of editing
+`docker-compose.yml`.
 
 ## Tests
 

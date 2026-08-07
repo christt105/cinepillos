@@ -38,6 +38,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local overrides (host paths, reverse proxy, tunnel, etc.)
+docker-compose.override.yml
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

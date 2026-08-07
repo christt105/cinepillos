@@ -1,8 +1,7 @@
-version: '3.9'
-
 services:
-  club-de-cine:
-    container_name: club-de-cine
+  cinepillos:
+    container_name: cinepillos
+    image: ghcr.io/christt105/cinepillos:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -14,17 +13,7 @@ services:
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
     volumes:
-      - /home/christian/Projects/club-cine/club-de-cine/data:/app/data
-      - /home/christian/Projects/club-cine/club-de-cine/public/uploads:/app/public/uploads
+      - ./data:/app/data
+      - ./public/uploads:/app/public/uploads
     ports:
       - "6889:6889"
-
-  tunnel:
-    container_name: cloudflared-tunnel
-    image: cloudflare/cloudflared:latest
-    restart: always
-    command: tunnel --no-autoupdate run
-    environment:
-      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
-    depends_on:
-      - club-de-cine

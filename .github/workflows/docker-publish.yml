@@ -38,8 +38,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            name=ghcr.io/${{ github.repository }}
-            name=docker.io/${{ secrets.DOCKER_USERNAME }}/club-de-cine
+            name=ghcr.io/christt105/cinepillos
+            name=docker.io/${{ secrets.DOCKER_USERNAME }}/cinepillos
           tags: |
             type=semver,pattern=v{{version}}
             type=semver,pattern=v{{major}}.{{minor}}

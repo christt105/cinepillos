@@ -36,7 +36,7 @@ export default function LoginPage() {
         <div className={styles.screen}>
             <div className={styles.brand}>
                 <Film size={36} className={styles.brandIcon} />
-                <h1 className={styles.brandName}>Zorropillos</h1>
+                <h1 className={styles.brandName}>CinePillos</h1>
             </div>
 
             <div className={clsx("glass-card", styles.card)}>

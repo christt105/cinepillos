@@ -7,8 +7,8 @@ import Navbar from "@/components/Navbar";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "ClubDeCine",
-  description: "Exclusive Cinema Club for Friends",
+  title: "CinePillos",
+  description: "A private film club for friends",
 };
 
 export default function RootLayout({

@@ -39,7 +39,7 @@ export default function Navbar() {
             <div className={clsx("container", styles.bar)}>
                 <Link href={groupHref("")} className={styles.logo}>
                     <Film className={styles.icon} />
-                    <span>Zorropillos</span>
+                    <span>CinePillos</span>
                 </Link>
 
                 {/* Desktop Links */}
