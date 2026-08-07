@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    env:
+      # The suite creates and destroys its own SQLite databases under .tmp;
+      # this is only the fallback for anything that reads DATABASE_URL early.
+      DATABASE_URL: file:./.tmp/ci.db
+      NEXTAUTH_SECRET: ci-secret
+      NEXTAUTH_URL: http://localhost:6889
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx prisma generate
+
+      - run: npm run lint
+
+      - run: npm test
+
+      - run: npm run build
+
+      - name: Check the tests left no database behind
+        run: |
+          if [ -n "$(ls -A .tmp 2>/dev/null)" ]; then
+            echo "::error::.tmp still contains files after the test run"
+            ls -A .tmp
+            exit 1
+          fi

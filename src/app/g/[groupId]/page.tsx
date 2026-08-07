@@ -3,6 +3,7 @@ import { requireGroupPage } from "@/lib/group-page";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import Image from "next/image";
+import { recentMeetingCutoff } from "@/lib/meetings";
 import styles from "./home.module.css";
 
 export const dynamic = "force-dynamic";
@@ -11,12 +12,10 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
   const { groupId } = await params;
   await requireGroupPage(groupId);
 
-  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
   // Fetch Next Meeting (or recently concluded)
   const nextMeeting = await prisma.meeting.findFirst({
     where: {
-      date: { gt: cutoff }, // Show meetings from last 24h to keep concluded ones visible
+      date: { gt: recentMeetingCutoff() }, // Show meetings from last 24h to keep concluded ones visible
       groupId
     },
     orderBy: { date: 'asc' },

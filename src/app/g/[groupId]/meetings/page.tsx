@@ -36,13 +36,24 @@ interface Vote {
     userId: string;
 }
 
+interface ProposedFilm {
+    id: string;
+    title: string;
+    releaseDate: string | null;
+}
+
+interface Proposal {
+    id: string;
+    film: ProposedFilm;
+}
+
 export default function MeetingsPage() {
     const { data: session } = useSession();
     const { groupId } = useParams<{ groupId: string }>();
     const [meetings, setMeetings] = useState<Meeting[]>([]);
     const [loading, setLoading] = useState(true);
     // State for candidate selection
-    const [proposedFilms, setProposedFilms] = useState<any[]>([]);
+    const [proposedFilms, setProposedFilms] = useState<ProposedFilm[]>([]);
     const [showAddModal, setShowAddModal] = useState<string | null>(null); // meetingId
     const [showDateModal, setShowDateModal] = useState(false);
     const [newMeetingDate, setNewMeetingDate] = useState<Date>(new Date());
@@ -66,10 +77,10 @@ export default function MeetingsPage() {
         if (res.ok) {
             const data = await res.json();
             // Filter unique films
-            const uniqueFilms = new Map();
-            data.forEach((p: any) => {
-                if (!uniqueFilms.has(p.film.id)) {
-                    uniqueFilms.set(p.film.id, p.film);
+            const uniqueFilms = new Map<string, ProposedFilm>();
+            (data as Proposal[]).forEach(proposal => {
+                if (!uniqueFilms.has(proposal.film.id)) {
+                    uniqueFilms.set(proposal.film.id, proposal.film);
                 }
             });
             setProposedFilms(Array.from(uniqueFilms.values()));

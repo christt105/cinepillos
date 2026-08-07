@@ -12,7 +12,11 @@ const ITEM_H = 48;
 function useDebouncedCallback<T extends unknown[]>(fn: (...args: T) => void, delay: number) {
     const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const fnRef = useRef(fn);
-    fnRef.current = fn;
+
+    useEffect(() => {
+        fnRef.current = fn;
+    });
+
     return useCallback((...args: T) => {
         if (timer.current) clearTimeout(timer.current);
         timer.current = setTimeout(() => fnRef.current(...args), delay);

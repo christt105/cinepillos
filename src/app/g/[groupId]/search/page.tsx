@@ -7,6 +7,11 @@ import { Search } from "lucide-react";
 import { TMDBMovie } from "@/lib/tmdb";
 import styles from "./search.module.css";
 
+interface Proposal {
+    id: string;
+    film: { tmdbId: number };
+}
+
 export default function SearchPage() {
     const { groupId } = useParams<{ groupId: string }>();
     const [query, setQuery] = useState("");
@@ -25,8 +30,7 @@ export default function SearchPage() {
                 if (res.ok) {
                     const data = await res.json();
                     const newMap = new Map<number, string>();
-                    // Data shape: [{ id: "...", film: { tmdbId: 123 } }]
-                    data.forEach((p: any) => newMap.set(p.film.tmdbId, p.id));
+                    (data as Proposal[]).forEach(proposal => newMap.set(proposal.film.tmdbId, proposal.id));
                     setProposalsMap(newMap);
                 }
             } catch (error) {

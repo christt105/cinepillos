@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { requireGroupMember } from "@/lib/auth-guards";
+import { recentMeetingCutoff } from "@/lib/meetings";
 import { meetingSchema } from "@/lib/schemas";
 import { parseBody } from "@/lib/validation";
 import { NextResponse } from "next/server";
@@ -16,7 +17,7 @@ export async function GET(request: Request, { params }: Context) {
         const meetings = await prisma.meeting.findMany({
             orderBy: { date: 'asc' },
             where: {
-                date: { gt: new Date(Date.now() - 86400000) },
+                date: { gt: recentMeetingCutoff() },
                 groupId: auth.group.id
             },
             include: {
