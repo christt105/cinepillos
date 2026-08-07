@@ -4,12 +4,12 @@ import { NextResponse } from "next/server";
 
 export async function DELETE(
     request: Request,
-    { params }: { params: Promise<{ id: string; candidateId: string }> }
+    { params }: { params: Promise<{ groupId: string; id: string; candidateId: string }> }
 ) {
     try {
-        const { id: meetingId, candidateId } = await params;
+        const { groupId, id: meetingId, candidateId } = await params;
 
-        const auth = await requireMeetingMember(meetingId);
+        const auth = await requireMeetingMember(meetingId, groupId);
         if (!auth.ok) return auth.response;
 
         const candidate = await prisma.meetingCandidate.findUnique({

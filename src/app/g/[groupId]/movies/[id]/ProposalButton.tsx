@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 
 interface ProposalButtonProps {
@@ -14,6 +14,7 @@ interface ProposalButtonProps {
 }
 
 export function ProposalButton({ tmdbId, title, overview, posterPath, releaseDate, initialProposalId }: ProposalButtonProps) {
+    const { groupId } = useParams<{ groupId: string }>();
     const [proposalId, setProposalId] = useState<string | null>(initialProposalId);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -22,7 +23,7 @@ export function ProposalButton({ tmdbId, title, overview, posterPath, releaseDat
         e.preventDefault();
         setLoading(true);
         try {
-            const res = await fetch("/api/proposals", {
+            const res = await fetch(`/api/groups/${groupId}/proposals`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -53,7 +54,7 @@ export function ProposalButton({ tmdbId, title, overview, posterPath, releaseDat
 
         setLoading(true);
         try {
-            const res = await fetch(`/api/proposals/${proposalId}`, {
+            const res = await fetch(`/api/groups/${groupId}/proposals/${proposalId}`, {
                 method: "DELETE",
             });
 

@@ -23,62 +23,76 @@ vi.mock("@/lib/auth", () => ({
     authOptions: {},
 }));
 
-import { GET, POST } from "@/app/api/meetings/route";
+import { GET, POST } from "@/app/api/groups/[groupId]/meetings/route";
 import { getServerSession } from "next-auth";
-import { group, memberUser, outsiderUser } from "../../helpers/fixtures";
+import { GROUP_ID, group, memberUser, outsiderUser } from "../../helpers/fixtures";
 
 const FUTURE_DATE = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
+const makeGet = (groupId: string) =>
+    [
+        new Request(`http://localhost/api/groups/${groupId}/meetings`),
+        { params: Promise.resolve({ groupId }) } as never,
+    ] as const;
+
+const makePost = (groupId: string, body: object) =>
+    [
+        new Request(`http://localhost/api/groups/${groupId}/meetings`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        }),
+        { params: Promise.resolve({ groupId }) } as never,
+    ] as const;
+
 const asMember = () => {
-    vi.mocked(getServerSession).mockResolvedValue({
-        user: { id: "u1", activeGroupId: "g1" },
-    } as never);
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1" } } as never);
     mockUserFindUnique.mockResolvedValue(memberUser());
     mockGroupFindUnique.mockResolvedValue(group);
 };
 
 const asOutsider = () => {
-    vi.mocked(getServerSession).mockResolvedValue({
-        user: { id: "u2", activeGroupId: "g1" },
-    } as never);
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u2" } } as never);
     mockUserFindUnique.mockResolvedValue(outsiderUser());
     mockGroupFindUnique.mockResolvedValue(group);
 };
 
-describe("GET /api/meetings", () => {
+describe("GET /api/groups/[groupId]/meetings", () => {
     beforeEach(() => vi.clearAllMocks());
 
-    it("returns meetings for the active group", async () => {
+    it("returns the meetings of the group in the URL", async () => {
         asMember();
 
-        const fakeMeetings = [{ id: "m1", date: new Date().toISOString(), status: "VOTING", candidates: [] }];
-        mockFindMany.mockResolvedValue(fakeMeetings);
+        mockFindMany.mockResolvedValue([{ id: "m1", date: new Date().toISOString(), status: "VOTING", candidates: [] }]);
 
-        const res = await GET();
+        const [req, ctx] = makeGet(GROUP_ID);
+        const res = await GET(req, ctx);
 
         expect(res.status).toBe(200);
         const data = await res.json();
         expect(data).toHaveLength(1);
-        expect(data[0].id).toBe("m1");
+        expect(mockFindMany).toHaveBeenCalledWith(
+            expect.objectContaining({ where: expect.objectContaining({ groupId: GROUP_ID }) })
+        );
     });
 
-    it("returns empty array when user has no active group", async () => {
-        vi.mocked(getServerSession).mockResolvedValue({
-            user: { id: "u1", activeGroupId: null },
-        } as never);
+    it("returns 403 when the user is not a member of that group", async () => {
+        asOutsider();
 
-        const res = await GET();
+        const [req, ctx] = makeGet(GROUP_ID);
+        const res = await GET(req, ctx);
 
-        expect(res.status).toBe(200);
-        const data = await res.json();
-        expect(data).toEqual([]);
+        expect(res.status).toBe(403);
         expect(mockFindMany).not.toHaveBeenCalled();
     });
 
-    it("returns 403 when the user is not a member of the active group", async () => {
-        asOutsider();
+    it("returns 403 for a group that does not exist", async () => {
+        vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1" } } as never);
+        mockUserFindUnique.mockResolvedValue(memberUser());
+        mockGroupFindUnique.mockResolvedValue(null);
 
-        const res = await GET();
+        const [req, ctx] = makeGet("ghost");
+        const res = await GET(req, ctx);
 
         expect(res.status).toBe(403);
         expect(mockFindMany).not.toHaveBeenCalled();
@@ -87,43 +101,36 @@ describe("GET /api/meetings", () => {
     it("returns 401 when not authenticated", async () => {
         vi.mocked(getServerSession).mockResolvedValue(null);
 
-        const res = await GET();
+        const [req, ctx] = makeGet(GROUP_ID);
+        const res = await GET(req, ctx);
 
         expect(res.status).toBe(401);
         expect(mockFindMany).not.toHaveBeenCalled();
     });
 });
 
-describe("POST /api/meetings", () => {
-    const makeRequest = (body: object) =>
-        new Request("http://localhost/api/meetings", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-        });
-
+describe("POST /api/groups/[groupId]/meetings", () => {
     beforeEach(() => vi.clearAllMocks());
 
-    it("creates a meeting for the active group", async () => {
+    it("creates a meeting in the group from the URL", async () => {
         asMember();
 
-        const date = FUTURE_DATE;
-        mockCreate.mockResolvedValue({ id: "m2", date, status: "VOTING", groupId: "g1" });
+        mockCreate.mockResolvedValue({ id: "m2", date: FUTURE_DATE, status: "VOTING", groupId: GROUP_ID });
 
-        const res = await POST(makeRequest({ date }));
+        const [req, ctx] = makePost(GROUP_ID, { date: FUTURE_DATE });
+        const res = await POST(req, ctx);
 
         expect(res.status).toBe(200);
-        const data = await res.json();
-        expect(data.id).toBe("m2");
         expect(mockCreate).toHaveBeenCalledWith(
-            expect.objectContaining({ data: expect.objectContaining({ groupId: "g1", status: "VOTING" }) })
+            expect.objectContaining({ data: expect.objectContaining({ groupId: GROUP_ID, status: "VOTING" }) })
         );
     });
 
-    it("returns 403 when the user is not a member of the active group", async () => {
+    it("returns 403 when the user is not a member of that group", async () => {
         asOutsider();
 
-        const res = await POST(makeRequest({ date: FUTURE_DATE }));
+        const [req, ctx] = makePost(GROUP_ID, { date: FUTURE_DATE });
+        const res = await POST(req, ctx);
 
         expect(res.status).toBe(403);
         expect(mockCreate).not.toHaveBeenCalled();
@@ -132,7 +139,8 @@ describe("POST /api/meetings", () => {
     it("returns 400 when date is missing", async () => {
         asMember();
 
-        const res = await POST(makeRequest({}));
+        const [req, ctx] = makePost(GROUP_ID, {});
+        const res = await POST(req, ctx);
 
         expect(res.status).toBe(400);
     });
@@ -140,7 +148,8 @@ describe("POST /api/meetings", () => {
     it("returns 400 when the date is not a real date", async () => {
         asMember();
 
-        const res = await POST(makeRequest({ date: "next friday" }));
+        const [req, ctx] = makePost(GROUP_ID, { date: "next friday" });
+        const res = await POST(req, ctx);
 
         expect(res.status).toBe(400);
         expect(mockCreate).not.toHaveBeenCalled();
@@ -149,26 +158,18 @@ describe("POST /api/meetings", () => {
     it("returns 400 when the date is in the past", async () => {
         asMember();
 
-        const res = await POST(makeRequest({ date: "2020-01-01T20:00:00Z" }));
+        const [req, ctx] = makePost(GROUP_ID, { date: "2020-01-01T20:00:00Z" });
+        const res = await POST(req, ctx);
 
         expect(res.status).toBe(400);
         expect(mockCreate).not.toHaveBeenCalled();
     });
 
-    it("returns 400 when user has no active group", async () => {
-        vi.mocked(getServerSession).mockResolvedValue({
-            user: { id: "u1", activeGroupId: null },
-        } as never);
-
-        const res = await POST(makeRequest({ date: FUTURE_DATE }));
-
-        expect(res.status).toBe(400);
-    });
-
     it("returns 401 when not authenticated", async () => {
         vi.mocked(getServerSession).mockResolvedValue(null);
 
-        const res = await POST(makeRequest({ date: FUTURE_DATE }));
+        const [req, ctx] = makePost(GROUP_ID, { date: FUTURE_DATE });
+        const res = await POST(req, ctx);
 
         expect(res.status).toBe(401);
     });

@@ -1,26 +1,23 @@
 import { prisma } from "@/lib/prisma";
-import { requireGroupMember, requireSession } from "@/lib/auth-guards";
+import { requireGroupMember } from "@/lib/auth-guards";
 import { meetingSchema } from "@/lib/schemas";
 import { parseBody } from "@/lib/validation";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+type Context = { params: Promise<{ groupId: string }> };
+
+export async function GET(request: Request, { params }: Context) {
     try {
-        const auth = await requireSession();
+        const { groupId } = await params;
+
+        const auth = await requireGroupMember(groupId);
         if (!auth.ok) return auth.response;
-
-        if (!auth.session.user.activeGroupId) {
-            return NextResponse.json([]);
-        }
-
-        const access = await requireGroupMember(auth.session.user.activeGroupId, auth.session);
-        if (!access.ok) return access.response;
 
         const meetings = await prisma.meeting.findMany({
             orderBy: { date: 'asc' },
             where: {
                 date: { gt: new Date(Date.now() - 86400000) },
-                groupId: access.group.id
+                groupId: auth.group.id
             },
             include: {
                 candidates: {
@@ -42,26 +39,21 @@ export async function GET() {
     }
 }
 
-export async function POST(request: Request) {
-    const auth = await requireSession();
+export async function POST(request: Request, { params }: Context) {
+    const { groupId } = await params;
+
+    const auth = await requireGroupMember(groupId);
     if (!auth.ok) return auth.response;
 
     const body = await parseBody(request, meetingSchema);
     if (!body.ok) return body.response;
 
     try {
-        if (!auth.session.user.activeGroupId) {
-            return NextResponse.json({ error: "No active group selected" }, { status: 400 });
-        }
-
-        const access = await requireGroupMember(auth.session.user.activeGroupId, auth.session);
-        if (!access.ok) return access.response;
-
         const meeting = await prisma.meeting.create({
             data: {
                 date: body.data.date,
                 status: "VOTING",
-                groupId: access.group.id,
+                groupId: auth.group.id,
             }
         });
 

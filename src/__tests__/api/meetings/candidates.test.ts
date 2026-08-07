@@ -27,28 +27,28 @@ vi.mock("@/lib/auth", () => ({
     authOptions: {},
 }));
 
-import { POST } from "@/app/api/meetings/[id]/candidates/route";
+import { POST } from "@/app/api/groups/[groupId]/meetings/[id]/candidates/route";
 import { getServerSession } from "next-auth";
-import { group, memberUser, outsiderUser } from "../../helpers/fixtures";
+import { GROUP_ID, OTHER_GROUP_ID, group, memberUser, outsiderUser } from "../../helpers/fixtures";
 
-const makeRequest = (meetingId: string, body: object) =>
+const makeRequest = (groupId: string, meetingId: string, body: object) =>
     [
-        new Request(`http://localhost/api/meetings/${meetingId}/candidates`, {
+        new Request(`http://localhost/api/groups/${groupId}/meetings/${meetingId}/candidates`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
         }),
-        { params: Promise.resolve({ id: meetingId }) } as never,
+        { params: Promise.resolve({ groupId, id: meetingId }) } as never,
     ] as const;
 
-const asMember = () => {
+const asMember = (meetingGroupId = GROUP_ID) => {
     vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1" } } as never);
-    mockMeetingFindUnique.mockResolvedValue({ id: "m1", groupId: "g1", status: "VOTING" });
+    mockMeetingFindUnique.mockResolvedValue({ id: "m1", groupId: meetingGroupId, status: "VOTING" });
     mockUserFindUnique.mockResolvedValue(memberUser());
     mockGroupFindUnique.mockResolvedValue(group);
 };
 
-describe("POST /api/meetings/[id]/candidates", () => {
+describe("POST /api/groups/[groupId]/meetings/[id]/candidates", () => {
     beforeEach(() => vi.clearAllMocks());
 
     it("adds a candidate when film is not yet in meeting and user has not proposed", async () => {
@@ -58,11 +58,34 @@ describe("POST /api/meetings/[id]/candidates", () => {
         mockFindFirst.mockResolvedValue(null);
         mockCreate.mockResolvedValue({ id: "c1", meetingId: "m1", filmId: "film1", userId: "u1", film: {}, votes: [], user: {} });
 
-        const [req, ctx] = makeRequest("m1", { filmId: "film1" });
+        const [req, ctx] = makeRequest(GROUP_ID, "m1", { filmId: "film1" });
         const res = await POST(req, ctx);
 
         expect(res.status).toBe(200);
         expect(mockCreate).toHaveBeenCalledOnce();
+    });
+
+    it("returns 403 when the meeting belongs to another group", async () => {
+        asMember(OTHER_GROUP_ID);
+
+        const [req, ctx] = makeRequest(GROUP_ID, "m1", { filmId: "film1" });
+        const res = await POST(req, ctx);
+
+        expect(res.status).toBe(403);
+        expect(mockCreate).not.toHaveBeenCalled();
+    });
+
+    it("returns 403 when the user is not a member of the meeting's group", async () => {
+        vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u2" } } as never);
+        mockMeetingFindUnique.mockResolvedValue({ id: "m1", groupId: GROUP_ID, status: "VOTING" });
+        mockUserFindUnique.mockResolvedValue(outsiderUser());
+        mockGroupFindUnique.mockResolvedValue(group);
+
+        const [req, ctx] = makeRequest(GROUP_ID, "m1", { filmId: "film1" });
+        const res = await POST(req, ctx);
+
+        expect(res.status).toBe(403);
+        expect(mockCreate).not.toHaveBeenCalled();
     });
 
     it("returns 400 when film is already proposed for this meeting", async () => {
@@ -70,7 +93,7 @@ describe("POST /api/meetings/[id]/candidates", () => {
 
         mockFindUnique.mockResolvedValue({ id: "existing-candidate" });
 
-        const [req, ctx] = makeRequest("m1", { filmId: "film1" });
+        const [req, ctx] = makeRequest(GROUP_ID, "m1", { filmId: "film1" });
         const res = await POST(req, ctx);
 
         expect(res.status).toBe(400);
@@ -85,7 +108,7 @@ describe("POST /api/meetings/[id]/candidates", () => {
         mockFindUnique.mockResolvedValue(null);
         mockFindFirst.mockResolvedValue({ id: "user-candidate" });
 
-        const [req, ctx] = makeRequest("m1", { filmId: "film2" });
+        const [req, ctx] = makeRequest(GROUP_ID, "m1", { filmId: "film2" });
         const res = await POST(req, ctx);
 
         expect(res.status).toBe(400);
@@ -96,30 +119,17 @@ describe("POST /api/meetings/[id]/candidates", () => {
     it("returns 400 when filmId is missing", async () => {
         asMember();
 
-        const [req, ctx] = makeRequest("m1", {});
+        const [req, ctx] = makeRequest(GROUP_ID, "m1", {});
         const res = await POST(req, ctx);
 
         expect(res.status).toBe(400);
-    });
-
-    it("returns 403 when the user is not a member of the meeting's group", async () => {
-        vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u2" } } as never);
-        mockMeetingFindUnique.mockResolvedValue({ id: "m1", groupId: "g1", status: "VOTING" });
-        mockUserFindUnique.mockResolvedValue(outsiderUser());
-        mockGroupFindUnique.mockResolvedValue(group);
-
-        const [req, ctx] = makeRequest("m1", { filmId: "film1" });
-        const res = await POST(req, ctx);
-
-        expect(res.status).toBe(403);
-        expect(mockCreate).not.toHaveBeenCalled();
     });
 
     it("returns 404 when the meeting does not exist", async () => {
         vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1" } } as never);
         mockMeetingFindUnique.mockResolvedValue(null);
 
-        const [req, ctx] = makeRequest("nonexistent", { filmId: "film1" });
+        const [req, ctx] = makeRequest(GROUP_ID, "nonexistent", { filmId: "film1" });
         const res = await POST(req, ctx);
 
         expect(res.status).toBe(404);
@@ -129,7 +139,7 @@ describe("POST /api/meetings/[id]/candidates", () => {
     it("returns 401 when not authenticated", async () => {
         vi.mocked(getServerSession).mockResolvedValue(null);
 
-        const [req, ctx] = makeRequest("m1", { filmId: "film1" });
+        const [req, ctx] = makeRequest(GROUP_ID, "m1", { filmId: "film1" });
         const res = await POST(req, ctx);
 
         expect(res.status).toBe(401);

@@ -23,54 +23,62 @@ vi.mock("@/lib/auth", () => ({
     authOptions: {},
 }));
 
-import { DELETE } from "@/app/api/proposals/[id]/route";
+import { DELETE } from "@/app/api/groups/[groupId]/proposals/[id]/route";
 import { getServerSession } from "next-auth";
-import { group, memberUser, outsiderUser } from "../helpers/fixtures";
+import { GROUP_ID, OTHER_GROUP_ID, group, memberUser, outsiderUser } from "../helpers/fixtures";
 
-const makeRequest = (id: string) =>
+const makeRequest = (id: string, groupId = GROUP_ID) =>
     [
-        new Request(`http://localhost/api/proposals/${id}`, { method: "DELETE" }),
-        { params: Promise.resolve({ id }) },
+        new Request(`http://localhost/api/groups/${groupId}/proposals/${id}`, { method: "DELETE" }),
+        { params: Promise.resolve({ groupId, id }) } as never,
     ] as const;
 
-describe("DELETE /api/proposals/[id]", () => {
+describe("DELETE /api/groups/[groupId]/proposals/[id]", () => {
     beforeEach(() => vi.clearAllMocks());
 
     it("deletes the proposal when the owner requests it", async () => {
         vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1" } } as never);
-        mockProposalFindUnique.mockResolvedValue({ id: "p1", userId: "u1", groupId: "g1" });
         mockUserFindUnique.mockResolvedValue(memberUser());
         mockGroupFindUnique.mockResolvedValue(group);
+        mockProposalFindUnique.mockResolvedValue({ id: "p1", userId: "u1", groupId: GROUP_ID });
         mockProposalDelete.mockResolvedValue({ id: "p1" });
 
-        const [req, ctx] = makeRequest("p1");
-        const res = await DELETE(req, ctx);
+        const res = await DELETE(...makeRequest("p1"));
 
         expect(res.status).toBe(204);
         expect(mockProposalDelete).toHaveBeenCalledOnce();
     });
 
-    it("returns 403 when the proposal belongs to another group", async () => {
+    it("returns 403 when the user is not a member of that group", async () => {
         vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u2" } } as never);
-        mockProposalFindUnique.mockResolvedValue({ id: "p1", userId: "u2", groupId: "g1" });
         mockUserFindUnique.mockResolvedValue(outsiderUser());
         mockGroupFindUnique.mockResolvedValue(group);
 
-        const [req, ctx] = makeRequest("p1");
-        const res = await DELETE(req, ctx);
+        const res = await DELETE(...makeRequest("p1"));
 
         expect(res.status).toBe(403);
         expect(mockProposalDelete).not.toHaveBeenCalled();
     });
 
-    it("returns 403 when a group member deletes someone else's proposal", async () => {
+    it("returns 404 when the proposal belongs to another group", async () => {
         vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1" } } as never);
-        mockProposalFindUnique.mockResolvedValue({ id: "p1", userId: "u9", groupId: "g1" });
         mockUserFindUnique.mockResolvedValue(memberUser());
         mockGroupFindUnique.mockResolvedValue(group);
+        mockProposalFindUnique.mockResolvedValue({ id: "p1", userId: "u1", groupId: OTHER_GROUP_ID });
 
-        const [req, ctx] = makeRequest("p1");
-        const res = await DELETE(req, ctx);
+        const res = await DELETE(...makeRequest("p1"));
+
+        expect(res.status).toBe(404);
+        expect(mockProposalDelete).not.toHaveBeenCalled();
+    });
+
+    it("returns 403 when a group member deletes someone else's proposal", async () => {
+        vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1" } } as never);
+        mockUserFindUnique.mockResolvedValue(memberUser());
+        mockGroupFindUnique.mockResolvedValue(group);
+        mockProposalFindUnique.mockResolvedValue({ id: "p1", userId: "u9", groupId: GROUP_ID });
+
+        const res = await DELETE(...makeRequest("p1"));
 
         expect(res.status).toBe(403);
         expect(mockProposalDelete).not.toHaveBeenCalled();
@@ -78,10 +86,11 @@ describe("DELETE /api/proposals/[id]", () => {
 
     it("returns 404 when the proposal does not exist", async () => {
         vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1" } } as never);
+        mockUserFindUnique.mockResolvedValue(memberUser());
+        mockGroupFindUnique.mockResolvedValue(group);
         mockProposalFindUnique.mockResolvedValue(null);
 
-        const [req, ctx] = makeRequest("ghost");
-        const res = await DELETE(req, ctx);
+        const res = await DELETE(...makeRequest("ghost"));
 
         expect(res.status).toBe(404);
     });
@@ -89,8 +98,7 @@ describe("DELETE /api/proposals/[id]", () => {
     it("returns 401 when not authenticated", async () => {
         vi.mocked(getServerSession).mockResolvedValue(null);
 
-        const [req, ctx] = makeRequest("p1");
-        const res = await DELETE(req, ctx);
+        const res = await DELETE(...makeRequest("p1"));
 
         expect(res.status).toBe(401);
     });

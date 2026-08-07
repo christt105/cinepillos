@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Film, LogOut, LogIn, Menu, X, Settings } from "lucide-react";
 import clsx from "clsx";
@@ -9,12 +10,42 @@ import { useState } from "react";
 
 export default function Navbar() {
     const { data: session } = useSession();
+    const params = useParams<{ groupId?: string }>();
+    const router = useRouter();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    const groups = session?.user?.groups ?? [];
+    const currentGroupId = params?.groupId ?? session?.user?.activeGroupId ?? groups[0]?.id ?? null;
+
+    const groupHref = (path: string) => (currentGroupId ? `/g/${currentGroupId}${path}` : "/");
+
+    const groupSelector = (extraStyle: React.CSSProperties) => (
+        <select
+            value={currentGroupId ?? ""}
+            onChange={(e) => router.push(`/g/${e.target.value}`)}
+            style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#aaa',
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+                outline: 'none',
+                ...extraStyle
+            }}
+        >
+            <option value="" disabled>Selecciona Grupo</option>
+            {groups.map(g => (
+                <option key={g.id} value={g.id} style={{ color: 'black' }}>
+                    {g.name}
+                </option>
+            ))}
+        </select>
+    );
 
     return (
         <nav className={clsx(styles.navbar, "glass")}>
             <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '100%' }}>
-                <Link href="/" className={styles.logo}>
+                <Link href={groupHref("")} className={styles.logo}>
                     <Film className={styles.icon} />
                     <span>Zorropillos</span>
                 </Link>
@@ -23,48 +54,21 @@ export default function Navbar() {
                 <div className={styles.links}>
                     {session ? (
                         <>
-                            <Link href="/search" className={styles.link}>
+                            <Link href={groupHref("/search")} className={styles.link}>
                                 Buscar
                             </Link>
-                            <Link href="/meetings" className={styles.link}>
+                            <Link href={groupHref("/meetings")} className={styles.link}>
                                 Reuniones
                             </Link>
-                            {session.user?.activeGroupId && (
-                                <Link href={`/groups/${session.user.activeGroupId}`} className={styles.link}>
+                            {currentGroupId && (
+                                <Link href={groupHref("/members")} className={styles.link}>
                                     Mi Grupo
                                 </Link>
                             )}
                             <div className={styles.userMenu}>
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginRight: '1rem' }}>
                                     <span className={styles.username}>{session.user?.name || session.user?.email}</span>
-                                    {session.user?.groups?.length > 0 && (
-                                        <select
-                                            value={session.user.activeGroupId || ""}
-                                            onChange={async (e) => {
-                                                await fetch('/api/users/activeGroup', {
-                                                    method: 'POST',
-                                                    headers: { 'Content-Type': 'application/json' },
-                                                    body: JSON.stringify({ groupId: e.target.value })
-                                                });
-                                                window.location.reload();
-                                            }}
-                                            style={{
-                                                background: 'transparent',
-                                                border: 'none',
-                                                color: '#aaa',
-                                                fontSize: '0.8rem',
-                                                cursor: 'pointer',
-                                                outline: 'none'
-                                            }}
-                                        >
-                                            <option value="" disabled>Selecciona Grupo</option>
-                                            {session.user.groups.map(g => (
-                                                <option key={g.id} value={g.id} style={{ color: 'black' }}>
-                                                    {g.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    )}
+                                    {groups.length > 0 && groupSelector({})}
                                     {session.user?.isAdmin && (
                                         <Link href="/admin" className={styles.link} style={{ fontSize: '0.8rem', padding: 0, marginTop: '4px', opacity: 0.8 }}>
                                             Administración
@@ -101,22 +105,22 @@ export default function Navbar() {
                         {session ? (
                             <>
                                 <Link
-                                    href="/search"
+                                    href={groupHref("/search")}
                                     className={styles.link}
                                     onClick={() => setIsMenuOpen(false)}
                                 >
                                     Buscar
                                 </Link>
                                 <Link
-                                    href="/meetings"
+                                    href={groupHref("/meetings")}
                                     className={styles.link}
                                     onClick={() => setIsMenuOpen(false)}
                                 >
                                     Reuniones
                                 </Link>
-                                {session.user?.activeGroupId && (
+                                {currentGroupId && (
                                     <Link
-                                        href={`/groups/${session.user.activeGroupId}`}
+                                        href={groupHref("/members")}
                                         className={styles.link}
                                         onClick={() => setIsMenuOpen(false)}
                                     >
@@ -126,36 +130,7 @@ export default function Navbar() {
                                 <div className={styles.userMenu}>
                                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginRight: '1rem' }}>
                                         <span className={styles.username}>{session.user?.name || session.user?.email}</span>
-                                        {session.user?.groups?.length > 0 && (
-                                            <select
-                                                value={session.user.activeGroupId || ""}
-                                                onChange={async (e) => {
-                                                    await fetch('/api/users/activeGroup', {
-                                                        method: 'POST',
-                                                        headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({ groupId: e.target.value })
-                                                    });
-                                                    window.location.reload();
-                                                }}
-                                                style={{
-                                                    background: 'transparent',
-                                                    border: 'none',
-                                                    color: '#aaa',
-                                                    fontSize: '0.8rem',
-                                                    cursor: 'pointer',
-                                                    outline: 'none',
-                                                    padding: 0,
-                                                    marginTop: '4px'
-                                                }}
-                                            >
-                                                <option value="" disabled>Selecciona Grupo</option>
-                                                {session.user.groups.map(g => (
-                                                    <option key={g.id} value={g.id} style={{ color: 'black' }}>
-                                                        {g.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        )}
+                                        {groups.length > 0 && groupSelector({ padding: 0, marginTop: '4px' })}
                                         {session.user?.isAdmin && (
                                             <Link href="/admin" className={styles.link} style={{ fontSize: '0.8rem', padding: 0, marginTop: '4px', opacity: 0.8 }}>
                                                 Administración

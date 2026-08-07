@@ -25,14 +25,14 @@ vi.mock("@/lib/auth", () => ({
     authOptions: {},
 }));
 
-import { PATCH } from "@/app/api/meetings/[id]/conclude/route";
+import { PATCH } from "@/app/api/groups/[groupId]/meetings/[id]/conclude/route";
 import { getServerSession } from "next-auth";
-import { group, memberUser, outsiderUser } from "../../helpers/fixtures";
+import { GROUP_ID, OTHER_GROUP_ID, group, memberUser, outsiderUser } from "../../helpers/fixtures";
 
-const makeRequest = (meetingId: string) =>
+const makeRequest = (meetingId: string, groupId = GROUP_ID) =>
     [
-        new Request(`http://localhost/api/meetings/${meetingId}/conclude`, { method: "PATCH" }),
-        { params: Promise.resolve({ id: meetingId }) } as never,
+        new Request(`http://localhost/api/groups/${groupId}/meetings/${meetingId}/conclude`, { method: "PATCH" }),
+        { params: Promise.resolve({ groupId, id: meetingId }) } as never,
     ] as const;
 
 const asRole = (role: string) => {
@@ -41,7 +41,7 @@ const asRole = (role: string) => {
     mockGroupFindUnique.mockResolvedValue(group);
 };
 
-describe("PATCH /api/meetings/[id]/conclude", () => {
+describe("PATCH /api/groups/[groupId]/meetings/[id]/conclude", () => {
     beforeEach(() => vi.clearAllMocks());
 
     it("concludes a meeting and selects the film with most votes as winner", async () => {
@@ -138,5 +138,17 @@ describe("PATCH /api/meetings/[id]/conclude", () => {
         const res = await PATCH(req, ctx);
 
         expect(res.status).toBe(401);
+    });
+
+    it("returns 403 when the meeting belongs to another group", async () => {
+        asRole("OWNER");
+
+        mockFindUnique.mockResolvedValue({ id: "m1", status: "VOTING", groupId: OTHER_GROUP_ID });
+
+        const [req, ctx] = makeRequest("m1");
+        const res = await PATCH(req, ctx);
+
+        expect(res.status).toBe(403);
+        expect(mockUpdate).not.toHaveBeenCalled();
     });
 });

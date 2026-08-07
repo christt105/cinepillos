@@ -33,23 +33,26 @@ vi.mock("@/lib/auth", () => ({
     authOptions: {},
 }));
 
-import { POST } from "@/app/api/meetings/vote/route";
+import { POST } from "@/app/api/groups/[groupId]/vote/route";
 import { getServerSession } from "next-auth";
-import { group, memberUser, outsiderUser } from "../../helpers/fixtures";
+import { GROUP_ID, OTHER_GROUP_ID, group, memberUser, outsiderUser } from "../../helpers/fixtures";
 
-const makeRequest = (body: object) =>
-    new Request("http://localhost/api/meetings/vote", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-    });
+const makeRequest = (body: object, groupId = GROUP_ID) =>
+    [
+        new Request(`http://localhost/api/groups/${groupId}/vote`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        }),
+        { params: Promise.resolve({ groupId }) } as never,
+    ] as const;
 
 const candidateInGroup = {
     id: "c1",
     meetingId: "m1",
     filmId: "film1",
     userId: "u9",
-    meeting: { id: "m1", groupId: "g1", status: "VOTING" },
+    meeting: { id: "m1", groupId: GROUP_ID, status: "VOTING" },
 };
 
 const asMember = () => {
@@ -59,7 +62,7 @@ const asMember = () => {
     mockGroupFindUnique.mockResolvedValue(group);
 };
 
-describe("POST /api/meetings/vote", () => {
+describe("POST /api/groups/[groupId]/vote", () => {
     beforeEach(() => vi.clearAllMocks());
 
     it("registers a vote when user has not voted yet", async () => {
@@ -68,7 +71,7 @@ describe("POST /api/meetings/vote", () => {
         mockVoteFindUnique.mockResolvedValue(null);
         mockVoteCreate.mockResolvedValue({ id: "v1", candidateId: "c1", userId: "u1" });
 
-        const res = await POST(makeRequest({ candidateId: "c1" }));
+        const res = await POST(...makeRequest({ candidateId: "c1" }));
 
         expect(res.status).toBe(200);
         const data = await res.json();
@@ -82,7 +85,7 @@ describe("POST /api/meetings/vote", () => {
         mockVoteFindUnique.mockResolvedValue({ id: "v1", candidateId: "c1", userId: "u1" });
         mockVoteDelete.mockResolvedValue({ id: "v1" });
 
-        const res = await POST(makeRequest({ candidateId: "c1" }));
+        const res = await POST(...makeRequest({ candidateId: "c1" }));
 
         expect(res.status).toBe(200);
         const data = await res.json();
@@ -97,7 +100,7 @@ describe("POST /api/meetings/vote", () => {
         mockVoteFindUnique.mockResolvedValue(null);
         mockVoteCreate.mockResolvedValue({ id: "v1", candidateId: "c1", userId: "u1" });
 
-        await POST(makeRequest({ candidateId: "c1" }));
+        await POST(...makeRequest({ candidateId: "c1" }));
 
         expect(mockUserFindUnique).toHaveBeenCalledWith(
             expect.objectContaining({ where: { id: "u1" } })
@@ -113,7 +116,22 @@ describe("POST /api/meetings/vote", () => {
         mockUserFindUnique.mockResolvedValue(outsiderUser());
         mockGroupFindUnique.mockResolvedValue(group);
 
-        const res = await POST(makeRequest({ candidateId: "c1" }));
+        const res = await POST(...makeRequest({ candidateId: "c1" }));
+
+        expect(res.status).toBe(403);
+        expect(mockVoteCreate).not.toHaveBeenCalled();
+    });
+
+    it("returns 403 when the candidate's meeting belongs to another group", async () => {
+        vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1" } } as never);
+        mockCandidateFindUnique.mockResolvedValue({
+            ...candidateInGroup,
+            meeting: { id: "m9", groupId: OTHER_GROUP_ID, status: "VOTING" },
+        });
+        mockUserFindUnique.mockResolvedValue(memberUser());
+        mockGroupFindUnique.mockResolvedValue(group);
+
+        const res = await POST(...makeRequest({ candidateId: "c1" }));
 
         expect(res.status).toBe(403);
         expect(mockVoteCreate).not.toHaveBeenCalled();
@@ -123,7 +141,7 @@ describe("POST /api/meetings/vote", () => {
         vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1" } } as never);
         mockCandidateFindUnique.mockResolvedValue(null);
 
-        const res = await POST(makeRequest({ candidateId: "ghost" }));
+        const res = await POST(...makeRequest({ candidateId: "ghost" }));
 
         expect(res.status).toBe(404);
         expect(mockVoteCreate).not.toHaveBeenCalled();
@@ -132,7 +150,7 @@ describe("POST /api/meetings/vote", () => {
     it("returns 400 when candidateId is missing", async () => {
         vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1" } } as never);
 
-        const res = await POST(makeRequest({}));
+        const res = await POST(...makeRequest({}));
 
         expect(res.status).toBe(400);
     });
@@ -140,7 +158,7 @@ describe("POST /api/meetings/vote", () => {
     it("returns 401 when not authenticated", async () => {
         vi.mocked(getServerSession).mockResolvedValue(null);
 
-        const res = await POST(makeRequest({ candidateId: "c1" }));
+        const res = await POST(...makeRequest({ candidateId: "c1" }));
 
         expect(res.status).toBe(401);
     });

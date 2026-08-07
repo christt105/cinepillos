@@ -6,12 +6,12 @@ import { NextResponse } from "next/server";
 
 export async function POST(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: Promise<{ groupId: string; id: string }> }
 ) {
     try {
-        const { id: meetingId } = await params;
+        const { groupId, id: meetingId } = await params;
 
-        const auth = await requireMeetingMember(meetingId);
+        const auth = await requireMeetingMember(meetingId, groupId);
         if (!auth.ok) return auth.response;
 
         const body = await parseBody(request, candidateSchema);
