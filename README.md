@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Club de Cine
 
-## Getting Started
+A small self-hosted web app for organising film nights with friends. A group
+keeps a shared board of film proposals, schedules a session, and votes on which
+of the proposed films to watch. One instance can host several independent
+groups; everything a group does is private to that group.
 
-First, run the development server:
+![Home page](docs/screenshot-home.png)
+
+## Stack
+
+Next.js (App Router) with React server components, Prisma over SQLite, NextAuth
+with a credentials provider, and TMDB for film search, posters and metadata. No
+CSS framework: design tokens in `src/app/globals.css` plus CSS Modules.
+
+## Environment
+
+Copy `.env.example` to `.env` and fill it in.
+
+| Variable | What it is |
+| --- | --- |
+| `DATABASE_URL` | SQLite file. `file:./dev.db` locally, `file:../data/club.db` in the container. |
+| `TMDB_API_KEY` | TMDB v3 API key. Without it, search returns nothing instead of crashing. |
+| `NEXTAUTH_SECRET` | Signs the session cookies. `openssl rand -base64 32`. |
+| `NEXTAUTH_URL` | Public origin of the app, no trailing slash. |
+| `TUNNEL_TOKEN` | Optional, only for the Cloudflare tunnel in `docker-compose.yml`. |
+| `SEED_ADMIN_NAME`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | Read by `prisma db seed` to create the first administrator. There is no default password. |
+
+## Running it locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm ci
+npx prisma migrate dev
+npx prisma db seed      # creates the admin from SEED_ADMIN_* above
+npm run dev             # http://localhost:6889
 ```
 
-Open [http://localhost:6889](http://localhost:6889) with your browser to see the result.
+Sign in as the seeded administrator, then create the real accounts and groups
+from `/admin`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Accounts and groups
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+There is no open registration. An administrator creates users from `/admin`
+(name, optional email, and a PIN they sign in with), creates groups, and adds
+users to them. The first member of a group is its `OWNER`; only an owner can
+close the voting on a session. Members can change their own name, avatar and
+PIN from `/settings`.
 
-## Learn More
+Every group-scoped URL carries the group id (`/g/<groupId>/...`), and every API
+route under `/api/groups/<groupId>` checks membership before it reads or writes
+anything. A group URL can be shared safely: a non-member gets a 403, not an
+empty page.
 
-To learn more about Next.js, take a look at the following resources:
+## Deployment
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+docker compose up -d --build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The stack is the app on port 6889 plus an optional `cloudflared` tunnel. Two
+host directories are mounted:
 
-## Deploy on Vercel
+- `data/` — holds `club.db`. This is the entire database; back it up.
+- `public/uploads/` — uploaded avatars.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The container runs `prisma migrate deploy` on start, so a new migration is
+applied when the image restarts. `npm run backup` (`scripts/backup-db.sh`)
+writes a timestamped copy into `data/backups` and prunes copies older than a
+week.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Tests
+
+```bash
+npm run lint             # eslint, warnings included
+npm test                 # unit + integration
+npm run test:unit        # mocked Prisma, response shapes
+npm run test:integration # real SQLite, group isolation
+npm run test:e2e         # Playwright layout checks (needs npx playwright install)
+```
+
+The integration project builds a migrated template database once per run under
+`.tmp/` and copies it per test file, so the tests never touch a real database
+and leave nothing behind. They are where the cross-group access rules are
+pinned down: a member of one group must get a 403 on every route of another,
+never a 200 with empty data.
+
+The Playwright suite starts its own dev server on a freshly seeded database and
+checks the pages for elements that stick out of the viewport, at a 375px phone
+width and at desktop width.
+
+GitHub Actions runs lint, tests and build on every push and pull request.
+
+![Voting room on a phone](docs/screenshot-mobile.png)
