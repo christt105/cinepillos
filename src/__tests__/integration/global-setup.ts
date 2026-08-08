@@ -1,22 +1,17 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync, rmSync } from "node:fs";
-import { PROJECT_ROOT, TEMPLATE_DB, TMP_DIR } from "./paths";
+import path from "node:path";
+
+const PROJECT_ROOT = path.resolve(__dirname, "../../..");
 
 /**
- * Builds the template database once per `vitest` run. Each test file then gets
- * its own copy from `setup.ts`, so nothing is shared between files.
+ * Migrates the Postgres database pointed at by DATABASE_URL/DIRECT_URL once
+ * per `vitest` run. Every test file shares that single database; `resetDatabase`
+ * in factories.ts empties it before each test, so nothing leaks between files
+ * even with fileParallelism disabled and no per-file database of its own.
  */
 export function setup() {
-    rmSync(TMP_DIR, { recursive: true, force: true });
-    mkdirSync(TMP_DIR, { recursive: true });
-
     execFileSync("npx", ["prisma", "migrate", "deploy"], {
         cwd: PROJECT_ROOT,
-        env: { ...process.env, DATABASE_URL: `file:${TEMPLATE_DB}` },
         stdio: "pipe",
     });
-}
-
-export function teardown() {
-    rmSync(TMP_DIR, { recursive: true, force: true });
 }

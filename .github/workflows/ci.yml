@@ -8,10 +8,23 @@ jobs:
   check:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: cinepillos_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     env:
-      # The suite creates and destroys its own SQLite databases under .tmp;
-      # this is only the fallback for anything that reads DATABASE_URL early.
-      DATABASE_URL: file:./.tmp/ci.db
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/cinepillos_test
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/cinepillos_test
       NEXTAUTH_SECRET: ci-secret
       NEXTAUTH_URL: http://localhost:6889
 
@@ -32,11 +45,3 @@ jobs:
       - run: npm test
 
       - run: npm run build
-
-      - name: Check the tests left no database behind
-        run: |
-          if [ -n "$(ls -A .tmp 2>/dev/null)" ]; then
-            echo "::error::.tmp still contains files after the test run"
-            ls -A .tmp
-            exit 1
-          fi

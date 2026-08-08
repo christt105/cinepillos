@@ -10,9 +10,10 @@ that group.
 
 ## Stack
 
-Next.js (App Router) with React server components, Prisma over SQLite, NextAuth
-with a credentials provider, and TMDB for film search, posters and metadata. No
-CSS framework: design tokens in `src/app/globals.css` plus CSS Modules.
+Next.js (App Router) with React server components, Prisma over Postgres
+(hosted on [Neon](https://neon.tech)), NextAuth with a credentials provider,
+and TMDB for film search, posters and metadata. No CSS framework: design
+tokens in `src/app/globals.css` plus CSS Modules.
 
 ## Environment
 
@@ -20,7 +21,8 @@ Copy `.env.example` to `.env` and fill it in.
 
 | Variable | What it is |
 | --- | --- |
-| `DATABASE_URL` | SQLite file. `file:./dev.db` locally, `file:../data/club.db` in the container. |
+| `DATABASE_URL` | Neon's pooled Postgres connection string, used by the running app. |
+| `DIRECT_URL` | Neon's direct Postgres connection string, used by `prisma migrate`. |
 | `TMDB_API_KEY` | TMDB v3 API key. Without it, search returns nothing instead of crashing. |
 | `NEXTAUTH_SECRET` | Signs the session cookies. `openssl rand -base64 32`. |
 | `NEXTAUTH_URL` | Public origin of the app, no trailing slash. |
@@ -34,6 +36,17 @@ npx prisma migrate dev
 npx prisma db seed      # creates the admin from SEED_ADMIN_* above
 npm run dev             # http://localhost:6889
 ```
+
+Any reachable Postgres works for local development, including a throwaway
+container:
+
+```bash
+docker run -d --name cinepillos-db -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=cinepillos -p 5432:5432 postgres:16-alpine
+```
+
+with `DATABASE_URL` and `DIRECT_URL` both set to
+`postgresql://postgres:postgres@localhost:5432/cinepillos`.
 
 Sign in as the seeded administrator, then create the real accounts and groups
 from `/admin`.
@@ -53,23 +66,22 @@ empty page.
 
 ## Deployment
 
-```bash
-docker compose up -d
-```
+The app is meant to run on [Vercel](https://vercel.com) (Hobby plan) with a
+[Neon](https://neon.tech) Postgres database: push to the connected repo, set
+the environment variables above in the Vercel project, and Vercel builds and
+deploys on every push. There is no persistent disk to manage.
 
-This pulls the published image (`ghcr.io/christt105/cinepillos`) and starts
-the app on port 6889. To build from source instead, use
-`docker compose up -d --build`.
+`docker compose up -d` still pulls the published image
+(`ghcr.io/christt105/cinepillos`) and starts the app on port 6889 for
+self-hosting instead. `docker-compose.yml` currently hardcodes
+`DATABASE_URL=file:../data/club.db`, left over from SQLite — that line needs
+replacing with a Postgres `DATABASE_URL`/`DIRECT_URL` (e.g. via
+`docker-compose.override.yml`) before the container will start against this
+schema. Not fixed here on purpose: the compose file stays untouched until a
+deliberate call on whether self-hosting is kept around at all now that Vercel
+is the primary deployment.
 
-Two directories next to the compose file are mounted into the container:
-
-- `data/` holds `club.db`, which is the entire database. Back it up.
-- `public/uploads/` holds uploaded avatars.
-
-The container runs `prisma migrate deploy` on start, so a new migration is
-applied when the image restarts. `npm run backup` (`scripts/backup-db.sh`)
-writes a timestamped copy into `data/backups` and prunes copies older than a
-week.
+`public/uploads/` is still mounted for uploaded avatars in this setup.
 
 If you want to put the app behind a reverse proxy or a tunnel, add a
 `docker-compose.override.yml` (not tracked by git) instead of editing
@@ -81,15 +93,19 @@ If you want to put the app behind a reverse proxy or a tunnel, add a
 npm run lint             # eslint, warnings included
 npm test                 # unit + integration
 npm run test:unit        # mocked Prisma, response shapes
-npm run test:integration # real SQLite, group isolation
+npm run test:integration # real Postgres, group isolation
 npm run test:e2e         # Playwright layout checks (needs npx playwright install)
 ```
 
-The integration project builds a migrated template database once per run under
-`.tmp/` and copies it per test file, so the tests never touch a real database
-and leave nothing behind. They are where the cross-group access rules are
-pinned down: a member of one group must get a 403 on every route of another,
-never a 200 with empty data.
+The integration project needs a real Postgres reachable via `DATABASE_URL`/
+`DIRECT_URL` — see the throwaway container command above. `global-setup.ts`
+runs `prisma migrate deploy` once per `vitest` run; every test file then
+shares that one database, and `resetDatabase()` (in `factories.ts`) empties it
+before each individual test, so nothing leaks between tests or files. CI spins
+up its own disposable Postgres via a GitHub Actions service container, so
+nothing needs to be provisioned by hand there. These are where the cross-group
+access rules are pinned down: a member of one group must get a 403 on every
+route of another, never a 200 with empty data.
 
 The Playwright suite starts its own dev server on a freshly seeded database and
 checks the pages for elements that stick out of the viewport, at a 375px phone
