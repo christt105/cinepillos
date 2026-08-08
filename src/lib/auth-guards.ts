@@ -52,10 +52,8 @@ export async function requireSession(): Promise<SessionGuard> {
 
 async function resolveGroupAccess(
     session: Session,
-    groupId: string | null | undefined
+    groupId: string
 ): Promise<({ ok: true } & GroupAccess) | GuardFailure> {
-    if (!groupId) return forbidden();
-
     const [user, group] = await Promise.all([
         prisma.user.findUnique({
             where: { id: session.user.id },
@@ -78,7 +76,7 @@ async function resolveGroupAccess(
  * get a 403 so the endpoint cannot be used to probe for existing groups.
  */
 export async function requireGroupMember(
-    groupId: string | null | undefined,
+    groupId: string,
     session?: Session
 ): Promise<GroupGuard> {
     if (session) return resolveGroupAccess(session, groupId);

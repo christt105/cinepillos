@@ -69,12 +69,12 @@ model Proposal {
   id        String   @id @default(cuid())
   userId    String
   filmId    String
-  groupId   String?
+  groupId   String
   createdAt DateTime @default(now())
 
-  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  film  Film   @relation(fields: [filmId], references: [id], onDelete: Cascade)
-  group Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  film  Film  @relation(fields: [filmId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@unique([userId, filmId, groupId])
 }
@@ -84,9 +84,9 @@ model Meeting {
   date           DateTime
   status         String
   selectedFilmId String?
-  groupId        String?
+  groupId        String
 
-  group Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   candidates MeetingCandidate[]
 }
