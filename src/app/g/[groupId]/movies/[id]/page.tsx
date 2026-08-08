@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Link as LinkIcon } from "lucide-react";
 import { ProposalButton } from "./ProposalButton";
+import { avatarUrl } from "@/lib/avatar";
 import styles from "./movie.module.css";
 
 interface PageProps {
@@ -112,15 +113,12 @@ export default async function MovieDetailsPage(props: PageProps) {
                                 {allProposals.map(p => (
                                     <div key={p.id} className={styles.proposer}>
                                         <div className={`avatar ${styles.proposerAvatar}`}>
-                                            {p.user.image && (
-                                                <Image
-                                                    src={p.user.image}
-                                                    alt={p.user.name || "User"}
-                                                    fill
-                                                    className={styles.posterImage}
-                                                    unoptimized
-                                                />
-                                            )}
+                                            <Image
+                                                src={avatarUrl(p.user)}
+                                                alt={p.user.name || "User"}
+                                                fill
+                                                className={styles.posterImage}
+                                            />
                                         </div>
                                         <span>{p.user.name}</span>
                                     </div>

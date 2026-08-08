@@ -24,9 +24,6 @@ const PEOPLE = [
     { name: 'Aina', email: 'aina@preview.local', isAdmin: false },
 ]
 
-const avatar = (name: string) =>
-    `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(name)}`
-
 async function wipe() {
     await prisma.vote.deleteMany()
     await prisma.meetingCandidate.deleteMany()
@@ -42,13 +39,11 @@ async function wipe() {
 async function main() {
     await wipe()
 
+    // No image: exercises the Gravatar identicon fallback, same as any real
+    // user who signs in with Google without a profile photo.
     const users = []
     for (const person of PEOPLE) {
-        users.push(
-            await prisma.user.create({
-                data: { ...person, image: avatar(person.name) },
-            })
-        )
+        users.push(await prisma.user.create({ data: person }))
     }
 
     const films = []

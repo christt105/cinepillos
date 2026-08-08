@@ -23,15 +23,15 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "api.dicebear.com",
+        hostname: "lh3.googleusercontent.com",
         port: "",
         pathname: "/**",
       },
       {
         protocol: "https",
-        hostname: "raw.githubusercontent.com",
+        hostname: "gravatar.com",
         port: "",
-        pathname: "/**",
+        pathname: "/avatar/**",
       },
     ],
   },

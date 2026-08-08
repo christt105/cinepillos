@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireGroupPage } from "@/lib/group-page";
 import Image from "next/image";
 import Link from "next/link";
+import { avatarUrl } from "@/lib/avatar";
 import styles from "./members.module.css";
 
 export const dynamic = "force-dynamic";
@@ -38,19 +39,12 @@ export default async function GroupMembersPage({ params }: { params: Promise<{ g
                     <section key={member.id}>
                         <div className={styles.member}>
                             <div className={`avatar ${styles.memberAvatar}`}>
-                                {member.image ? (
-                                    <Image
-                                        src={member.image}
-                                        alt={member.name || ""}
-                                        fill
-                                        className={styles.memberImage}
-                                        unoptimized
-                                    />
-                                ) : (
-                                    <div className="avatar-fallback">
-                                        {(member.name || "?")[0].toUpperCase()}
-                                    </div>
-                                )}
+                                <Image
+                                    src={avatarUrl(member)}
+                                    alt={member.name || ""}
+                                    fill
+                                    className={styles.memberImage}
+                                />
                             </div>
                             <div>
                                 <h2 className={styles.memberName}>{member.name}</h2>

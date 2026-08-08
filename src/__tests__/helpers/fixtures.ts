@@ -1,9 +1,9 @@
 export const GROUP_ID = "g1";
 export const OTHER_GROUP_ID = "g2";
 
-export const group = { id: GROUP_ID, name: "Grupo 1", image: null };
+export const group = { id: GROUP_ID, name: "Grupo 1" };
 
-export const otherGroup = { id: OTHER_GROUP_ID, name: "Grupo 2", image: null };
+export const otherGroup = { id: OTHER_GROUP_ID, name: "Grupo 2" };
 
 /**
  * User row as `requireGroupMember` reads it: `memberships` is already filtered

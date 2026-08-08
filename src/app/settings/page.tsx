@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { avatarUrl } from "@/lib/avatar";
 import SettingsClient from "./SettingsClient";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,7 @@ export default async function SettingsPage() {
     return (
         <div className="page page-form">
             <h1 className="page-title">Mi perfil</h1>
-            <SettingsClient user={user} />
+            <SettingsClient user={{ ...user, avatar: avatarUrl(user) }} />
         </div>
     );
 }

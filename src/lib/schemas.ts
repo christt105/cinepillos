@@ -55,11 +55,3 @@ export const adminGroupCreateSchema = z.object({
 export const adminMembershipSchema = z.object({
     groupId: id,
 });
-
-export const AVATAR_MIME_TYPES: Record<string, string> = {
-    "image/jpeg": "jpg",
-    "image/png": "png",
-    "image/webp": "webp",
-};
-
-export const AVATAR_MAX_BYTES = 2 * 1024 * 1024;

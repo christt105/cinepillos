@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import Image from "next/image";
 import { recentMeetingCutoff } from "@/lib/meetings";
+import { avatarUrl } from "@/lib/avatar";
 import styles from "./home.module.css";
 
 export const dynamic = "force-dynamic";
@@ -77,12 +78,10 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
                           </div>
                           <h4 className="poster-title">{candidate.film.title}</h4>
                           <div className="poster-meta">
-                            {mainProposer?.image ? (
+                            {mainProposer && (
                               <div className={`avatar ${styles.miniAvatar}`}>
-                                <Image src={mainProposer.image} alt={mainProposer.name || 'User'} fill className="poster-image" />
+                                <Image src={avatarUrl(mainProposer)} alt={mainProposer.name || 'User'} fill className="poster-image" />
                               </div>
-                            ) : (
-                              <div className={`avatar ${styles.miniAvatar}`} />
                             )}
                             <span>{mainProposer?.name || 'Unknown'}</span>
                             {proposers.length > 1 && <span className={styles.extraProposers}>+{proposers.length - 1}</span>}
@@ -126,8 +125,8 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
 
                             <div className={styles.winnerProposer}>
                               <span className={styles.proposerLabel}>Propuesta por</span>
-                              {mainProposer?.image && (
-                                <Image src={mainProposer.image} alt={mainProposer.name || ''} width={24} height={24} className={styles.proposerAvatar} />
+                              {mainProposer && (
+                                <Image src={avatarUrl(mainProposer)} alt={mainProposer.name || ''} width={24} height={24} className={styles.proposerAvatar} />
                               )}
                               <span className={styles.proposerName}>{mainProposer?.name}</span>
                               {proposers.length > 1 && <span className={styles.extraProposers}>+{proposers.length - 1} others</span>}
@@ -203,7 +202,7 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
                   <div className={styles.proposerStack}>
                     {film.proposals.slice(0, 3).map((proposal) => (
                       <div key={proposal.id} className={`avatar ${styles.stackAvatar}`}>
-                        <Image src={proposal.user.image || ''} alt={proposal.user.name || ''} fill unoptimized />
+                        <Image src={avatarUrl(proposal.user)} alt={proposal.user.name || ''} fill />
                       </div>
                     ))}
                     {film.proposals.length > 3 && (
