@@ -61,20 +61,6 @@
     display: none;
 }
 
-.field {
-    margin-bottom: var(--space-4);
-}
-
-.pinRow {
-    display: flex;
-    gap: var(--space-4);
-    flex-wrap: wrap;
-}
-
-.pinCell {
-    flex: 1 1 10rem;
-}
-
 .save {
     padding: 0.85rem;
     font-size: 1rem;

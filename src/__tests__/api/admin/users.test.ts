@@ -18,10 +18,6 @@ vi.mock("@/lib/auth", () => ({
     authOptions: {},
 }));
 
-vi.mock("bcryptjs", () => ({
-    default: { hash: vi.fn(async (pw: string) => `hashed:${pw}`) },
-}));
-
 import { POST } from "@/app/api/admin/users/route";
 import { getServerSession } from "next-auth";
 
@@ -42,7 +38,7 @@ describe("POST /api/admin/users", () => {
 
         mockCreate.mockResolvedValue({ id: "u1", name: "Ana", email: "ana@example.com" });
 
-        const res = await POST(makeRequest({ name: "Ana", email: "ana@example.com", password: "1234" }));
+        const res = await POST(makeRequest({ name: "Ana", email: "ana@example.com" }));
 
         expect(res.status).toBe(200);
         const data = await res.json();
@@ -55,7 +51,7 @@ describe("POST /api/admin/users", () => {
             user: { id: "user-1", isAdmin: false },
         } as never);
 
-        const res = await POST(makeRequest({ name: "Bob", email: "bob@example.com", password: "1234" }));
+        const res = await POST(makeRequest({ name: "Bob", email: "bob@example.com" }));
 
         expect(res.status).toBe(403);
         expect(mockCreate).not.toHaveBeenCalled();
@@ -64,7 +60,7 @@ describe("POST /api/admin/users", () => {
     it("returns 401 when not authenticated", async () => {
         vi.mocked(getServerSession).mockResolvedValue(null);
 
-        const res = await POST(makeRequest({ name: "Bob", email: "bob@example.com", password: "1234" }));
+        const res = await POST(makeRequest({ name: "Bob", email: "bob@example.com" }));
 
         expect(res.status).toBe(401);
         expect(mockCreate).not.toHaveBeenCalled();
@@ -77,7 +73,7 @@ describe("POST /api/admin/users", () => {
 
         mockCreate.mockRejectedValue(new Error("Unique constraint failed"));
 
-        const res = await POST(makeRequest({ name: "Ana", email: "ana@example.com", password: "1234" }));
+        const res = await POST(makeRequest({ name: "Ana", email: "ana@example.com" }));
 
         expect(res.status).toBe(400);
         const data = await res.json();

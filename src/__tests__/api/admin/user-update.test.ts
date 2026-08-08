@@ -18,10 +18,6 @@ vi.mock("@/lib/auth", () => ({
     authOptions: {},
 }));
 
-vi.mock("bcryptjs", () => ({
-    default: { hash: vi.fn(async (pw: string) => `hashed:${pw}`) },
-}));
-
 import { PATCH } from "@/app/api/admin/users/[userId]/route";
 import { getServerSession } from "next-auth";
 
@@ -50,16 +46,6 @@ describe("PATCH /api/admin/users/[userId]", () => {
         expect(mockUpdate).toHaveBeenCalledWith({
             where: { id: "u1" },
             data: { name: "Ana", isAdmin: true },
-        });
-    });
-
-    it("hashes the password instead of storing it as sent", async () => {
-        const [req, ctx] = makeRequest("u1", { password: "4321" });
-        await PATCH(req, ctx);
-
-        expect(mockUpdate).toHaveBeenCalledWith({
-            where: { id: "u1" },
-            data: { password: "hashed:4321" },
         });
     });
 

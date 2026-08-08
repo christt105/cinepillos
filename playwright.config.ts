@@ -1,21 +1,25 @@
 import { defineConfig, devices } from "@playwright/test";
-import path from "node:path";
 
 const PORT = Number(process.env.E2E_PORT ?? 3100);
-const DB_PATH = path.join(__dirname, ".tmp", "e2e.db");
+
+// A local Postgres is expected to be reachable the same way it is for
+// `npm run test:integration` (see README's Tests section). Set both to the
+// same env process-wide so the webServer subprocess and the spec files
+// (which query the seeded data through `@/lib/prisma`) agree on where the
+// database is.
+process.env.DATABASE_URL ??= "postgresql://postgres:postgres@localhost:5432/cinepillos_e2e";
+process.env.DIRECT_URL ??= process.env.DATABASE_URL;
+process.env.NEXTAUTH_SECRET ??= "e2e-secret";
 
 export const E2E = {
     baseURL: `http://127.0.0.1:${PORT}`,
-    user: "Christian",
-    pin: "1234",
+    nextAuthSecret: process.env.NEXTAUTH_SECRET,
+    christian: "christian@preview.local",
 };
 
 const env = {
     ...process.env,
-    DATABASE_URL: `file:${DB_PATH}`,
     NEXTAUTH_URL: E2E.baseURL,
-    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET ?? "e2e-secret",
-    PREVIEW_PIN: E2E.pin,
 };
 
 export default defineConfig({
@@ -35,19 +39,17 @@ export default defineConfig({
         { name: "mobile", use: { ...devices["Pixel 5"], viewport: { width: 375, height: 812 } } },
     ],
     webServer: {
-        // The database is rebuilt as part of starting the server: Playwright
+        // The database is reset as part of starting the server: Playwright
         // boots the web server before any global setup would run, so doing it
-        // anywhere else leaves the server holding the previous database file.
+        // anywhere else leaves the server holding stale data.
         command: [
-            "mkdir -p .tmp",
-            `rm -f ${DB_PATH} ${DB_PATH}-journal ${DB_PATH}-wal ${DB_PATH}-shm`,
             "npx prisma migrate deploy",
             "npx tsx prisma/seed-preview.ts",
             `npx next dev -p ${PORT} -H 127.0.0.1`,
         ].join(" && "),
         url: E2E.baseURL,
-        // Never reuse: the command above recreates the database file, and an
-        // already running server would keep serving the previous one.
+        // Never reuse: the command above reseeds the database, and an already
+        // running server would keep serving the previous data.
         reuseExistingServer: false,
         timeout: 120_000,
         env,

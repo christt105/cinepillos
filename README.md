@@ -11,9 +11,9 @@ that group.
 ## Stack
 
 Next.js (App Router) with React server components, Prisma over Postgres
-(hosted on [Neon](https://neon.tech)), NextAuth with a credentials provider,
-and TMDB for film search, posters and metadata. No CSS framework: design
-tokens in `src/app/globals.css` plus CSS Modules.
+(hosted on [Neon](https://neon.tech)), NextAuth with Google as the only
+provider, and TMDB for film search, posters and metadata. No CSS framework:
+design tokens in `src/app/globals.css` plus CSS Modules.
 
 ## Environment
 
@@ -26,7 +26,8 @@ Copy `.env.example` to `.env` and fill it in.
 | `TMDB_API_KEY` | TMDB v3 API key. Without it, search returns nothing instead of crashing. |
 | `NEXTAUTH_SECRET` | Signs the session cookies. `openssl rand -base64 32`. |
 | `NEXTAUTH_URL` | Public origin of the app, no trailing slash. |
-| `SEED_ADMIN_NAME`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | Read by `prisma db seed` to create the first administrator. There is no default password. |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | OAuth client from the Google Cloud console. Redirect URI is `<NEXTAUTH_URL>/api/auth/callback/google`. |
+| `SEED_ADMIN_NAME`, `SEED_ADMIN_EMAIL` | Read by `prisma db seed` to create the first administrator. `SEED_ADMIN_EMAIL` must be the Google account they sign in with — there is no password. |
 
 ## Running it locally
 
@@ -53,11 +54,13 @@ from `/admin`.
 
 ## Accounts and groups
 
-There is no open registration. An administrator creates users from `/admin`
-(name, optional email, and a PIN they sign in with), creates groups, and adds
-users to them. The first member of a group is its `OWNER`; only an owner can
-close the voting on a session. Members can change their own name, avatar and
-PIN from `/settings`.
+There is no open registration. An administrator pre-creates users from
+`/admin` (name and email), creates groups, and adds users to them. Signing in
+happens with Google: the first time someone signs in with the email an admin
+registered them under, that Google account links to their existing `User` and
+they keep whatever proposals, votes and membership history it already has.
+The first member of a group is its `OWNER`; only an owner can close the voting
+on a session. Members can change their own name and avatar from `/settings`.
 
 Every group-scoped URL carries the group id (`/g/<groupId>/...`), and every API
 route under `/api/groups/<groupId>` checks membership before it reads or writes

@@ -5,7 +5,6 @@ import { authOptions } from "@/lib/auth";
 import { adminUserUpdateSchema } from "@/lib/schemas";
 import { parseBody } from "@/lib/validation";
 import { Prisma } from "@prisma/client";
-import bcrypt from "bcryptjs";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ userId: string }> }) {
     const session = await getServerSession(authOptions);
@@ -17,13 +16,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ userId
 
     try {
         const { userId } = await params;
-        const { name, email, isAdmin, password } = body.data;
+        const { name, email, isAdmin } = body.data;
 
         const data: Prisma.UserUpdateInput = {};
         if (name !== undefined) data.name = name;
         if (email !== undefined) data.email = email;
         if (isAdmin !== undefined) data.isAdmin = isAdmin;
-        if (password !== undefined) data.password = await bcrypt.hash(password, 10);
 
         const user = await prisma.user.update({
             where: { id: userId },

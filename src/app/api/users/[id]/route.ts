@@ -5,7 +5,6 @@ import { NextResponse } from "next/server";
 import { userUpdateSchema } from "@/lib/schemas";
 import { parseBody } from "@/lib/validation";
 import { Prisma } from "@prisma/client";
-import bcrypt from "bcryptjs";
 
 export async function PATCH(
     request: Request,
@@ -24,7 +23,7 @@ export async function PATCH(
     if (!body.ok) return body.response;
 
     try {
-        const { name, image, currentPassword, newPassword } = body.data;
+        const { name, image } = body.data;
 
         const data: Prisma.UserUpdateInput = {};
         if (name !== undefined) {
@@ -33,21 +32,6 @@ export async function PATCH(
             data.name = name;
         }
         if (image !== undefined) data.image = image;
-        if (newPassword) {
-            if (session.user.id === id) {
-                const current = await prisma.user.findUnique({ where: { id } });
-                if (current?.password) {
-                    if (!currentPassword) {
-                        return NextResponse.json({ error: "current_password_required" }, { status: 400 });
-                    }
-                    const matches = await bcrypt.compare(currentPassword, current.password);
-                    if (!matches) {
-                        return NextResponse.json({ error: "current_password_invalid" }, { status: 403 });
-                    }
-                }
-            }
-            data.password = await bcrypt.hash(newPassword, 10);
-        }
 
         const updatedUser = await prisma.user.update({
             where: { id },

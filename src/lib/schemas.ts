@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 const id = z.string().min(1);
-const password = z.string().min(4).max(64);
 
 export const activeGroupSchema = z.object({
     groupId: id,
@@ -33,23 +32,19 @@ export const userUpdateSchema = z
     .object({
         name: z.string().min(1).max(60).optional(),
         image: z.string().max(500).nullish(),
-        currentPassword: z.string().max(64).optional(),
-        newPassword: password.optional(),
     })
     .strict();
 
 export const adminUserCreateSchema = z.object({
     name: z.string().min(1).max(60),
-    email: z.email().max(200).optional(),
-    password,
+    email: z.email().max(200),
 });
 
 export const adminUserUpdateSchema = z
     .object({
         name: z.string().min(1).max(60).optional(),
-        email: z.email().max(200).nullish(),
+        email: z.email().max(200).optional(),
         isAdmin: z.boolean().optional(),
-        password: password.optional(),
     })
     .strict();
 

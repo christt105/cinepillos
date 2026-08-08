@@ -10,14 +10,12 @@ import styles from "./settings.module.css";
 interface User {
     id: string;
     name: string | null;
-    email: string | null;
+    email: string;
     image: string | null;
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
     name_taken: "Ese nombre ya está en uso",
-    current_password_required: "Introduce tu PIN actual para cambiarlo",
-    current_password_invalid: "El PIN actual no es correcto",
 };
 
 export default function SettingsClient({ user }: { user: User }) {
@@ -29,9 +27,6 @@ export default function SettingsClient({ user }: { user: User }) {
     const [imageMode, setImageMode] = useState<"url" | "upload">("url");
     const [previewFile, setPreviewFile] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [currentPin, setCurrentPin] = useState("");
-    const [newPin, setNewPin] = useState("");
-    const [confirmPin, setConfirmPin] = useState("");
 
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
@@ -48,15 +43,6 @@ export default function SettingsClient({ user }: { user: User }) {
 
     const handleSave = async () => {
         setError("");
-        if (newPin && newPin !== confirmPin) {
-            setError("Los PINs no coinciden");
-            return;
-        }
-        if (newPin && !currentPin) {
-            setError("Introduce tu PIN actual para cambiarlo");
-            return;
-        }
-
         setSaving(true);
         try {
             let finalImage = imageUrl;
@@ -80,10 +66,6 @@ export default function SettingsClient({ user }: { user: User }) {
 
             const body: Record<string, string> = { name };
             if (finalImage) body.image = finalImage;
-            if (newPin) {
-                body.currentPassword = currentPin;
-                body.newPassword = newPin;
-            }
 
             const res = await fetch(`/api/users/${user.id}`, {
                 method: "PATCH",
@@ -92,9 +74,6 @@ export default function SettingsClient({ user }: { user: User }) {
             });
 
             if (res.ok) {
-                setCurrentPin("");
-                setNewPin("");
-                setConfirmPin("");
                 setSaved(true);
                 setTimeout(() => setSaved(false), 2000);
                 router.refresh();
@@ -182,45 +161,6 @@ export default function SettingsClient({ user }: { user: User }) {
                         </button>
                     </div>
                 )}
-            </div>
-
-            {/* PIN change */}
-            <div className={clsx("glass-card", styles.card)}>
-                <h3 className={styles.cardTitle}>Cambiar PIN</h3>
-                <div className={styles.field}>
-                    <label className="field-label">PIN actual</label>
-                    <input
-                        type="password"
-                        maxLength={8}
-                        value={currentPin}
-                        onChange={e => setCurrentPin(e.target.value)}
-                        autoComplete="current-password"
-                        className="input input-pin"
-                    />
-                </div>
-                <div className={styles.pinRow}>
-                    <div className={styles.pinCell}>
-                        <label className="field-label">Nuevo PIN</label>
-                        <input
-                            type="password"
-                            maxLength={8}
-                            value={newPin}
-                            onChange={e => setNewPin(e.target.value)}
-                            placeholder="Dejar vacío para no cambiar"
-                            className="input input-pin"
-                        />
-                    </div>
-                    <div className={styles.pinCell}>
-                        <label className="field-label">Confirmar PIN</label>
-                        <input
-                            type="password"
-                            maxLength={8}
-                            value={confirmPin}
-                            onChange={e => setConfirmPin(e.target.value)}
-                            className={clsx("input input-pin", newPin && confirmPin && newPin !== confirmPin && "input-invalid")}
-                        />
-                    </div>
-                </div>
             </div>
 
             {error && <p className="form-error">{error}</p>}

@@ -4,7 +4,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { adminUserCreateSchema } from "@/lib/schemas";
 import { parseBody } from "@/lib/validation";
-import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
@@ -15,16 +14,10 @@ export async function POST(req: Request) {
     if (!body.ok) return body.response;
 
     try {
-        const { name, email, password } = body.data;
-
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const { name, email } = body.data;
 
         const user = await prisma.user.create({
-            data: {
-                name,
-                email,
-                password: hashedPassword,
-            }
+            data: { name, email },
         });
 
         return NextResponse.json(user);

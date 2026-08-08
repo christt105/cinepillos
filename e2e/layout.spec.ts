@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { E2E } from "../playwright.config";
+import { signIn as authenticate } from "./auth";
 
 /**
  * `body` hides horizontal overflow, so a cut-off element does not widen the
@@ -30,10 +30,8 @@ async function overflowingElements(page: Page) {
 }
 
 async function signIn(page: Page) {
-    await page.goto("/login");
-    await page.getByLabel("Email o nombre").fill(E2E.user);
-    await page.getByLabel("PIN").fill(E2E.pin);
-    await page.getByRole("button", { name: "Entrar" }).click();
+    await authenticate(page);
+    await page.goto("/");
     await page.waitForURL(url => !url.pathname.startsWith("/login"));
 
     const groupId = new URL(page.url()).pathname.split("/")[2];

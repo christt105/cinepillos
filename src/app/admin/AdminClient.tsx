@@ -8,7 +8,7 @@ import styles from "./admin.module.css";
 type AdminUser = {
     id: string;
     name: string | null;
-    email: string | null;
+    email: string;
     isAdmin: boolean;
     memberships: { group: { name: string } }[];
 };
@@ -23,7 +23,6 @@ export default function AdminClient({ initialUsers, initialGroups }: { initialUs
     const router = useRouter();
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
     const [groupName, setGroupName] = useState("");
     const [msg, setMsg] = useState("");
 
@@ -32,11 +31,11 @@ export default function AdminClient({ initialUsers, initialGroups }: { initialUs
         const res = await fetch("/api/admin/users", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email: email || undefined, password }),
+            body: JSON.stringify({ name, email }),
         });
         if (res.ok) {
             setMsg("Usuario creado");
-            setName(""); setEmail(""); setPassword("");
+            setName(""); setEmail("");
             router.refresh();
         } else {
             const data = await res.json();
@@ -80,8 +79,7 @@ export default function AdminClient({ initialUsers, initialGroups }: { initialUs
                 <h2>Crear Usuario</h2>
                 <form onSubmit={handleCreateUser} className={styles.form}>
                     <input className="input" placeholder="Nombre *" value={name} onChange={e => setName(e.target.value)} required />
-                    <input className="input" placeholder="Email (opcional)" value={email} onChange={e => setEmail(e.target.value)} />
-                    <input className="input" type="password" placeholder="PIN *" value={password} onChange={e => setPassword(e.target.value)} required />
+                    <input className="input" type="email" placeholder="Email *" value={email} onChange={e => setEmail(e.target.value)} required />
                     <button className="btn btn-primary" type="submit">Crear</button>
                     {msg && <p className={styles.message}>{msg}</p>}
                 </form>

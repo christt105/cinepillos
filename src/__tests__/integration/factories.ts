@@ -11,7 +11,6 @@ export async function createUser(overrides: Partial<User> = {}): Promise<User> {
         data: {
             name: `User ${n}`,
             email: `user${n}@example.test`,
-            password: "hashed",
             ...overrides,
         },
     });

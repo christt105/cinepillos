@@ -263,10 +263,6 @@ a {
   border-color: hsl(var(--destructive));
 }
 
-.input-pin {
-  letter-spacing: 0.3rem;
-}
-
 .field-label {
   display: block;
   margin-bottom: var(--space-1);

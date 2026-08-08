@@ -1,13 +1,10 @@
 import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcryptjs'
 
 /**
  * Demo data for a throwaway preview instance. Never point this at the real
  * database: it wipes every table before writing.
  */
 const prisma = new PrismaClient()
-
-const PIN = process.env.PREVIEW_PIN || '1234'
 
 const FILMS = [
     { tmdbId: 550, title: 'El club de la lucha', posterPath: '/8kNruSfhk5IoE4eZOc4UpvDn6tq.jpg', releaseDate: '1999-10-15' },
@@ -45,13 +42,11 @@ async function wipe() {
 async function main() {
     await wipe()
 
-    const password = await bcrypt.hash(PIN, 10)
-
     const users = []
     for (const person of PEOPLE) {
         users.push(
             await prisma.user.create({
-                data: { ...person, password, image: avatar(person.name) },
+                data: { ...person, image: avatar(person.name) },
             })
         )
     }
@@ -144,7 +139,7 @@ async function main() {
         data: { meetingId: concluded.id, filmId: films[0].id, userId: users[3].id },
     })
 
-    console.log(`Preview data ready. Sign in as any of ${PEOPLE.map(p => p.name).join(', ')} with PIN ${PIN}.`)
+    console.log(`Preview data ready. Sign in as any of ${PEOPLE.map(p => p.name).join(', ')} via the e2e auth helper (see e2e/auth.ts).`)
 }
 
 main()
