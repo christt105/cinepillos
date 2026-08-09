@@ -148,6 +148,10 @@ GitHub Actions runs lint, tests and build on every push and pull request.
 
 ![Voting room on a phone](docs/screenshot-mobile.png)
 
+If you find CinePillos useful and want to support its development, you can buy me a coffee!
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/christt105)
+
 ## License
 
 [AGPL-3.0](LICENSE).
