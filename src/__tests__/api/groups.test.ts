@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mockCount, mockGroupCreate, mockMembershipCreate, mockUserUpdate } = vi.hoisted(() => ({
+const { mockCount, mockTransaction, mockGroupCreate, mockMembershipCreate, mockUserUpdate } = vi.hoisted(() => ({
     mockCount: vi.fn(),
+    mockTransaction: vi.fn(),
     mockGroupCreate: vi.fn(),
     mockMembershipCreate: vi.fn(),
     mockUserUpdate: vi.fn(),
@@ -12,6 +13,7 @@ vi.mock("@/lib/prisma", () => ({
         membership: { count: mockCount, create: mockMembershipCreate },
         group: { create: mockGroupCreate },
         user: { update: mockUserUpdate },
+        $transaction: mockTransaction,
     },
 }));
 
@@ -34,7 +36,12 @@ const makeRequest = (body: object) =>
     });
 
 describe("POST /api/groups", () => {
-    beforeEach(() => vi.clearAllMocks());
+    beforeEach(() => {
+        vi.clearAllMocks();
+        mockTransaction.mockImplementation(async (fn: (tx: unknown) => unknown) =>
+            fn({ group: { create: mockGroupCreate }, membership: { create: mockMembershipCreate }, user: { update: mockUserUpdate } })
+        );
+    });
 
     it("creates a group with the caller as OWNER and switches activeGroupId", async () => {
         vi.mocked(getServerSession).mockResolvedValue({
