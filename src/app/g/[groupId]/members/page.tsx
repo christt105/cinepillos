@@ -46,6 +46,7 @@ export default async function GroupMembersPage({ params }: { params: Promise<{ g
 
             <MembersManagement
                 groupId={groupId}
+                groupName={group.name}
                 currentUserId={session.user.id}
                 isOwnerOrAdmin={isOwnerOrAdmin}
                 members={group.memberships.map(m => ({ userId: m.userId, name: m.user.name, role: m.role }))}

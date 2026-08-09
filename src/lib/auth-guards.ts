@@ -88,6 +88,22 @@ export async function requireGroupMember(
 }
 
 /**
+ * Same as `requireGroupMember`, but also demands the caller owns the group. A
+ * site admin passes without a membership, which is why the owner check cannot
+ * be folded into `resolveGroupAccess`.
+ */
+export async function requireGroupOwner(groupId: string): Promise<GroupGuard> {
+    const access = await requireGroupMember(groupId);
+    if (!access.ok) return access;
+
+    if (access.membership?.role !== "OWNER" && !access.session.user.isAdmin) {
+        return forbidden();
+    }
+
+    return access;
+}
+
+/**
  * Same as `requireGroupMember`, but takes the group from the meeting itself so
  * routes nested under a meeting never trust a group id coming from the session.
  * When `expectedGroupId` is given, the meeting must also belong to that group.
