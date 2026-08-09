@@ -24,7 +24,7 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/cinepillos_test
-      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/cinepillos_test
+      DATABASE_URL_UNPOOLED: postgresql://postgres:postgres@localhost:5432/cinepillos_test
       NEXTAUTH_SECRET: ci-secret
       NEXTAUTH_URL: http://localhost:6889
 

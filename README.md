@@ -22,7 +22,7 @@ Copy `.env.example` to `.env` and fill it in.
 | Variable | What it is |
 | --- | --- |
 | `DATABASE_URL` | Neon's pooled Postgres connection string, used by the running app. |
-| `DIRECT_URL` | Neon's direct Postgres connection string, used by `prisma migrate`. |
+| `DATABASE_URL_UNPOOLED` | Neon's direct Postgres connection string, used by `prisma migrate`. Named to match what Vercel's Neon integration provisions automatically. |
 | `TMDB_API_KEY` | TMDB v3 API key. Without it, search returns nothing instead of crashing. |
 | `NEXTAUTH_SECRET` | Signs the session cookies. `openssl rand -base64 32`. |
 | `NEXTAUTH_URL` | Public origin of the app, no trailing slash. |
@@ -46,7 +46,7 @@ docker run -d --name cinepillos-db -e POSTGRES_PASSWORD=postgres \
   -e POSTGRES_DB=cinepillos -p 5432:5432 postgres:16-alpine
 ```
 
-with `DATABASE_URL` and `DIRECT_URL` both set to
+with `DATABASE_URL` and `DATABASE_URL_UNPOOLED` both set to
 `postgresql://postgres:postgres@localhost:5432/cinepillos`.
 
 Sign in as the seeded administrator, then create the real accounts and groups
@@ -99,7 +99,7 @@ deploys on every push. There is no persistent disk to manage.
 (`ghcr.io/christt105/cinepillos`) and starts the app on port 6889 for
 self-hosting instead. `docker-compose.yml` currently hardcodes
 `DATABASE_URL=file:../data/club.db`, left over from SQLite — that line needs
-replacing with a Postgres `DATABASE_URL`/`DIRECT_URL` (e.g. via
+replacing with a Postgres `DATABASE_URL`/`DATABASE_URL_UNPOOLED` (e.g. via
 `docker-compose.override.yml`) before the container will start against this
 schema. Not fixed here on purpose: the compose file stays untouched until a
 deliberate call on whether self-hosting is kept around at all now that Vercel
@@ -122,7 +122,7 @@ npm run test:e2e         # Playwright layout checks (needs npx playwright instal
 ```
 
 The integration project needs a real Postgres reachable via `DATABASE_URL`/
-`DIRECT_URL` — see the throwaway container command above. `global-setup.ts`
+`DATABASE_URL_UNPOOLED` — see the throwaway container command above. `global-setup.ts`
 runs `prisma migrate deploy` once per `vitest` run; every test file then
 shares that one database, and `resetDatabase()` (in `factories.ts`) empties it
 before each individual test, so nothing leaks between tests or files. CI spins
