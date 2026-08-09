@@ -3,13 +3,16 @@ import { requireGroupPage } from "@/lib/group-page";
 import Image from "next/image";
 import Link from "next/link";
 import { avatarUrl } from "@/lib/avatar";
+import MembersManagement from "./MembersManagement";
 import styles from "./members.module.css";
 
 export const dynamic = "force-dynamic";
 
 export default async function GroupMembersPage({ params }: { params: Promise<{ groupId: string }> }) {
     const { groupId } = await params;
-    await requireGroupPage(groupId);
+    const { session, membership } = await requireGroupPage(groupId);
+
+    const isOwnerOrAdmin = membership?.role === "OWNER" || !!session.user.isAdmin;
 
     const group = await prisma.group.findUniqueOrThrow({
         where: { id: groupId },
@@ -30,9 +33,30 @@ export default async function GroupMembersPage({ params }: { params: Promise<{ g
         }
     });
 
+    const invitations = isOwnerOrAdmin
+        ? await prisma.invitation.findMany({
+            where: { groupId, revokedAt: null, expiresAt: { gt: new Date() } },
+            orderBy: { createdAt: "desc" },
+        })
+        : [];
+
     return (
         <div className="page">
             <h1 className="page-title">{group.name}</h1>
+
+            <MembersManagement
+                groupId={groupId}
+                currentUserId={session.user.id}
+                isOwnerOrAdmin={isOwnerOrAdmin}
+                members={group.memberships.map(m => ({ userId: m.userId, name: m.user.name, role: m.role }))}
+                initialInvitations={invitations.map(i => ({
+                    id: i.id,
+                    token: i.token,
+                    expiresAt: i.expiresAt.toISOString(),
+                    maxUses: i.maxUses,
+                    useCount: i.useCount,
+                }))}
+            />
 
             <div className={styles.list}>
                 {group.memberships.map(({ user: member }) => (

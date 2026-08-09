@@ -1,9 +1,29 @@
 "use client";
 
+import { Suspense } from "react";
 import { signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import { Film } from "lucide-react";
 import clsx from "clsx";
 import styles from "./login.module.css";
+
+function SignInButton() {
+    const searchParams = useSearchParams();
+    // Only ever a relative, same-app path (e.g. an invite link resumed after
+    // login); next-auth itself refuses to redirect to a different origin.
+    const callbackUrl = searchParams.get("callbackUrl") || "/";
+
+    return (
+        <button
+            type="button"
+            onClick={() => signIn("google", { callbackUrl })}
+            className={clsx("btn btn-primary", styles.submit)}
+        >
+            <GoogleIcon />
+            Continuar con Google
+        </button>
+    );
+}
 
 export default function LoginPage() {
     return (
@@ -16,14 +36,9 @@ export default function LoginPage() {
             <div className={clsx("glass-card", styles.card)}>
                 <h2 className={styles.title}>Entrar</h2>
 
-                <button
-                    type="button"
-                    onClick={() => signIn("google", { callbackUrl: "/" })}
-                    className={clsx("btn btn-primary", styles.submit)}
-                >
-                    <GoogleIcon />
-                    Continuar con Google
-                </button>
+                <Suspense fallback={null}>
+                    <SignInButton />
+                </Suspense>
             </div>
         </div>
     );

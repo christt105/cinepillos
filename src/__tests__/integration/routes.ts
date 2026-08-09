@@ -6,6 +6,10 @@ import { DELETE as deleteCandidate } from "@/app/api/groups/[groupId]/meetings/[
 import { PATCH as patchConclude } from "@/app/api/groups/[groupId]/meetings/[id]/conclude/route";
 import { POST as postVote } from "@/app/api/groups/[groupId]/vote/route";
 import { POST as postActiveGroup } from "@/app/api/users/activeGroup/route";
+import { GET as getInvitations, POST as postInvitation } from "@/app/api/groups/[groupId]/invitations/route";
+import { DELETE as deleteInvitation } from "@/app/api/groups/[groupId]/invitations/[invitationId]/route";
+import { DELETE as deleteMember } from "@/app/api/groups/[groupId]/members/[userId]/route";
+import { GET as getInvitationByToken, POST as acceptInvitation } from "@/app/api/invitations/[token]/route";
 
 const BASE = "http://localhost";
 
@@ -71,4 +75,25 @@ export const api = {
 
     setActiveGroup: (groupId: string) =>
         postActiveGroup(jsonRequest(`/api/users/activeGroup`, "POST", { groupId })),
+
+    listInvitations: (groupId: string) =>
+        getInvitations(jsonRequest(`/api/groups/${groupId}/invitations`, "GET"), context({ groupId })),
+
+    createInvitation: (groupId: string, body: unknown = { expiresInDays: 7 }) =>
+        postInvitation(jsonRequest(`/api/groups/${groupId}/invitations`, "POST", body), context({ groupId })),
+
+    revokeInvitation: (groupId: string, invitationId: string) =>
+        deleteInvitation(
+            jsonRequest(`/api/groups/${groupId}/invitations/${invitationId}`, "DELETE"),
+            context({ groupId, invitationId })
+        ),
+
+    removeMember: (groupId: string, userId: string) =>
+        deleteMember(jsonRequest(`/api/groups/${groupId}/members/${userId}`, "DELETE"), context({ groupId, userId })),
+
+    getInvitation: (token: string) =>
+        getInvitationByToken(jsonRequest(`/api/invitations/${token}`, "GET"), context({ token })),
+
+    acceptInvitation: (token: string) =>
+        acceptInvitation(jsonRequest(`/api/invitations/${token}`, "POST"), context({ token })),
 };

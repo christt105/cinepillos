@@ -1,5 +1,6 @@
-import type { Film, Group, Meeting, MeetingCandidate, User } from "@prisma/client";
+import type { Film, Group, Invitation, Meeting, MeetingCandidate, User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { generateInvitationToken } from "@/lib/invitations";
 
 let sequence = 0;
 const next = () => ++sequence;
@@ -87,6 +88,24 @@ export async function createVote(candidate: MeetingCandidate, user: User) {
     return prisma.vote.create({ data: { candidateId: candidate.id, userId: user.id } });
 }
 
+const inHours = (hours: number) => new Date(Date.now() + hours * 3600000);
+
+export async function createInvitation(
+    group: Group,
+    inviter: User,
+    overrides: Partial<Invitation> = {}
+): Promise<Invitation> {
+    return prisma.invitation.create({
+        data: {
+            token: generateInvitationToken(),
+            groupId: group.id,
+            invitedBy: inviter.id,
+            expiresAt: inHours(24),
+            ...overrides,
+        },
+    });
+}
+
 export async function createProposal(group: Group, user: User, film?: Film) {
     const proposalFilm = film ?? (await createFilm());
 
@@ -102,6 +121,7 @@ export async function resetDatabase() {
     await prisma.meeting.deleteMany();
     await prisma.proposal.deleteMany();
     await prisma.film.deleteMany();
+    await prisma.invitation.deleteMany();
     await prisma.membership.deleteMany();
     await prisma.user.updateMany({ data: { activeGroupId: null } });
     await prisma.group.deleteMany();

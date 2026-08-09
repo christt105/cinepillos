@@ -55,3 +55,8 @@ export const groupCreateSchema = z.object({
 export const adminMembershipSchema = z.object({
     groupId: id,
 });
+
+export const invitationCreateSchema = z.object({
+    expiresInDays: z.coerce.number().int().min(1).max(30).default(7),
+    maxUses: z.coerce.number().int().min(1).max(100).nullish(),
+});

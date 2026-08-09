@@ -27,6 +27,7 @@ model User {
   proposals          Proposal[]
   votes              Vote[]
   candidatesProposed MeetingCandidate[]
+  invitationsSent    Invitation[]
 }
 
 /// Linked OAuth accounts, required by `PrismaAdapter` even under the jwt session strategy.
@@ -76,6 +77,7 @@ model Group {
   memberships Membership[]
   meetings    Meeting[]
   proposals   Proposal[]
+  invitations Invitation[]
 }
 
 model Membership {
@@ -89,6 +91,23 @@ model Membership {
   group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@unique([userId, groupId])
+}
+
+/// A shareable, revocable link an OWNER (or a site admin) can hand out to let
+/// someone join their group without an admin creating an account for them.
+model Invitation {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  groupId   String
+  invitedBy String
+  expiresAt DateTime
+  maxUses   Int?
+  useCount  Int       @default(0)
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  group   Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  inviter User  @relation(fields: [invitedBy], references: [id], onDelete: Cascade)
 }
 
 model Film {

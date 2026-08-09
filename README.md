@@ -65,6 +65,17 @@ itself. Members can change their own name and avatar from `/settings`, and
 delete their account entirely from there too — see `/privacy` for what that
 removes.
 
+An owner (or a site admin) can also invite people straight from `/g/<groupId>/members`:
+generating a link there creates an `Invitation` with an expiry, and anyone who
+opens `/invite/<token>` while signed in can join through it, capped at 30
+members per group. Members can leave a group on their own, and an owner can
+remove someone else; both go through the same
+`/api/groups/<groupId>/members/<userId>` route. Accepting an invitation is the
+one deliberate exception to every other group guard: it is the only route
+that grants access to a group the caller is not yet a member of, and it never
+touches `requireGroupMember` to do it — see `resolveInvitationState` in
+`src/lib/invitations.ts`.
+
 Every group-scoped URL carries the group id (`/g/<groupId>/...`), and every API
 route under `/api/groups/<groupId>` checks membership before it reads or writes
 anything. A group URL can be shared safely: a non-member gets a 403, not an
