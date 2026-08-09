@@ -104,8 +104,10 @@ function CalendarPicker({ selected, onSelect }: { selected: Date; onSelect: (d: 
 
     const isSel = (d: number) => selected.getFullYear() === year && selected.getMonth() === month && selected.getDate() === d;
     const isToday = (d: number) => { const t = new Date(); return t.getFullYear() === year && t.getMonth() === month && t.getDate() === d; };
+    const isPast = (d: number) => new Date(year, month, d + 1) <= new Date(new Date().setHours(0, 0, 0, 0));
 
     const pick = (day: number) => {
+        if (isPast(day)) return;
         const d = new Date(selected);
         d.setFullYear(year, month, day);
         onSelect(d);
@@ -134,6 +136,7 @@ function CalendarPicker({ selected, onSelect }: { selected: Date; onSelect: (d: 
                         className={clsx(
                             styles.day,
                             !day && styles.dayEmpty,
+                            day && isPast(day) && styles.dayPast,
                             day && isToday(day) && styles.dayToday,
                             day && isSel(day) && styles.daySelected,
                         )}
