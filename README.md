@@ -95,19 +95,28 @@ The app is meant to run on [Vercel](https://vercel.com) (Hobby plan) with a
 the environment variables above in the Vercel project, and Vercel builds and
 deploys on every push. There is no persistent disk to manage.
 
-`docker compose up -d` still pulls the published image
-(`ghcr.io/christt105/cinepillos`) and starts the app on port 6889 for
-self-hosting instead. `docker-compose.yml` currently hardcodes
-`DATABASE_URL=file:../data/club.db`, left over from SQLite — that line needs
-replacing with a Postgres `DATABASE_URL`/`DATABASE_URL_UNPOOLED` (e.g. via
-`docker-compose.override.yml`) before the container will start against this
-schema. Not fixed here on purpose: the compose file stays untouched until a
-deliberate call on whether self-hosting is kept around at all now that Vercel
-is the primary deployment.
+For self-hosting, `docker compose up -d` builds the image and starts both the
+app (port 6889) and its own Postgres, with a named volume so the database
+survives restarts. Copy `.env.example` to `.env` and fill in `TMDB_API_KEY`,
+`NEXTAUTH_SECRET`, `NEXTAUTH_URL` and the Google OAuth pair — the
+`DATABASE_URL`/`DATABASE_URL_UNPOOLED` in `.env` are ignored in this setup,
+since `docker-compose.yml` points the app at the bundled `postgres` service
+instead. The entrypoint runs `prisma migrate deploy` on every start, so the
+schema is ready by the time the app comes up.
 
-`public/uploads/` is still mounted for uploaded avatars in this setup.
+The runtime image only ships the Prisma CLI, not `tsx`, so `prisma db seed`
+can't run inside the `cinepillos` container. The bundled Postgres is published
+to `127.0.0.1:5432`, so seed the admin from the host instead, from a checkout
+with `npm ci` already run:
 
-If you want to put the app behind a reverse proxy or a tunnel, add a
+```bash
+DATABASE_URL="postgresql://cinepillos:cinepillos@localhost:5432/cinepillos" \
+DATABASE_URL_UNPOOLED="postgresql://cinepillos:cinepillos@localhost:5432/cinepillos" \
+npx prisma db seed
+```
+
+If you want to put the app behind a reverse proxy or a tunnel, or point it at
+an external Postgres instead of the bundled one, add a
 `docker-compose.override.yml` (not tracked by git) instead of editing
 `docker-compose.yml`.
 
