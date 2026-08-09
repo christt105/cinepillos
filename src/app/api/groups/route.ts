@@ -30,20 +30,20 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "group_limit_reached" }, { status: 403 });
     }
 
-    const createdGroup = await prisma.$transaction(async tx => {
-        const newGroup = await tx.group.create({ data: { name: body.data.name } });
+    // Not wrapped in an interactive $transaction: Neon's pooled connection
+    // (DATABASE_URL) runs PgBouncer in transaction-pooling mode, which does
+    // not support Prisma holding one connection open across these calls. A
+    // crash between them just leaves a harmless ownerless group.
+    const newGroup = await prisma.group.create({ data: { name: body.data.name } });
 
-        await tx.membership.create({
-            data: { userId: session.user.id, groupId: newGroup.id, role: "OWNER" },
-        });
-
-        await tx.user.update({
-            where: { id: session.user.id },
-            data: { activeGroupId: newGroup.id },
-        });
-
-        return newGroup;
+    await prisma.membership.create({
+        data: { userId: session.user.id, groupId: newGroup.id, role: "OWNER" },
     });
 
-    return NextResponse.json(createdGroup);
+    await prisma.user.update({
+        where: { id: session.user.id },
+        data: { activeGroupId: newGroup.id },
+    });
+
+    return NextResponse.json(newGroup);
 }
