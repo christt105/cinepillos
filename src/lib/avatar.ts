@@ -1,16 +1,13 @@
-import { createHash } from "node:crypto";
+const DEFAULT_AVATAR_PATH = "/default-avatar.svg";
 
-/** SHA-256 of the trimmed, lowercased email, as Gravatar's API requires. */
-function gravatarHash(email: string): string {
-    return createHash("sha256").update(email.trim().toLowerCase()).digest("hex");
-}
-
-/** `d=identicon` draws a deterministic pattern instead of a broken image for anyone without a Gravatar account. */
-export function gravatarUrl(email: string, size = 128): string {
-    return `https://gravatar.com/avatar/${gravatarHash(email)}?d=identicon&s=${size}`;
-}
-
-/** Google's photo first, Gravatar as the fallback so an avatar is never empty. */
-export function avatarUrl(user: { image?: string | null; email: string }, size = 128): string {
-    return user.image || gravatarUrl(user.email, size);
+/**
+ * `image` is only ever a TMDB image path (e.g. "/abc123.jpg"), validated
+ * server-side against TMDB's own data before it's stored — see
+ * `/api/users/[id]/avatar` — never a URL a client supplied directly.
+ */
+export function avatarUrl(user: { image: string | null }): string {
+    // TMDB paths always start with "/"; anything else is a leftover Google
+    // photo URL or Gravatar URL from before this, and no longer resolvable.
+    if (!user.image || !user.image.startsWith("/")) return DEFAULT_AVATAR_PATH;
+    return `https://image.tmdb.org/t/p/w200${user.image}`;
 }

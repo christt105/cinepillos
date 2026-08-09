@@ -23,7 +23,7 @@ export async function PATCH(
     if (!body.ok) return body.response;
 
     try {
-        const { name, image } = body.data;
+        const { name } = body.data;
 
         const data: Prisma.UserUpdateInput = {};
         if (name !== undefined) {
@@ -31,7 +31,6 @@ export async function PATCH(
             if (existing) return NextResponse.json({ error: "name_taken" }, { status: 409 });
             data.name = name;
         }
-        if (image !== undefined) data.image = image;
 
         const updatedUser = await prisma.user.update({
             where: { id },

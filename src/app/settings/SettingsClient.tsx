@@ -7,6 +7,8 @@ import { Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import clsx from "clsx";
+import { avatarUrl } from "@/lib/avatar";
+import AvatarPicker from "./AvatarPicker";
 import styles from "./settings.module.css";
 
 interface User {
@@ -24,6 +26,9 @@ export default function SettingsClient({ user }: { user: User }) {
     const router = useRouter();
 
     const [name, setName] = useState(user.name || "");
+    const [avatar, setAvatar] = useState(user.avatar);
+    const [pickingAvatar, setPickingAvatar] = useState(false);
+    const [removingAvatar, setRemovingAvatar] = useState(false);
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
     const [error, setError] = useState("");
@@ -53,6 +58,19 @@ export default function SettingsClient({ user }: { user: User }) {
         }
     };
 
+    const handleRemoveAvatar = async () => {
+        setRemovingAvatar(true);
+        try {
+            const res = await fetch(`/api/users/${user.id}/avatar`, { method: "DELETE" });
+            if (res.ok) {
+                setAvatar(avatarUrl({ image: null }));
+                router.refresh();
+            }
+        } finally {
+            setRemovingAvatar(false);
+        }
+    };
+
     const handleDelete = async () => {
         setDeleting(true);
         try {
@@ -71,13 +89,33 @@ export default function SettingsClient({ user }: { user: User }) {
         <div className={styles.form}>
             <div className={clsx("glass-card", styles.identity)}>
                 <div className={clsx("avatar", styles.identityAvatar)}>
-                    <Image src={user.avatar} alt={name} fill className={styles.identityImage} />
+                    <Image src={avatar} alt={name} fill className={styles.identityImage} />
                 </div>
                 <div>
                     <h2 className={styles.identityName}>{name || "Sin nombre"}</h2>
                     <p className={styles.identityEmail}>{user.email}</p>
+                    <div className={styles.avatarActions}>
+                        <button className="btn btn-ghost" onClick={() => setPickingAvatar(true)}>
+                            Cambiar avatar
+                        </button>
+                        <button className="btn btn-ghost" onClick={handleRemoveAvatar} disabled={removingAvatar}>
+                            Quitar avatar
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            {pickingAvatar && (
+                <AvatarPicker
+                    userId={user.id}
+                    onSelected={path => {
+                        setAvatar(avatarUrl({ image: path }));
+                        setPickingAvatar(false);
+                        router.refresh();
+                    }}
+                    onClose={() => setPickingAvatar(false)}
+                />
+            )}
 
             <div className={clsx("glass-card", styles.card)}>
                 <h3 className={styles.cardTitle}>Nombre</h3>

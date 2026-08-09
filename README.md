@@ -12,7 +12,7 @@ that group.
 
 Next.js (App Router) with React server components, Prisma over Postgres
 (hosted on [Neon](https://neon.tech)), NextAuth with Google as the only
-provider, and TMDB for film search, posters and metadata. No CSS framework:
+provider, and TMDB for film search, posters, metadata and avatars. No CSS framework:
 design tokens in `src/app/globals.css` plus CSS Modules.
 
 ## Environment
@@ -61,9 +61,16 @@ voting on a session. A regular user can own up to 3 clubs, an admin up to 100
 (checked server-side in `POST /api/groups`). `/admin` still exists for
 pre-provisioning a user by email before their first Google sign-in and for
 adding an existing user to a group by hand; it no longer creates groups
-itself. Members can change their own name and avatar from `/settings`, and
-delete their account entirely from there too — see `/privacy` for what that
-removes.
+itself. Members can change their own name from `/settings`, and delete their
+account entirely from there too — see `/privacy` for what that removes.
+
+Avatars come only from TMDB: `/settings` lets a member search a film, then
+pick one of its textless posters or a cast member's photo as their avatar.
+There is no Google photo sync and no Gravatar fallback, and the backend never
+stores a URL a client sent as-is — a poster path has to still be present in a
+fresh TMDB response for that movie, and a cast photo is resolved from the
+person's TMDB id rather than a path at all (`/api/users/[id]/avatar`).
+Anyone without a chosen avatar gets the bundled `public/default-avatar.svg`.
 
 An owner (or a site admin) can also invite people straight from `/g/<groupId>/members`:
 generating a link there creates an `Invitation` with an expiry, and anyone who

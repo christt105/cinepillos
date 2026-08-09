@@ -16,6 +16,25 @@ export interface TMDBResponse<T> {
     total_pages: number;
 }
 
+export interface TMDBCastMember {
+    id: number;
+    name: string;
+    profile_path: string | null;
+}
+
+export interface TMDBCredits {
+    cast: TMDBCastMember[];
+}
+
+export interface TMDBImage {
+    file_path: string;
+    iso_639_1: string | null;
+}
+
+export interface TMDBImages {
+    posters: TMDBImage[];
+}
+
 async function fetchTMDB<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
     if (!TMDB_API_KEY) {
         console.warn("TMDB_API_KEY is missing");
@@ -47,5 +66,12 @@ export const tmdb = {
     },
     getMovieDetails: async (id: number) => {
         return fetchTMDB<TMDBMovie>(`/movie/${id}`);
+    },
+    getMovieCredits: async (id: number) => {
+        return fetchTMDB<TMDBCredits>(`/movie/${id}/credits`);
+    },
+    /** `include_image_language=null` asks for the textless posters — no localized title art. */
+    getMovieImages: async (id: number) => {
+        return fetchTMDB<TMDBImages>(`/movie/${id}/images`, { include_image_language: "null" });
     },
 };

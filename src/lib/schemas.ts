@@ -31,9 +31,20 @@ export const voteSchema = z.object({
 export const userUpdateSchema = z
     .object({
         name: z.string().min(1).max(60).optional(),
-        image: z.string().max(500).nullish(),
     })
     .strict();
+
+const tmdbId = z.coerce.number().int().positive();
+
+/**
+ * Never a client-supplied URL: `path`/`personId` only pick out which of a
+ * movie's own TMDB images to use, and the backend re-validates the choice
+ * against a fresh TMDB response before it resolves and stores an actual path.
+ */
+export const avatarSelectSchema = z.discriminatedUnion("kind", [
+    z.object({ kind: z.literal("poster"), tmdbId, path: z.string().min(1).max(300) }),
+    z.object({ kind: z.literal("cast"), tmdbId, personId: z.coerce.number().int().positive() }),
+]);
 
 export const adminUserCreateSchema = z.object({
     name: z.string().min(1).max(60),
