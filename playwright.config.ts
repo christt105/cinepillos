@@ -8,7 +8,7 @@ const PORT = Number(process.env.E2E_PORT ?? 3100);
 // (which query the seeded data through `@/lib/prisma`) agree on where the
 // database is.
 process.env.DATABASE_URL ??= "postgresql://postgres:postgres@localhost:5432/cinepillos_e2e";
-process.env.DIRECT_URL ??= process.env.DATABASE_URL;
+process.env.DATABASE_URL_UNPOOLED ??= process.env.DATABASE_URL;
 process.env.NEXTAUTH_SECRET ??= "e2e-secret";
 
 export const E2E = {
