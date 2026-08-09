@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev -p 6889",
     "build": "next build",
+    "vercel-build": "prisma migrate deploy && next build",
     "start": "next start",
     "lint": "eslint --max-warnings 0",
     "test": "vitest run",
