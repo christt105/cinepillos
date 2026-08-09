@@ -17,6 +17,10 @@ model User {
   isAdmin   Boolean  @default(false)
   createdAt DateTime @default(now())
 
+  /// Always null: written by `PrismaAdapter.createUser`, which passes it on
+  /// every first sign-in. Unused by the app, but the column has to exist.
+  emailVerified DateTime?
+
   activeGroupId String?
   activeGroup   Group? @relation("ActiveGroup", fields: [activeGroupId], references: [id])
 
