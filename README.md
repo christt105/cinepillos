@@ -138,3 +138,7 @@ width and at desktop width.
 GitHub Actions runs lint, tests and build on every push and pull request.
 
 ![Voting room on a phone](docs/screenshot-mobile.png)
+
+## License
+
+[AGPL-3.0](LICENSE).
