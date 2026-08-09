@@ -54,13 +54,16 @@ from `/admin`.
 
 ## Accounts and groups
 
-There is no open registration. An administrator pre-creates users from
-`/admin` (name and email), creates groups, and adds users to them. Signing in
-happens with Google: the first time someone signs in with the email an admin
-registered them under, that Google account links to their existing `User` and
-they keep whatever proposals, votes and membership history it already has.
-The first member of a group is its `OWNER`; only an owner can close the voting
-on a session. Members can change their own name and avatar from `/settings`.
+Signing in with Google creates an account on the spot; there is no invite
+needed to use the app. From there, anyone can create their own club from
+"Crear club" — that makes them its `OWNER`, the only role that can close the
+voting on a session. A regular user can own up to 3 clubs, an admin up to 100
+(checked server-side in `POST /api/groups`). `/admin` still exists for
+pre-provisioning a user by email before their first Google sign-in and for
+adding an existing user to a group by hand; it no longer creates groups
+itself. Members can change their own name and avatar from `/settings`, and
+delete their account entirely from there too — see `/privacy` for what that
+removes.
 
 Every group-scoped URL carries the group id (`/g/<groupId>/...`), and every API
 route under `/api/groups/<groupId>` checks membership before it reads or writes

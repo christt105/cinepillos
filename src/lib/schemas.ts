@@ -48,7 +48,7 @@ export const adminUserUpdateSchema = z
     })
     .strict();
 
-export const adminGroupCreateSchema = z.object({
+export const groupCreateSchema = z.object({
     name: z.string().min(1).max(60),
 });
 

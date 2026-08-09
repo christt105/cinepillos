@@ -26,10 +26,24 @@ export const authOptions: NextAuthOptions = {
     callbacks: {
         session: async ({ session, token }) => {
             if (token.id) {
+                // Runs on every request under the jwt strategy, so this pulls only the
+                // columns the session actually needs (not the full User/Group rows),
+                // and derives activeGroup from `memberships` instead of a second
+                // relational fetch — activeGroupId always points at a group the user
+                // is already a member of, see rememberLastGroup/requireGroupMember.
                 const dbUser = await prisma.user.findUnique({
                     where: { id: token.id as string },
-                    include: { memberships: { include: { group: true } }, activeGroup: true }
+                    select: {
+                        isAdmin: true,
+                        activeGroupId: true,
+                        memberships: {
+                            select: { group: { select: { id: true, name: true } } },
+                        },
+                    },
                 });
+
+                const groups = dbUser?.memberships.map(m => m.group) ?? [];
+                const activeGroup = groups.find(g => g.id === dbUser?.activeGroupId) ?? null;
 
                 return {
                     ...session,
@@ -37,8 +51,8 @@ export const authOptions: NextAuthOptions = {
                         ...session.user,
                         id: token.id,
                         activeGroupId: dbUser?.activeGroupId,
-                        activeGroup: dbUser?.activeGroup,
-                        groups: dbUser?.memberships.map(m => m.group) || [],
+                        activeGroup,
+                        groups,
                         isAdmin: dbUser?.isAdmin || false
                     },
                 };

@@ -44,3 +44,22 @@ export async function PATCH(
         return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
     }
 }
+
+/** Self-service account deletion; cascades to memberships, proposals and votes via the schema. */
+export async function DELETE(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const { id } = await params;
+
+    if (session.user.id !== id) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    await prisma.user.delete({ where: { id } });
+
+    return NextResponse.json({ deleted: true });
+}

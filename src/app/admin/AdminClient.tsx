@@ -23,7 +23,6 @@ export default function AdminClient({ initialUsers, initialGroups }: { initialUs
     const router = useRouter();
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
-    const [groupName, setGroupName] = useState("");
     const [msg, setMsg] = useState("");
 
     const handleCreateUser = async (e: React.FormEvent) => {
@@ -42,17 +41,6 @@ export default function AdminClient({ initialUsers, initialGroups }: { initialUs
             setMsg(`Error: ${data.error}`);
         }
         setTimeout(() => setMsg(""), 3000);
-    };
-
-    const handleCreateGroup = async (e: React.FormEvent) => {
-        e.preventDefault();
-        await fetch("/api/admin/groups", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: groupName }),
-        });
-        setGroupName("");
-        router.refresh();
     };
 
     const handleAssignGroup = async (userId: string, groupId: string) => {
@@ -122,11 +110,12 @@ export default function AdminClient({ initialUsers, initialGroups }: { initialUs
             </div>
 
             <div className={clsx("glass-card", styles.column)}>
-                <h2>Crear Grupo</h2>
-                <form onSubmit={handleCreateGroup} className={styles.form}>
-                    <input className="input" placeholder="Nombre del grupo *" value={groupName} onChange={e => setGroupName(e.target.value)} required />
-                    <button className="btn btn-primary" type="submit">Crear</button>
-                </form>
+                <h2>Grupos</h2>
+                <p className={styles.message}>
+                    Cualquier usuario puede crear su propio club desde &quot;Crear
+                    club&quot;. Este panel ya solo sirve para añadir usuarios existentes
+                    a un grupo a mano.
+                </p>
 
                 <h3 className={styles.listTitle}>Grupos ({initialGroups.length})</h3>
                 <ul className={styles.listTight}>

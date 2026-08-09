@@ -40,3 +40,19 @@
     padding: 0.85rem;
     font-size: 1rem;
 }
+
+.dangerZone {
+    border-color: hsl(var(--destructive) / 0.3);
+}
+
+.dangerText {
+    opacity: 0.7;
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-4);
+    line-height: 1.5;
+}
+
+.dangerActions {
+    display: flex;
+    gap: var(--space-3);
+}

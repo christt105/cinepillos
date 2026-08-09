@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { Film, LogOut, LogIn, Menu, X, Settings } from "lucide-react";
+import { Film, LogOut, LogIn, Menu, X, Settings, Plus } from "lucide-react";
 import clsx from "clsx";
 import styles from "./Navbar.module.css";
 import { useState } from "react";
@@ -61,6 +61,9 @@ export default function Navbar() {
                                 <div className={styles.identity}>
                                     <span className={styles.username}>{session.user?.name || session.user?.email}</span>
                                     {groups.length > 0 && groupSelector()}
+                                    <Link href="/groups/new" className="btn btn-ghost" title="Crear club">
+                                        <Plus size={18} />
+                                    </Link>
                                     {session.user?.isAdmin && (
                                         <Link href="/admin" className={clsx(styles.link, styles.adminLink)}>
                                             Administración
@@ -123,6 +126,13 @@ export default function Navbar() {
                                     <div className={styles.identity}>
                                         <span className={styles.username}>{session.user?.name || session.user?.email}</span>
                                         {groups.length > 0 && groupSelector()}
+                                        <Link
+                                            href="/groups/new"
+                                            className={styles.link}
+                                            onClick={() => setIsMenuOpen(false)}
+                                        >
+                                            Crear club
+                                        </Link>
                                         {session.user?.isAdmin && (
                                             <Link href="/admin" className={clsx(styles.link, styles.adminLink)}>
                                                 Administración
