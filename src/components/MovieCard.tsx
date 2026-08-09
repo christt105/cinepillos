@@ -7,29 +7,32 @@ import { TMDBMovie } from "@/lib/tmdb";
 
 interface MovieCardProps {
     movie: TMDBMovie;
+    /// The group the card is being browsed from, so it links straight to that
+    /// group instead of bouncing through the legacy `/movies/[id]` redirect.
+    groupId: string;
     onAdd?: (movie: TMDBMovie) => void;
     loading?: boolean;
     isProposed?: boolean;
 }
 
-export default function MovieCard({ movie, onAdd, loading = false, isProposed = false }: MovieCardProps) {
-    const imageUrl = movie.poster_path
-        ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-        : "https://via.placeholder.com/500x750?text=No+Image";
-
-    const link = `/movies/${movie.id}`;
+export default function MovieCard({ movie, groupId, onAdd, loading = false, isProposed = false }: MovieCardProps) {
+    const link = `/g/${groupId}/movies/${movie.id}`;
 
     return (
         <div className={styles.card}>
             <div className={styles.imageContainer}>
                 <Link href={link}>
-                    <Image
-                        src={imageUrl}
-                        alt={movie.title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className={styles.image}
-                    />
+                    {movie.poster_path ? (
+                        <Image
+                            src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                            alt={movie.title}
+                            fill
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            className={styles.image}
+                        />
+                    ) : (
+                        <div className="poster-placeholder">Sin poster</div>
+                    )}
                 </Link>
                 <div className={styles.overlay}>
                     <p className={styles.overview}>{movie.overview.slice(0, 150)}...</p>

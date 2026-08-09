@@ -132,6 +132,7 @@ export default function SearchPage() {
                     <MovieCard
                         key={movie.id}
                         movie={movie}
+                        groupId={groupId}
                         onAdd={handleToggle}
                         loading={togglingId === movie.id}
                         isProposed={proposalsMap.has(movie.id)}
