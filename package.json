@@ -15,8 +15,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "studio": "prisma studio",
-    "postinstall": "prisma generate",
-    "backup": "sh scripts/backup-db.sh"
+    "postinstall": "prisma generate"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
