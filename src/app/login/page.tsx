@@ -7,21 +7,42 @@ import { Film } from "lucide-react";
 import clsx from "clsx";
 import styles from "./login.module.css";
 
+/// next-auth redirects back here with `?error=<code>` and no other trace, so
+/// without this every failure looks like the button doing nothing.
+const ERROR_MESSAGES: Record<string, string> = {
+    Configuration: "El servidor de acceso está mal configurado. Avisa al administrador.",
+    AccessDenied: "Has cancelado el acceso o tu cuenta no tiene permiso.",
+    OAuthAccountNotLinked: "Ya existe una cuenta con ese correo creada por otra vía.",
+    OAuthCreateAccount: "No se ha podido crear tu cuenta. Avisa al administrador.",
+    OAuthCallback: "Google ha rechazado la vuelta al sitio. Inténtalo de nuevo.",
+    OAuthSignin: "No se ha podido contactar con Google. Inténtalo de nuevo.",
+    SessionRequired: "Necesitas iniciar sesión para ver esa página.",
+};
+
 function SignInButton() {
     const searchParams = useSearchParams();
     // Only ever a relative, same-app path (e.g. an invite link resumed after
     // login); next-auth itself refuses to redirect to a different origin.
     const callbackUrl = searchParams.get("callbackUrl") || "/";
+    const error = searchParams.get("error");
 
     return (
-        <button
-            type="button"
-            onClick={() => signIn("google", { callbackUrl })}
-            className={clsx("btn btn-primary", styles.submit)}
-        >
-            <GoogleIcon />
-            Continuar con Google
-        </button>
+        <>
+            {error && (
+                <p className={clsx("form-error", styles.error)} role="alert">
+                    {ERROR_MESSAGES[error] ?? "No se ha podido iniciar sesión."}
+                </p>
+            )}
+
+            <button
+                type="button"
+                onClick={() => signIn("google", { callbackUrl })}
+                className={clsx("btn btn-primary", styles.submit)}
+            >
+                <GoogleIcon />
+                Continuar con Google
+            </button>
+        </>
     );
 }
 

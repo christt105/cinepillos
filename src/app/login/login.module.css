@@ -38,6 +38,11 @@
     text-align: center;
 }
 
+.error {
+    margin-bottom: var(--space-4);
+    text-align: center;
+}
+
 .submit {
     display: flex;
     align-items: center;
