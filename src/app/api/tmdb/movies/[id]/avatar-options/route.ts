@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { tmdb } from "@/lib/tmdb";
+import { tvdb } from "@/lib/tvdb";
 
 const MAX_OPTIONS = 12;
 
-/** The textless posters and cast photos of a movie, offered as avatar choices. */
+/** The textless posters and TVDB character photos of a title, offered as avatar choices. */
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
     const session = await getServerSession(authOptions);
     if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -16,20 +17,24 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         return NextResponse.json({ error: "invalid_id" }, { status: 400 });
     }
 
-    const [images, credits] = await Promise.all([
-        tmdb.getMovieImages(tmdbId),
-        tmdb.getMovieCredits(tmdbId),
+    const { searchParams } = new URL(req.url);
+    const mediaType = searchParams.get("mediaType") === "tv" ? "tv" : "movie";
+
+    const [images, remote] = await Promise.all([
+        tmdb.getImages(mediaType, tmdbId),
+        tvdb.findRemoteId(tmdbId, mediaType),
     ]);
+    const characters = remote ? await tvdb.getCharacters(remote) : [];
 
     const posters = images.posters
         .filter(p => p.iso_639_1 === null)
         .slice(0, MAX_OPTIONS)
         .map(p => p.file_path);
 
-    const cast = credits.cast
-        .filter(c => c.profile_path)
+    const cast = characters
+        .filter(c => c.peopleType === "Actor" && c.image)
         .slice(0, MAX_OPTIONS)
-        .map(c => ({ id: c.id, name: c.name, profilePath: c.profile_path as string }));
+        .map(c => ({ id: c.id, name: c.name, imageUrl: c.image }));
 
     return NextResponse.json({ posters, cast });
 }

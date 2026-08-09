@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mockUserUpdate, mockGetMovieImages, mockGetMovieCredits } = vi.hoisted(() => ({
+const { mockUserUpdate, mockGetImages, mockFindRemoteId, mockGetCharacters } = vi.hoisted(() => ({
     mockUserUpdate: vi.fn(),
-    mockGetMovieImages: vi.fn(),
-    mockGetMovieCredits: vi.fn(),
+    mockGetImages: vi.fn(),
+    mockFindRemoteId: vi.fn(),
+    mockGetCharacters: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({
@@ -14,8 +15,14 @@ vi.mock("@/lib/prisma", () => ({
 
 vi.mock("@/lib/tmdb", () => ({
     tmdb: {
-        getMovieImages: mockGetMovieImages,
-        getMovieCredits: mockGetMovieCredits,
+        getImages: mockGetImages,
+    },
+}));
+
+vi.mock("@/lib/tvdb", () => ({
+    tvdb: {
+        findRemoteId: mockFindRemoteId,
+        getCharacters: mockGetCharacters,
     },
 }));
 
@@ -47,25 +54,29 @@ describe("POST /api/users/[id]/avatar", () => {
 
     it("stores a poster path that is present in a fresh TMDB response", async () => {
         vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1" } } as never);
-        mockGetMovieImages.mockResolvedValue({
+        mockGetImages.mockResolvedValue({
             posters: [{ file_path: "/poster.jpg", iso_639_1: null }],
         });
         mockUserUpdate.mockResolvedValue({ id: "u1", image: "/poster.jpg" });
 
-        const res = await POST(makePost("u1", { kind: "poster", tmdbId: 550, path: "/poster.jpg" }), context("u1"));
+        const res = await POST(
+            makePost("u1", { kind: "poster", tmdbId: 550, mediaType: "movie", path: "/poster.jpg" }),
+            context("u1")
+        );
 
         expect(res.status).toBe(200);
         expect(mockUserUpdate).toHaveBeenCalledWith({ where: { id: "u1" }, data: { image: "/poster.jpg" } });
+        expect(mockGetImages).toHaveBeenCalledWith("movie", 550);
     });
 
-    it("refuses a poster path that TMDB does not actually have for that movie", async () => {
+    it("refuses a poster path that TMDB does not actually have for that title", async () => {
         vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1" } } as never);
-        mockGetMovieImages.mockResolvedValue({
+        mockGetImages.mockResolvedValue({
             posters: [{ file_path: "/real.jpg", iso_639_1: null }],
         });
 
         const res = await POST(
-            makePost("u1", { kind: "poster", tmdbId: 550, path: "https://evil.example/x.jpg" }),
+            makePost("u1", { kind: "poster", tmdbId: 550, mediaType: "movie", path: "https://evil.example/x.jpg" }),
             context("u1")
         );
 
@@ -73,42 +84,74 @@ describe("POST /api/users/[id]/avatar", () => {
         expect(mockUserUpdate).not.toHaveBeenCalled();
     });
 
-    it("resolves a cast photo from the person's id rather than trusting a path", async () => {
+    it("resolves a character photo from the TVDB character's id rather than trusting a URL", async () => {
         vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1" } } as never);
-        mockGetMovieCredits.mockResolvedValue({
-            cast: [{ id: 42, name: "Actor", profile_path: "/actor.jpg" }],
-        });
-        mockUserUpdate.mockResolvedValue({ id: "u1", image: "/actor.jpg" });
+        mockFindRemoteId.mockResolvedValue({ type: "movie", id: 247 });
+        mockGetCharacters.mockResolvedValue([
+            { id: 42, name: "Character", image: "https://artworks.thetvdb.com/x.jpg", peopleType: "Actor" },
+        ]);
+        mockUserUpdate.mockResolvedValue({ id: "u1", image: "https://artworks.thetvdb.com/x.jpg" });
 
-        const res = await POST(makePost("u1", { kind: "cast", tmdbId: 550, personId: 42 }), context("u1"));
+        const res = await POST(
+            makePost("u1", { kind: "cast", tmdbId: 550, mediaType: "movie", characterId: 42 }),
+            context("u1")
+        );
 
         expect(res.status).toBe(200);
-        expect(mockUserUpdate).toHaveBeenCalledWith({ where: { id: "u1" }, data: { image: "/actor.jpg" } });
+        expect(mockUserUpdate).toHaveBeenCalledWith({
+            where: { id: "u1" },
+            data: { image: "https://artworks.thetvdb.com/x.jpg" },
+        });
+        expect(mockFindRemoteId).toHaveBeenCalledWith(550, "movie");
     });
 
-    it("refuses a personId that is not in that movie's cast", async () => {
+    it("refuses a characterId that is not in that title's cast", async () => {
         vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1" } } as never);
-        mockGetMovieCredits.mockResolvedValue({ cast: [] });
+        mockFindRemoteId.mockResolvedValue({ type: "movie", id: 247 });
+        mockGetCharacters.mockResolvedValue([]);
 
-        const res = await POST(makePost("u1", { kind: "cast", tmdbId: 550, personId: 999 }), context("u1"));
+        const res = await POST(
+            makePost("u1", { kind: "cast", tmdbId: 550, mediaType: "movie", characterId: 999 }),
+            context("u1")
+        );
 
         expect(res.status).toBe(400);
         expect(mockUserUpdate).not.toHaveBeenCalled();
     });
 
+    it("refuses a cast selection when TVDB has no matching title", async () => {
+        vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1" } } as never);
+        mockFindRemoteId.mockResolvedValue(null);
+
+        const res = await POST(
+            makePost("u1", { kind: "cast", tmdbId: 550, mediaType: "movie", characterId: 42 }),
+            context("u1")
+        );
+
+        expect(res.status).toBe(400);
+        expect(mockUserUpdate).not.toHaveBeenCalled();
+        expect(mockGetCharacters).not.toHaveBeenCalled();
+    });
+
     it("refuses to set another user's avatar", async () => {
         vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1" } } as never);
 
-        const res = await POST(makePost("u2", { kind: "poster", tmdbId: 550, path: "/x.jpg" }), context("u2"));
+        const res = await POST(
+            makePost("u2", { kind: "poster", tmdbId: 550, mediaType: "movie", path: "/x.jpg" }),
+            context("u2")
+        );
 
         expect(res.status).toBe(403);
-        expect(mockGetMovieImages).not.toHaveBeenCalled();
+        expect(mockGetImages).not.toHaveBeenCalled();
     });
 
     it("returns 401 when not authenticated", async () => {
         vi.mocked(getServerSession).mockResolvedValue(null);
 
-        const res = await POST(makePost("u1", { kind: "poster", tmdbId: 550, path: "/x.jpg" }), context("u1"));
+        const res = await POST(
+            makePost("u1", { kind: "poster", tmdbId: 550, mediaType: "movie", path: "/x.jpg" }),
+            context("u1")
+        );
 
         expect(res.status).toBe(401);
     });

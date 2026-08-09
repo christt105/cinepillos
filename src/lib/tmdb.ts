@@ -16,14 +16,14 @@ export interface TMDBResponse<T> {
     total_pages: number;
 }
 
-export interface TMDBCastMember {
+export interface TMDBMultiResult {
     id: number;
-    name: string;
-    profile_path: string | null;
-}
-
-export interface TMDBCredits {
-    cast: TMDBCastMember[];
+    media_type: "movie" | "tv" | "person";
+    title?: string;
+    name?: string;
+    poster_path: string | null;
+    release_date?: string;
+    first_air_date?: string;
 }
 
 export interface TMDBImage {
@@ -67,11 +67,13 @@ export const tmdb = {
     getMovieDetails: async (id: number) => {
         return fetchTMDB<TMDBMovie>(`/movie/${id}`);
     },
-    getMovieCredits: async (id: number) => {
-        return fetchTMDB<TMDBCredits>(`/movie/${id}/credits`);
+    /** Movies and TV shows only — `include_adult` stays off by default, but `search/multi` still mixes in people. */
+    searchMulti: async (query: string) => {
+        const data = await fetchTMDB<TMDBResponse<TMDBMultiResult>>('/search/multi', { query });
+        return { ...data, results: data.results.filter(r => r.media_type === "movie" || r.media_type === "tv") };
     },
     /** `include_image_language=null` asks for the textless posters — no localized title art. */
-    getMovieImages: async (id: number) => {
-        return fetchTMDB<TMDBImages>(`/movie/${id}/images`, { include_image_language: "null" });
+    getImages: async (mediaType: "movie" | "tv", id: number) => {
+        return fetchTMDB<TMDBImages>(`/${mediaType}/${id}/images`, { include_image_language: "null" });
     },
 };
