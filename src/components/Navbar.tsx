@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { Film, LogOut, LogIn, Menu, X, Settings, Plus } from "lucide-react";
+import { Film, LogOut, LogIn, Menu, X, Settings, Plus, ChevronDown } from "lucide-react";
 import clsx from "clsx";
 import styles from "./Navbar.module.css";
 import { useState } from "react";
@@ -19,20 +19,32 @@ export default function Navbar() {
 
     const groupHref = (path: string) => (currentGroupId ? `/g/${currentGroupId}${path}` : "/");
 
-    const groupSelector = () => (
-        <select
-            value={currentGroupId ?? ""}
-            onChange={(e) => router.push(`/g/${e.target.value}`)}
-            className={styles.groupSelect}
-        >
-            <option value="" disabled>Selecciona Grupo</option>
-            {groups.map(g => (
-                <option key={g.id} value={g.id}>
-                    {g.name}
-                </option>
-            ))}
-        </select>
-    );
+    const groupControl = () => {
+        if (groups.length === 0) {
+            return <span className={styles.groupLabel}>Sin club</span>;
+        }
+        if (groups.length === 1) {
+            return <span className={styles.groupLabel}>{groups[0].name}</span>;
+        }
+        return (
+            <div className={styles.groupSelectWrap}>
+                <select
+                    value={currentGroupId ?? ""}
+                    onChange={(e) => router.push(`/g/${e.target.value}`)}
+                    className={styles.groupSelect}
+                    aria-label="Grupo activo"
+                >
+                    <option value="" disabled>Selecciona Grupo</option>
+                    {groups.map(g => (
+                        <option key={g.id} value={g.id}>
+                            {g.name}
+                        </option>
+                    ))}
+                </select>
+                <ChevronDown size={16} className={styles.groupSelectIcon} />
+            </div>
+        );
+    };
 
     return (
         <nav className={clsx(styles.navbar, "glass")}>
@@ -41,6 +53,14 @@ export default function Navbar() {
                     <Film className={styles.icon} />
                     <span>CinePillos</span>
                 </Link>
+
+                {/* Group indicator kept out of the hamburger menu so the active
+                    club is visible on mobile without opening anything */}
+                {session && (
+                    <div className={styles.mobileGroupBar}>
+                        {groupControl()}
+                    </div>
+                )}
 
                 {/* Desktop Links */}
                 <div className={styles.links}>
@@ -59,8 +79,8 @@ export default function Navbar() {
                             )}
                             <div className={styles.userMenu}>
                                 <div className={styles.identity}>
+                                    {groupControl()}
                                     <span className={styles.username}>{session.user?.name || session.user?.email}</span>
-                                    {groups.length > 0 && groupSelector()}
                                     <Link href="/groups/new" className="btn btn-ghost" title="Crear club">
                                         <Plus size={18} />
                                     </Link>
@@ -125,7 +145,6 @@ export default function Navbar() {
                                 <div className={styles.userMenu}>
                                     <div className={styles.identity}>
                                         <span className={styles.username}>{session.user?.name || session.user?.email}</span>
-                                        {groups.length > 0 && groupSelector()}
                                         <Link
                                             href="/groups/new"
                                             className={styles.link}
