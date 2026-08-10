@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import Image from "next/image";
 import { recentMeetingCutoff } from "@/lib/meetings";
 import { avatarUrl } from "@/lib/avatar";
+import { sortByLikes } from "@/lib/proposals";
 import ScheduleMeetingButton from "@/components/ScheduleMeetingButton";
 import ProposalLikeButton from "@/components/ProposalLikeButton";
 import styles from "./home.module.css";
@@ -42,10 +43,20 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
     }
   });
 
-  // Fetch Proposals (Recent Films with Proposals). Likes hang off a proposal,
-  // so a film card acts on the group's first proposal of that film.
-  const filmsWithProposals = await prisma.film.findMany({
-    where: { proposals: { some: { groupId } } },
+  // Films the group already watched: they won a meeting that is now concluded.
+  const concludedMeetings = await prisma.meeting.findMany({
+    where: { groupId, status: 'CONCLUDED', selectedFilmId: { not: null } },
+    select: { selectedFilmId: true }
+  });
+  const watchedFilmIds = concludedMeetings.flatMap(meeting => meeting.selectedFilmId ?? []);
+
+  // Fetch Proposals (Films with Proposals, most liked first). Likes hang off a
+  // proposal, so a film card acts on the group's first proposal of that film.
+  const proposedFilms = await prisma.film.findMany({
+    where: {
+      proposals: { some: { groupId } },
+      ...(watchedFilmIds.length > 0 ? { NOT: { id: { in: watchedFilmIds } } } : {})
+    },
     orderBy: { createdAt: 'desc' },
     include: {
       proposals: {
@@ -59,6 +70,8 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
       }
     }
   });
+
+  const filmsWithProposals = sortByLikes(proposedFilms);
 
   return (
     <div className="page">
