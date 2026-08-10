@@ -164,6 +164,16 @@ If you find CinePillos useful and want to support its development, you can buy m
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/christt105)
 
+## Attribution
+
+This product uses the [TMDB](https://www.themoviedb.org/) API for film
+search, posters and metadata, but is not endorsed or certified by TMDB.
+
+Character avatar photos are provided by [TheTVDB](https://thetvdb.com/).
+Please consider adding missing information or subscribing.
+
+Both are also credited in the app's footer, visible on every page.
+
 ## License
 
 [AGPL-3.0](LICENSE).
