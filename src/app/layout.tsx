@@ -4,12 +4,13 @@ import "./globals.css";
 import { Providers } from "./providers";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { SITE_DESCRIPTION, SITE_NAME, siteUrl, socialMetadata } from "@/lib/metadata";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "CinePillos",
-  description: "A private film club for friends",
+  metadataBase: siteUrl(),
+  ...socialMetadata({ title: SITE_NAME, description: SITE_DESCRIPTION }),
 };
 
 export default function RootLayout({

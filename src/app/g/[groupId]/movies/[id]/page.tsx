@@ -1,6 +1,8 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { requireGroupPage } from "@/lib/group-page";
 import { tmdb } from "@/lib/tmdb";
+import { SITE_NAME, socialMetadata } from "@/lib/metadata";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,6 +13,40 @@ import styles from "./movie.module.css";
 
 interface PageProps {
     params: Promise<{ groupId: string; id: string }>;
+}
+
+/** Poster size that keeps the card sharp without shipping the original file. */
+const OG_POSTER = { base: "https://image.tmdb.org/t/p/w780", width: 780, height: 1170 };
+
+const MAX_OG_DESCRIPTION = 200;
+
+export async function generateMetadata(props: PageProps): Promise<Metadata> {
+    const { id } = await props.params;
+    const tmdbId = Number(id);
+
+    if (isNaN(tmdbId)) return {};
+
+    let movie;
+    try {
+        movie = await tmdb.getMovieDetails(tmdbId);
+    } catch (e) {
+        console.error("Failed to fetch TMDB movie for metadata", e);
+    }
+
+    if (!movie?.title) return {};
+
+    const overview = movie.overview?.trim() || `Propuesta en ${SITE_NAME}.`;
+
+    return socialMetadata({
+        title: `${movie.title} · ${SITE_NAME}`,
+        description: overview.length > MAX_OG_DESCRIPTION
+            ? `${overview.slice(0, MAX_OG_DESCRIPTION).trimEnd()}…`
+            : overview,
+        // image.tmdb.org is public https, so the crawlers fetch it directly.
+        image: movie.poster_path
+            ? { url: `${OG_POSTER.base}${movie.poster_path}`, width: OG_POSTER.width, height: OG_POSTER.height }
+            : undefined,
+    });
 }
 
 export default async function MovieDetailsPage(props: PageProps) {
