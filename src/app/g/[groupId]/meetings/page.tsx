@@ -6,6 +6,8 @@ import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import DateTimePicker from "@/components/DateTimePicker";
 import ScheduleMeetingButton from "@/components/ScheduleMeetingButton";
+import MeetingFilmSearch from "./MeetingFilmSearch";
+import { TMDBMovie } from "@/lib/tmdb";
 import clsx from "clsx";
 import styles from "./meetings.module.css";
 
@@ -56,6 +58,8 @@ export default function MeetingsPage() {
     // State for candidate selection
     const [proposedFilms, setProposedFilms] = useState<ProposedFilm[]>([]);
     const [showAddModal, setShowAddModal] = useState<string | null>(null); // meetingId
+    const [pickerTab, setPickerTab] = useState<"proposals" | "search">("proposals");
+    const [proposingId, setProposingId] = useState<number | null>(null);
     const [showDateModal, setShowDateModal] = useState(false);
     const [newMeetingDate, setNewMeetingDate] = useState<Date>(new Date());
 
@@ -190,8 +194,44 @@ export default function MeetingsPage() {
         }
     };
 
+    /**
+     * Proposes a film found on TMDB and promotes it to candidate of the meeting
+     * in a single action, so nobody has to walk through `/search` and back.
+     */
+    const handleProposeAndAdd = async (meetingId: string, movie: TMDBMovie) => {
+        if (proposingId === movie.id) return;
+        setProposingId(movie.id);
+
+        try {
+            const proposalRes = await fetch(`/api/groups/${groupId}/proposals`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    tmdbId: movie.id,
+                    title: movie.title,
+                    overview: movie.overview,
+                    posterPath: movie.poster_path,
+                    releaseDate: movie.release_date
+                })
+            });
+
+            if (!proposalRes.ok) {
+                alert("No se ha podido proponer la película");
+                return;
+            }
+
+            const proposal = await proposalRes.json();
+            await handleAddCandidate(meetingId, proposal.filmId);
+        } catch (error) {
+            console.error("Propose from meeting failed", error);
+        } finally {
+            setProposingId(null);
+        }
+    };
+
     const openAddModal = (meetingId: string) => {
         setShowAddModal(meetingId);
+        setPickerTab("proposals");
         fetchProposedFilms();
     };
 
@@ -336,18 +376,41 @@ export default function MeetingsPage() {
                                                     <h5>Elige película a proponer:</h5>
                                                     <button onClick={() => setShowAddModal(null)} className={clsx("btn btn-ghost", styles.smallAction)}>Cerrar</button>
                                                 </div>
-                                                <div className={styles.pickerList}>
-                                                    {proposedFilms.map(film => (
-                                                        <button
-                                                            key={film.id}
-                                                            className={clsx("btn btn-ghost", styles.pickerOption)}
-                                                            onClick={() => handleAddCandidate(meeting.id, film.id)}
-                                                        >
-                                                            <span>{film.title}</span>
-                                                        </button>
-                                                    ))}
-                                                    {proposedFilms.length === 0 && <p className={styles.pickerEmpty}>No se encontraron propuestas.</p>}
+                                                <div className={styles.pickerTabs}>
+                                                    <button
+                                                        className={clsx("btn", pickerTab === "proposals" ? "btn-primary" : "btn-ghost")}
+                                                        onClick={() => setPickerTab("proposals")}
+                                                    >
+                                                        Propuestas del grupo
+                                                    </button>
+                                                    <button
+                                                        className={clsx("btn", pickerTab === "search" ? "btn-primary" : "btn-ghost")}
+                                                        onClick={() => setPickerTab("search")}
+                                                    >
+                                                        Buscar película
+                                                    </button>
                                                 </div>
+
+                                                {pickerTab === "proposals" ? (
+                                                    <div className={styles.pickerList}>
+                                                        {proposedFilms.map(film => (
+                                                            <button
+                                                                key={film.id}
+                                                                className={clsx("btn btn-ghost", styles.pickerOption)}
+                                                                onClick={() => handleAddCandidate(meeting.id, film.id)}
+                                                            >
+                                                                <span>{film.title}</span>
+                                                            </button>
+                                                        ))}
+                                                        {proposedFilms.length === 0 && <p className={styles.pickerEmpty}>No se encontraron propuestas.</p>}
+                                                    </div>
+                                                ) : (
+                                                    <MeetingFilmSearch
+                                                        groupId={groupId}
+                                                        proposingId={proposingId}
+                                                        onPropose={movie => handleProposeAndAdd(meeting.id, movie)}
+                                                    />
+                                                )}
                                             </div>
                                         ) : (
                                             <button

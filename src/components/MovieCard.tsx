@@ -47,7 +47,7 @@ export default function MovieCard({ movie, groupId, onAdd, loading = false, isPr
                             ) : (
                                 <Plus size={16} className={clsx(styles.toggleIcon, isProposed && styles.toggleIconOn)} />
                             )}
-                            {isProposed ? "Quitar" : "Añadir"}
+                            {isProposed ? "Quitar" : "Proponer"}
                         </button>
                         <a
                             href={`https://www.themoviedb.org/movie/${movie.id}`}
