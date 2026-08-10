@@ -136,13 +136,20 @@ describe("POST /api/groups/[groupId]/meetings", () => {
         expect(mockCreate).not.toHaveBeenCalled();
     });
 
-    it("returns 400 when date is missing", async () => {
+    it("creates an undated meeting in PLANNING when no date is given", async () => {
         asMember();
+
+        mockCreate.mockResolvedValue({ id: "m3", date: null, status: "PLANNING", groupId: GROUP_ID });
 
         const [req, ctx] = makePost(GROUP_ID, {});
         const res = await POST(req, ctx);
 
-        expect(res.status).toBe(400);
+        expect(res.status).toBe(200);
+        expect(mockCreate).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({ groupId: GROUP_ID, status: "PLANNING", date: null }),
+            })
+        );
     });
 
     it("returns 400 when the date is not a real date", async () => {

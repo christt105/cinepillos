@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import Image from "next/image";
 import { recentMeetingCutoff } from "@/lib/meetings";
 import { avatarUrl } from "@/lib/avatar";
+import ScheduleMeetingButton from "@/components/ScheduleMeetingButton";
 import styles from "./home.module.css";
 
 export const dynamic = "force-dynamic";
@@ -13,13 +14,17 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
   const { groupId } = await params;
   await requireGroupPage(groupId);
 
-  // Fetch Next Meeting (or recently concluded)
+  // Fetch Next Meeting (or recently concluded), including one still in
+  // PLANNING, which has no date to filter or sort by yet.
   const nextMeeting = await prisma.meeting.findFirst({
     where: {
-      date: { gt: recentMeetingCutoff() }, // Show meetings from last 24h to keep concluded ones visible
+      OR: [
+        { date: { gt: recentMeetingCutoff() } }, // Show meetings from last 24h to keep concluded ones visible
+        { date: null }
+      ],
       groupId
     },
-    orderBy: { date: 'asc' },
+    orderBy: { date: { sort: 'asc', nulls: 'last' } },
     include: {
       candidates: {
         include: {
@@ -52,7 +57,9 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
           <div className={`glass-card ${styles.hero}`}>
             <div className={styles.heroContent}>
               <h3 className={styles.heroDate}>
-                {new Date(nextMeeting.date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
+                {nextMeeting.date
+                  ? new Date(nextMeeting.date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })
+                  : 'Sin fecha todavía'}
               </h3>
               <p className={styles.heroStatus}>Estado: {nextMeeting.status}</p>
 
@@ -146,9 +153,19 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
 
               {/* Status: PLANNING (Default) */}
               {(nextMeeting.status === 'PLANNING' || !nextMeeting.status) && (
-                <Link href={`/g/${groupId}/meetings`} className="btn btn-primary">
-                  Ir a la Sala de Votación
-                </Link>
+                <div>
+                  <p className={styles.planningCount}>
+                    {nextMeeting.candidates.length === 1
+                      ? '1 película propuesta'
+                      : `${nextMeeting.candidates.length} películas propuestas`}
+                  </p>
+                  <div className={styles.heroActions}>
+                    <ScheduleMeetingButton groupId={groupId} meetingId={nextMeeting.id} />
+                    <Link href={`/g/${groupId}/meetings`} className="btn btn-ghost">
+                      Proponer Películas
+                    </Link>
+                  </div>
+                </div>
               )}
 
             </div>

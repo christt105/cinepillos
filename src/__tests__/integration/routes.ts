@@ -1,6 +1,7 @@
 import { GET as getProposals, POST as postProposal } from "@/app/api/groups/[groupId]/proposals/route";
 import { DELETE as deleteProposal } from "@/app/api/groups/[groupId]/proposals/[id]/route";
 import { GET as getMeetings, POST as postMeeting } from "@/app/api/groups/[groupId]/meetings/route";
+import { PATCH as patchMeeting } from "@/app/api/groups/[groupId]/meetings/[id]/route";
 import { POST as postCandidate } from "@/app/api/groups/[groupId]/meetings/[id]/candidates/route";
 import { DELETE as deleteCandidate } from "@/app/api/groups/[groupId]/meetings/[id]/candidates/[candidateId]/route";
 import { PATCH as patchConclude } from "@/app/api/groups/[groupId]/meetings/[id]/conclude/route";
@@ -48,6 +49,12 @@ export const api = {
 
     createMeeting: (groupId: string, body: unknown) =>
         postMeeting(jsonRequest(`/api/groups/${groupId}/meetings`, "POST", body), context({ groupId })),
+
+    scheduleMeeting: (groupId: string, meetingId: string, body: unknown) =>
+        patchMeeting(
+            jsonRequest(`/api/groups/${groupId}/meetings/${meetingId}`, "PATCH", body),
+            context({ groupId, id: meetingId })
+        ),
 
     addCandidate: (groupId: string, meetingId: string, body: unknown) =>
         postCandidate(

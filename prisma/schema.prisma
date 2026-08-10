@@ -141,9 +141,11 @@ model Proposal {
   @@unique([userId, filmId, groupId])
 }
 
+/// A meeting without a `date` is still in the `PLANNING` phase: the group is
+/// gathering candidates before committing to a day.
 model Meeting {
-  id             String   @id @default(cuid())
-  date           DateTime
+  id             String    @id @default(cuid())
+  date           DateTime?
   status         String
   selectedFilmId String?
   groupId        String

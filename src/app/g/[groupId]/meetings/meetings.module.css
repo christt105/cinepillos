@@ -7,6 +7,12 @@
     margin-bottom: var(--space-6);
 }
 
+.headerActions {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
 .modalTitle {
     margin-bottom: var(--space-5);
     text-align: center;
@@ -67,6 +73,14 @@
     text-align: center;
     min-width: 60px;
     flex-shrink: 0;
+}
+
+.dateBadgeUndated {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: hsl(var(--secondary));
+    min-height: 60px;
 }
 
 .dateDay {
@@ -216,7 +230,7 @@
 
 .pending {
     text-align: center;
-    padding: var(--space-6);
+    padding: var(--space-4);
     opacity: 0.6;
 }
 

@@ -1,0 +1,11 @@
+.title {
+    margin-bottom: var(--space-5);
+    text-align: center;
+}
+
+.actions {
+    display: flex;
+    gap: var(--space-4);
+    justify-content: flex-end;
+    margin-top: var(--space-6);
+}

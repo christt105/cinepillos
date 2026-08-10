@@ -5,12 +5,13 @@ import { Calendar as CalendarIcon, ThumbsUp, Plus, Trash2, User, Trophy } from "
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import DateTimePicker from "@/components/DateTimePicker";
+import ScheduleMeetingButton from "@/components/ScheduleMeetingButton";
 import clsx from "clsx";
 import styles from "./meetings.module.css";
 
 interface Meeting {
     id: string;
-    date: string;
+    date: string | null;
     status: string;
     selectedFilmId: string | null;
     candidates: Candidate[];
@@ -110,12 +111,13 @@ export default function MeetingsPage() {
         }
     };
 
-    const handleCreateMeeting = async () => {
+    /** Without a date the meeting is created in PLANNING, still undated. */
+    const handleCreateMeeting = async (date: Date | null) => {
         try {
             const res = await fetch(`/api/groups/${groupId}/meetings`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ date: newMeetingDate.toISOString() })
+                body: JSON.stringify({ date: date ? date.toISOString() : null })
             });
 
             if (res.ok) {
@@ -201,9 +203,14 @@ export default function MeetingsPage() {
         <div className="page page-narrow">
             <header className={styles.header}>
                 <h1>Sesiones de Cine</h1>
-                <button className="btn btn-primary" onClick={() => setShowDateModal(true)}>
-                    <Plus size={16} /> Programar Reunión
-                </button>
+                <div className={styles.headerActions}>
+                    <button className="btn btn-ghost" onClick={() => handleCreateMeeting(null)}>
+                        <Plus size={16} /> Abrir Planificación
+                    </button>
+                    <button className="btn btn-primary" onClick={() => setShowDateModal(true)}>
+                        <Plus size={16} /> Programar Reunión
+                    </button>
+                </div>
             </header>
 
             {/* Date Selection Modal */}
@@ -214,7 +221,7 @@ export default function MeetingsPage() {
                         <DateTimePicker value={newMeetingDate} onChange={setNewMeetingDate} />
                         <div className={styles.modalActions}>
                             <button className="btn btn-ghost" onClick={() => setShowDateModal(false)}>Cancelar</button>
-                            <button className="btn btn-primary" onClick={handleCreateMeeting}>Programar</button>
+                            <button className="btn btn-primary" onClick={() => handleCreateMeeting(newMeetingDate)}>Programar</button>
                         </div>
                     </div>
                 </div>
@@ -233,18 +240,28 @@ export default function MeetingsPage() {
                     meetings.map((meeting) => (
                         <div key={meeting.id} className={clsx("glass-card", styles.meeting)}>
                             <div className={styles.meetingHeader}>
-                                <div className={styles.dateBadge}>
-                                    <span className={styles.dateDay}>
-                                        {new Date(meeting.date).getDate()}
-                                    </span>
-                                    <span className={styles.dateMonth}>
-                                        {new Date(meeting.date).toLocaleString('default', { month: 'short' })}
-                                    </span>
+                                <div className={clsx(styles.dateBadge, !meeting.date && styles.dateBadgeUndated)}>
+                                    {meeting.date ? (
+                                        <>
+                                            <span className={styles.dateDay}>
+                                                {new Date(meeting.date).getDate()}
+                                            </span>
+                                            <span className={styles.dateMonth}>
+                                                {new Date(meeting.date).toLocaleString('default', { month: 'short' })}
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <CalendarIcon size={24} />
+                                    )}
                                 </div>
                                 <div className={styles.meetingInfo}>
                                     <h3 className={styles.meetingDate}>
-                                        {new Date(meeting.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                                        {' '}{new Date(meeting.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        {meeting.date ? (
+                                            <>
+                                                {new Date(meeting.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                                {' '}{new Date(meeting.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </>
+                                        ) : "Sin fecha todavía"}
                                     </h3>
                                     <div className={styles.meetingMeta}>
                                         <span className={clsx(styles.status, meeting.status === 'VOTING' && styles.statusVoting)}>
@@ -258,12 +275,25 @@ export default function MeetingsPage() {
                                                 Finalizar Votación
                                             </button>
                                         )}
+                                        {meeting.status === 'PLANNING' && (
+                                            <ScheduleMeetingButton
+                                                groupId={groupId}
+                                                meetingId={meeting.id}
+                                                className={styles.smallAction}
+                                                onScheduled={fetchMeetings}
+                                            />
+                                        )}
                                     </div>
                                 </div>
                             </div>
 
-                            {meeting.status === 'VOTING' && (
+                            {(meeting.status === 'VOTING' || meeting.status === 'PLANNING') && (
                                 <div>
+                                    {meeting.status === 'PLANNING' && (
+                                        <p className={styles.pending}>
+                                            Aún sin fecha: propón películas y prográmala cuando decidáis el día.
+                                        </p>
+                                    )}
                                     <h4 className={styles.candidatesTitle}>Películas Propuestas</h4>
                                     <div className={styles.candidates}>
                                         {meeting.candidates.map((candidate) => (
@@ -281,11 +311,15 @@ export default function MeetingsPage() {
                                                     </div>
                                                 </div>
                                                 <div className={styles.candidateActions}>
-                                                    <span className={styles.voteCount}>{candidate.votes.length} votos</span>
+                                                    {meeting.status === 'VOTING' && (
+                                                        <>
+                                                            <span className={styles.voteCount}>{candidate.votes.length} votos</span>
 
-                                                    <button className={clsx("btn btn-ghost", styles.voteButton)} onClick={() => handleVote(meeting.id, candidate.id)}>
-                                                        <ThumbsUp size={18} />
-                                                    </button>
+                                                            <button className={clsx("btn btn-ghost", styles.voteButton)} onClick={() => handleVote(meeting.id, candidate.id)}>
+                                                                <ThumbsUp size={18} />
+                                                            </button>
+                                                        </>
+                                                    )}
 
                                                     {candidate.userId === session?.user?.id && (
                                                         <button className={clsx("btn btn-ghost", styles.removeButton)} onClick={() => handleRemoveCandidate(meeting.id, candidate.id)}>
@@ -324,12 +358,6 @@ export default function MeetingsPage() {
                                             </button>
                                         )}
                                     </div>
-                                </div>
-                            )}
-
-                            {meeting.status === 'PLANNING' && (
-                                <div className={styles.pending}>
-                                    <p>La votación aún no ha comenzado.</p>
                                 </div>
                             )}
 

@@ -244,4 +244,89 @@ describe("GET /api/groups/[groupId]/meetings", () => {
 
         expect(res.status).toBe(400);
     });
+
+    it("lists undated meetings still in planning", async () => {
+        await createMeeting(group, { date: null, status: "PLANNING" });
+
+        signIn(member);
+        const res = await api.listMeetings(group.id);
+        const meetings = await res.json();
+
+        expect(meetings).toHaveLength(1);
+        expect(meetings[0].date).toBeNull();
+        expect(meetings[0].status).toBe("PLANNING");
+    });
+});
+
+describe("planning meetings", () => {
+    it("creates a meeting in PLANNING when no date is given", async () => {
+        signIn(member);
+
+        const res = await api.createMeeting(group.id, {});
+
+        expect(res.status).toBe(200);
+        const stored = await prisma.meeting.findFirstOrThrow({ where: { groupId: group.id } });
+        expect(stored.date).toBeNull();
+        expect(stored.status).toBe("PLANNING");
+    });
+
+    it("takes candidates like a meeting already voting", async () => {
+        const meeting = await createMeeting(group, { date: null, status: "PLANNING" });
+        const film = await createFilm();
+        signIn(member);
+
+        const res = await api.addCandidate(group.id, meeting.id, { filmId: film.id });
+
+        expect(res.status).toBe(200);
+        expect(await prisma.meetingCandidate.count({ where: { meetingId: meeting.id } })).toBe(1);
+    });
+
+    it("moves to VOTING once it gets a date", async () => {
+        const meeting = await createMeeting(group, { date: null, status: "PLANNING" });
+        const date = new Date(Date.now() + 3 * 86400000);
+        signIn(member);
+
+        const res = await api.scheduleMeeting(group.id, meeting.id, { date: date.toISOString() });
+
+        expect(res.status).toBe(200);
+        const stored = await prisma.meeting.findUniqueOrThrow({ where: { id: meeting.id } });
+        expect(stored.status).toBe("VOTING");
+        expect(stored.date?.toISOString()).toBe(date.toISOString());
+    });
+
+    it("rejects a date in the past", async () => {
+        const meeting = await createMeeting(group, { date: null, status: "PLANNING" });
+        signIn(member);
+
+        const res = await api.scheduleMeeting(group.id, meeting.id, {
+            date: new Date(Date.now() - 86400000).toISOString(),
+        });
+
+        expect(res.status).toBe(400);
+        const stored = await prisma.meeting.findUniqueOrThrow({ where: { id: meeting.id } });
+        expect(stored.status).toBe("PLANNING");
+    });
+
+    it("refuses to reschedule a meeting already voting", async () => {
+        const meeting = await createMeeting(group);
+        signIn(member);
+
+        const res = await api.scheduleMeeting(group.id, meeting.id, {
+            date: new Date(Date.now() + 86400000).toISOString(),
+        });
+
+        expect(res.status).toBe(400);
+    });
+
+    it("refuses a caller outside the group", async () => {
+        const meeting = await createMeeting(group, { date: null, status: "PLANNING" });
+        const outsider = await createUser();
+        signIn(outsider);
+
+        const res = await api.scheduleMeeting(group.id, meeting.id, {
+            date: new Date(Date.now() + 86400000).toISOString(),
+        });
+
+        expect(res.status).toBe(403);
+    });
 });
