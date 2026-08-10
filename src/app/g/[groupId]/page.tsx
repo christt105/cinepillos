@@ -202,7 +202,7 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
                   <div className={styles.proposerStack}>
                     {film.proposals.slice(0, 3).map((proposal) => (
                       <div key={proposal.id} className={`avatar ${styles.stackAvatar}`}>
-                        <Image src={avatarUrl(proposal.user)} alt={proposal.user.name || ''} fill />
+                        <Image src={avatarUrl(proposal.user)} alt={proposal.user.name || ''} fill className="poster-image" />
                       </div>
                     ))}
                     {film.proposals.length > 3 && (
