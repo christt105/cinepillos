@@ -30,6 +30,7 @@ model User {
 
   proposals          Proposal[]
   votes              Vote[]
+  likes              Like[]
   candidatesProposed MeetingCandidate[]
   invitationsSent    Invitation[]
 }
@@ -137,8 +138,23 @@ model Proposal {
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   film  Film  @relation(fields: [filmId], references: [id], onDelete: Cascade)
   group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  likes Like[]
 
   @@unique([userId, filmId, groupId])
+}
+
+/// Light support for a proposal, deliberately separate from `Vote`, which is
+/// the formal choice inside a single meeting.
+model Like {
+  id         String   @id @default(cuid())
+  userId     String
+  proposalId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  proposal Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, proposalId])
 }
 
 /// A meeting without a `date` is still in the `PLANNING` phase: the group is

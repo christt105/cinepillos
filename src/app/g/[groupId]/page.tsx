@@ -6,13 +6,14 @@ import Image from "next/image";
 import { recentMeetingCutoff } from "@/lib/meetings";
 import { avatarUrl } from "@/lib/avatar";
 import ScheduleMeetingButton from "@/components/ScheduleMeetingButton";
+import ProposalLikeButton from "@/components/ProposalLikeButton";
 import styles from "./home.module.css";
 
 export const dynamic = "force-dynamic";
 
 export default async function GroupHome({ params }: { params: Promise<{ groupId: string }> }) {
   const { groupId } = await params;
-  await requireGroupPage(groupId);
+  const { session } = await requireGroupPage(groupId);
 
   // Fetch Next Meeting (or recently concluded), including one still in
   // PLANNING, which has no date to filter or sort by yet.
@@ -41,11 +42,22 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
     }
   });
 
-  // Fetch Proposals (Recent Films with Proposals)
+  // Fetch Proposals (Recent Films with Proposals). Likes hang off a proposal,
+  // so a film card acts on the group's first proposal of that film.
   const filmsWithProposals = await prisma.film.findMany({
     where: { proposals: { some: { groupId } } },
     orderBy: { createdAt: 'desc' },
-    include: { proposals: { where: { groupId }, include: { user: true } } }
+    include: {
+      proposals: {
+        where: { groupId },
+        orderBy: { createdAt: 'asc' },
+        include: {
+          user: true,
+          _count: { select: { likes: true } },
+          likes: { where: { userId: session.user.id }, select: { id: true } }
+        }
+      }
+    }
   });
 
   return (
@@ -204,31 +216,45 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
 
         {filmsWithProposals.length > 0 ? (
           <div className="responsive-proposals">
-            {filmsWithProposals.map((film) => (
-              <Link key={film.id} href={`/g/${groupId}/movies/${film.tmdbId}`}>
-                <div className="proposal-card">
-                  <div className="poster">
-                    <Image
-                      src={`https://image.tmdb.org/t/p/w500${film.posterPath}`}
-                      alt={film.title}
-                      fill
-                      className="poster-image"
-                    />
-                  </div>
-                  <h4 className="poster-title">{film.title}</h4>
-                  <div className={styles.proposerStack}>
-                    {film.proposals.slice(0, 3).map((proposal) => (
-                      <div key={proposal.id} className={`avatar ${styles.stackAvatar}`}>
-                        <Image src={avatarUrl(proposal.user)} alt={proposal.user.name || ''} fill className="poster-image" />
-                      </div>
-                    ))}
-                    {film.proposals.length > 3 && (
-                      <span className={styles.stackMore}>+{film.proposals.length - 3}</span>
+            {filmsWithProposals.map((film) => {
+              const mainProposal = film.proposals[0];
+
+              return (
+                <div key={film.id} className="proposal-card">
+                  <Link href={`/g/${groupId}/movies/${film.tmdbId}`}>
+                    <div className="poster">
+                      <Image
+                        src={`https://image.tmdb.org/t/p/w500${film.posterPath}`}
+                        alt={film.title}
+                        fill
+                        className="poster-image"
+                      />
+                    </div>
+                    <h4 className="poster-title">{film.title}</h4>
+                  </Link>
+                  <div className={styles.proposalFooter}>
+                    <div className={styles.proposerStack}>
+                      {film.proposals.slice(0, 3).map((proposal) => (
+                        <div key={proposal.id} className={`avatar ${styles.stackAvatar}`}>
+                          <Image src={avatarUrl(proposal.user)} alt={proposal.user.name || ''} fill className="poster-image" />
+                        </div>
+                      ))}
+                      {film.proposals.length > 3 && (
+                        <span className={styles.stackMore}>+{film.proposals.length - 3}</span>
+                      )}
+                    </div>
+                    {mainProposal && (
+                      <ProposalLikeButton
+                        groupId={groupId}
+                        proposalId={mainProposal.id}
+                        initialCount={mainProposal._count.likes}
+                        initialLiked={mainProposal.likes.length > 0}
+                      />
                     )}
                   </div>
                 </div>
-              </Link>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className={styles.emptyProposals}>

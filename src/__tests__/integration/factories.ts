@@ -119,6 +119,7 @@ export async function resetDatabase() {
     await prisma.vote.deleteMany();
     await prisma.meetingCandidate.deleteMany();
     await prisma.meeting.deleteMany();
+    await prisma.like.deleteMany();
     await prisma.proposal.deleteMany();
     await prisma.film.deleteMany();
     await prisma.invitation.deleteMany();

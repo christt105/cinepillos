@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import DateTimePicker from "@/components/DateTimePicker";
 import ScheduleMeetingButton from "@/components/ScheduleMeetingButton";
 import MeetingFilmSearch from "./MeetingFilmSearch";
+import ProposalLikeButton from "@/components/ProposalLikeButton";
 import { TMDBMovie } from "@/lib/tmdb";
 import clsx from "clsx";
 import styles from "./meetings.module.css";
@@ -48,6 +49,16 @@ interface ProposedFilm {
 interface Proposal {
     id: string;
     film: ProposedFilm;
+    _count: { likes: number };
+    likes: { id: string }[];
+}
+
+/// One entry per film: the group's first proposal of it carries the likes.
+interface ProposedFilmOption {
+    film: ProposedFilm;
+    proposalId: string;
+    likeCount: number;
+    liked: boolean;
 }
 
 export default function MeetingsPage() {
@@ -56,7 +67,7 @@ export default function MeetingsPage() {
     const [meetings, setMeetings] = useState<Meeting[]>([]);
     const [loading, setLoading] = useState(true);
     // State for candidate selection
-    const [proposedFilms, setProposedFilms] = useState<ProposedFilm[]>([]);
+    const [proposedFilms, setProposedFilms] = useState<ProposedFilmOption[]>([]);
     const [showAddModal, setShowAddModal] = useState<string | null>(null); // meetingId
     const [pickerTab, setPickerTab] = useState<"proposals" | "search">("proposals");
     const [proposingId, setProposingId] = useState<number | null>(null);
@@ -82,10 +93,15 @@ export default function MeetingsPage() {
         if (res.ok) {
             const data = await res.json();
             // Filter unique films
-            const uniqueFilms = new Map<string, ProposedFilm>();
+            const uniqueFilms = new Map<string, ProposedFilmOption>();
             (data as Proposal[]).forEach(proposal => {
                 if (!uniqueFilms.has(proposal.film.id)) {
-                    uniqueFilms.set(proposal.film.id, proposal.film);
+                    uniqueFilms.set(proposal.film.id, {
+                        film: proposal.film,
+                        proposalId: proposal.id,
+                        likeCount: proposal._count.likes,
+                        liked: proposal.likes.length > 0,
+                    });
                 }
             });
             setProposedFilms(Array.from(uniqueFilms.values()));
@@ -393,14 +409,21 @@ export default function MeetingsPage() {
 
                                                 {pickerTab === "proposals" ? (
                                                     <div className={styles.pickerList}>
-                                                        {proposedFilms.map(film => (
-                                                            <button
-                                                                key={film.id}
-                                                                className={clsx("btn btn-ghost", styles.pickerOption)}
-                                                                onClick={() => handleAddCandidate(meeting.id, film.id)}
-                                                            >
-                                                                <span>{film.title}</span>
-                                                            </button>
+                                                        {proposedFilms.map(option => (
+                                                            <div key={option.film.id} className={styles.pickerRow}>
+                                                                <button
+                                                                    className={clsx("btn btn-ghost", styles.pickerOption)}
+                                                                    onClick={() => handleAddCandidate(meeting.id, option.film.id)}
+                                                                >
+                                                                    <span>{option.film.title}</span>
+                                                                </button>
+                                                                <ProposalLikeButton
+                                                                    groupId={groupId}
+                                                                    proposalId={option.proposalId}
+                                                                    initialCount={option.likeCount}
+                                                                    initialLiked={option.liked}
+                                                                />
+                                                            </div>
                                                         ))}
                                                         {proposedFilms.length === 0 && <p className={styles.pickerEmpty}>No se encontraron propuestas.</p>}
                                                     </div>

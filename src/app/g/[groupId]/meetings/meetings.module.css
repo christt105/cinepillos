@@ -260,7 +260,15 @@
     overflow-y: auto;
 }
 
+.pickerRow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
 .pickerOption {
+    flex: 1;
+    min-width: 0;
     justify-content: flex-start;
     text-align: left;
 }
