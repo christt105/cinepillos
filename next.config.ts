@@ -15,6 +15,12 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/t/p/**",
       },
+      {
+        protocol: "https",
+        hostname: "artworks.thetvdb.com",
+        port: "",
+        pathname: "/**",
+      },
     ],
   },
 };

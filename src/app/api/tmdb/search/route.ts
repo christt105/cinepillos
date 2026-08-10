@@ -15,6 +15,7 @@ export async function GET(request: Request) {
         return NextResponse.json(trending);
     }
 
-    const results = await tmdb.searchMovies(query);
+    /** `media=multi` also searches TV shows — used by the avatar picker, which isn't limited to films. */
+    const results = searchParams.get("media") === "multi" ? await tmdb.searchMulti(query) : await tmdb.searchMovies(query);
     return NextResponse.json(results);
 }

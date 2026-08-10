@@ -12,8 +12,9 @@ that group.
 
 Next.js (App Router) with React server components, Prisma over Postgres
 (hosted on [Neon](https://neon.tech)), NextAuth with Google as the only
-provider, and TMDB for film search, posters, metadata and avatars. No CSS framework:
-design tokens in `src/app/globals.css` plus CSS Modules.
+provider, TMDB for film search, posters and metadata, and TVDB for character
+avatar photos. No CSS framework: design tokens in `src/app/globals.css` plus
+CSS Modules.
 
 ## Environment
 
@@ -24,6 +25,7 @@ Copy `.env.example` to `.env` and fill it in.
 | `DATABASE_URL` | Neon's pooled Postgres connection string, used by the running app. |
 | `DATABASE_URL_UNPOOLED` | Neon's direct Postgres connection string, used by `prisma migrate`. Named to match what Vercel's Neon integration provisions automatically. |
 | `TMDB_API_KEY` | TMDB v3 API key. Without it, search returns nothing instead of crashing. |
+| `TVDB_API_KEY` | TVDB v4 API key. Without it, the avatar picker offers posters but no character photos. |
 | `NEXTAUTH_SECRET` | Signs the session cookies. `openssl rand -base64 32`. |
 | `NEXTAUTH_URL` | Public origin of the app, no trailing slash. |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | OAuth client from the Google Cloud console. Redirect URI is `<NEXTAUTH_URL>/api/auth/callback/google`. |
@@ -64,12 +66,14 @@ adding an existing user to a group by hand; it no longer creates groups
 itself. Members can change their own name from `/settings`, and delete their
 account entirely from there too — see `/privacy` for what that removes.
 
-Avatars come only from TMDB: `/settings` lets a member search a film, then
-pick one of its textless posters or a cast member's photo as their avatar.
-There is no Google photo sync and no Gravatar fallback, and the backend never
-stores a URL a client sent as-is — a poster path has to still be present in a
-fresh TMDB response for that movie, and a cast photo is resolved from the
-person's TMDB id rather than a path at all (`/api/users/[id]/avatar`).
+Avatars come only from TMDB and TVDB: `/settings` lets a member search a film
+or series, then pick one of its textless TMDB posters or a TVDB character
+photo as their avatar — TVDB's character photos are stills of the role
+itself, not the actor's press photos TMDB's cast credits would give. There is
+no Google photo sync and no Gravatar fallback, and the backend never stores a
+URL a client sent as-is — a poster path has to still be present in a fresh
+TMDB response for that title, and a character photo is resolved from the
+TVDB character's id rather than a URL at all (`/api/users/[id]/avatar`).
 Anyone without a chosen avatar gets the bundled `public/default-avatar.svg`.
 
 An owner (or a site admin) can also invite people straight from `/g/<groupId>/members`:
@@ -106,7 +110,7 @@ route 404s on the production deployment.
 For self-hosting, `docker compose up -d` builds the image and starts both the
 app (port 6889) and its own Postgres, with a named volume so the database
 survives restarts. Copy `.env.example` to `.env` and fill in `TMDB_API_KEY`,
-`NEXTAUTH_SECRET`, `NEXTAUTH_URL` and the Google OAuth pair — the
+`TVDB_API_KEY`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL` and the Google OAuth pair — the
 `DATABASE_URL`/`DATABASE_URL_UNPOOLED` in `.env` are ignored in this setup,
 since `docker-compose.yml` points the app at the bundled `postgres` service
 instead. The entrypoint runs `prisma migrate deploy` on every start, so the
