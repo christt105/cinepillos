@@ -99,6 +99,14 @@ The app is meant to run on [Vercel](https://vercel.com) (Hobby plan) with a
 the environment variables above in the Vercel project, and Vercel builds and
 deploys on every push. There is no persistent disk to manage.
 
+Every branch gets its own preview subdomain, which Google OAuth rejects since
+only pre-registered redirect URIs work — registering each one by hand doesn't
+scale. Locally and on any deployment where `VERCEL_ENV` isn't `production`,
+`/login` also offers the users seeded by `prisma/seed-preview.ts` (or `prisma
+db seed` locally); picking one hits `/api/dev-login`, which mints the same
+session cookie a real Google sign-in would, skipping Google entirely. That
+route 404s on the production deployment.
+
 For self-hosting, `docker compose up -d` builds the image and starts both the
 app (port 6889) and its own Postgres, with a named volume so the database
 survives restarts. Copy `.env.example` to `.env` and fill in `TMDB_API_KEY`,

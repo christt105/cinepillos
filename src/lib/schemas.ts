@@ -6,6 +6,10 @@ export const activeGroupSchema = z.object({
     groupId: id,
 });
 
+export const devLoginSchema = z.object({
+    userId: id,
+});
+
 export const proposalSchema = z.object({
     tmdbId: z.coerce.number().int().positive(),
     title: z.string().min(1).max(300),
