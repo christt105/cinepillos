@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
+import { useTranslations } from "next-intl";
 import MovieCard from "@/components/MovieCard";
 import { TMDBMovie } from "@/lib/tmdb";
 import styles from "./meetings.module.css";
@@ -15,6 +16,8 @@ interface MeetingFilmSearchProps {
 
 /** TMDB search embedded in a meeting, so a film can be proposed without leaving it. */
 export default function MeetingFilmSearch({ groupId, onPropose, proposingId }: MeetingFilmSearchProps) {
+    const t = useTranslations("search");
+    const tCommon = useTranslations("common");
     const [query, setQuery] = useState("");
     const [movies, setMovies] = useState<TMDBMovie[]>([]);
     const [loading, setLoading] = useState(false);
@@ -42,14 +45,14 @@ export default function MeetingFilmSearch({ groupId, onPropose, proposingId }: M
                 <Search size={18} className={styles.searchIcon} />
                 <input
                     type="text"
-                    placeholder="Buscar una película..."
+                    placeholder={t("placeholder")}
                     value={query}
                     onChange={e => setQuery(e.target.value)}
                     className={`input ${styles.searchInput}`}
                 />
             </div>
 
-            {loading && <p className={styles.pickerEmpty}>Cargando...</p>}
+            {loading && <p className={styles.pickerEmpty}>{tCommon("loading")}</p>}
 
             <div className={styles.searchResults}>
                 {movies.map(movie => (
@@ -64,7 +67,7 @@ export default function MeetingFilmSearch({ groupId, onPropose, proposingId }: M
             </div>
 
             {!loading && movies.length === 0 && (
-                <p className={styles.pickerEmpty}>No se encontraron películas.</p>
+                <p className={styles.pickerEmpty}>{t("noResults")}</p>
             )}
         </div>
     );

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarPlus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import DateTimePicker from "@/components/DateTimePicker";
 import styles from "./ScheduleMeetingButton.module.css";
@@ -26,6 +27,8 @@ export default function ScheduleMeetingButton({
     className,
     onScheduled,
 }: ScheduleMeetingButtonProps) {
+    const t = useTranslations("schedule");
+    const tCommon = useTranslations("common");
     const router = useRouter();
     const [open, setOpen] = useState(false);
     const [date, setDate] = useState<Date>(new Date());
@@ -41,7 +44,7 @@ export default function ScheduleMeetingButton({
             });
 
             if (!res.ok) {
-                alert("No se ha podido programar la sesión");
+                alert(t("error"));
                 return;
             }
 
@@ -58,18 +61,18 @@ export default function ScheduleMeetingButton({
     return (
         <>
             <button className={clsx("btn btn-primary", className)} onClick={() => setOpen(true)}>
-                <CalendarPlus size={16} /> Programar
+                <CalendarPlus size={16} /> {t("action")}
             </button>
 
             {open && (
                 <div className="modal-overlay" onClick={() => setOpen(false)}>
                     <div className="glass-card modal" onClick={e => e.stopPropagation()}>
-                        <h3 className={styles.title}>Programar Sesión</h3>
+                        <h3 className={styles.title}>{t("title")}</h3>
                         <DateTimePicker value={date} onChange={setDate} />
                         <div className={styles.actions}>
-                            <button className="btn btn-ghost" onClick={() => setOpen(false)}>Cancelar</button>
+                            <button className="btn btn-ghost" onClick={() => setOpen(false)}>{tCommon("cancel")}</button>
                             <button className="btn btn-primary" onClick={handleSchedule} disabled={saving}>
-                                {saving ? "Programando..." : "Programar"}
+                                {saving ? t("saving") : t("action")}
                             </button>
                         </div>
                     </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { TMDBMultiResult } from "@/lib/tmdb";
 import styles from "./avatar-picker.module.css";
@@ -37,6 +38,8 @@ export default function AvatarPicker({
     onSelected: (image: string) => void;
     onClose: () => void;
 }) {
+    const t = useTranslations("avatarPicker");
+    const tCommon = useTranslations("common");
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<SearchResult[]>([]);
     const [selectedItem, setSelectedItem] = useState<SearchResult | null>(null);
@@ -100,7 +103,7 @@ export default function AvatarPicker({
         <div className="modal-overlay" onClick={onClose}>
             <div className={clsx("modal glass-card", styles.modal)} onClick={e => e.stopPropagation()}>
                 <div className={styles.header}>
-                    <h3>Elegir avatar</h3>
+                    <h3>{t("title")}</h3>
                     <button className="btn btn-ghost" onClick={onClose}>
                         <X size={18} />
                     </button>
@@ -110,7 +113,7 @@ export default function AvatarPicker({
                     <>
                         <input
                             className="input"
-                            placeholder="Busca una película o serie..."
+                            placeholder={t("searchPlaceholder")}
                             value={query}
                             onChange={e => setQuery(e.target.value)}
                             autoFocus
@@ -131,7 +134,7 @@ export default function AvatarPicker({
                                                 className="poster-image"
                                             />
                                         ) : (
-                                            <div className="poster-placeholder">Sin poster</div>
+                                            <div className="poster-placeholder">{tCommon("noPoster")}</div>
                                         )}
                                     </div>
                                     <span className={styles.movieOptionTitle}>{item.title}</span>
@@ -142,16 +145,16 @@ export default function AvatarPicker({
                 ) : (
                     <>
                         <button className="btn btn-ghost" onClick={() => setSelectedItem(null)}>
-                            ← Buscar otra
+                            {t("searchAgain")}
                         </button>
 
                         {!options ? (
-                            <p className={styles.status}>Cargando opciones...</p>
+                            <p className={styles.status}>{t("loadingOptions")}</p>
                         ) : (
                             <>
                                 {options.posters.length > 0 && (
                                     <section>
-                                        <h4 className={styles.sectionTitle}>Pósters</h4>
+                                        <h4 className={styles.sectionTitle}>{t("posters")}</h4>
                                         <div className={styles.imageGrid}>
                                             {options.posters.map(path => (
                                                 <button
@@ -162,7 +165,7 @@ export default function AvatarPicker({
                                                 >
                                                     <Image
                                                         src={`https://image.tmdb.org/t/p/w200${path}`}
-                                                        alt="Póster"
+                                                        alt={t("posterAlt")}
                                                         fill
                                                         className={styles.imageOptionImage}
                                                     />
@@ -174,7 +177,7 @@ export default function AvatarPicker({
 
                                 {options.cast.length > 0 && (
                                     <section>
-                                        <h4 className={styles.sectionTitle}>Personajes</h4>
+                                        <h4 className={styles.sectionTitle}>{t("characters")}</h4>
                                         <div className={styles.imageGrid}>
                                             {options.cast.map(member => (
                                                 <button
@@ -197,7 +200,7 @@ export default function AvatarPicker({
                                 )}
 
                                 {options.posters.length === 0 && options.cast.length === 0 && (
-                                    <p className={styles.status}>No hay imágenes disponibles para esta película.</p>
+                                    <p className={styles.status}>{t("noImages")}</p>
                                 )}
                             </>
                         )}

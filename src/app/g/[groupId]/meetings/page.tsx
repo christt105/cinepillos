@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Calendar as CalendarIcon, ThumbsUp, Plus, Trash2, User, Trophy } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useFormatter, useTranslations } from "next-intl";
 import DateTimePicker from "@/components/DateTimePicker";
 import ScheduleMeetingButton from "@/components/ScheduleMeetingButton";
 import MeetingFilmSearch from "./MeetingFilmSearch";
@@ -62,6 +63,10 @@ interface ProposedFilmOption {
 }
 
 export default function MeetingsPage() {
+    const t = useTranslations("meetings");
+    const tCommon = useTranslations("common");
+    const tSchedule = useTranslations("schedule");
+    const format = useFormatter();
     const { data: session } = useSession();
     const { groupId } = useParams<{ groupId: string }>();
     const [meetings, setMeetings] = useState<Meeting[]>([]);
@@ -124,7 +129,7 @@ export default function MeetingsPage() {
             if (res.ok) {
                 fetchMeetings(); // Refresh to show updated votes
             } else {
-                alert("Failed to vote");
+                alert(t("errorVote"));
             }
         } catch (error) {
             console.error("Vote failed", error);
@@ -145,7 +150,7 @@ export default function MeetingsPage() {
                 setNewMeetingDate(new Date());
                 fetchMeetings();
             } else {
-                alert("Failed to create meeting");
+                alert(t("errorCreate"));
             }
         } catch (error) {
             console.error("Create meeting failed", error);
@@ -165,7 +170,7 @@ export default function MeetingsPage() {
                 setShowAddModal(null);
             } else {
                 const data = await res.json();
-                alert(data.error || "Failed to add candidate");
+                alert(data.error || t("errorAddCandidate"));
             }
         } catch (error) {
             console.error("Add candidate failed", error);
@@ -173,7 +178,7 @@ export default function MeetingsPage() {
     };
 
     const handleRemoveCandidate = async (meetingId: string, candidateId: string) => {
-        if (!confirm("¿Estás seguro de que quieres quitar esta propuesta?")) return;
+        if (!confirm(t("confirmRemoveCandidate"))) return;
 
         try {
             const res = await fetch(`/api/groups/${groupId}/meetings/${meetingId}/candidates/${candidateId}`, {
@@ -184,7 +189,7 @@ export default function MeetingsPage() {
                 fetchMeetings();
             } else {
                 const data = await res.json();
-                alert(data.error || "Failed to remove candidate");
+                alert(data.error || t("errorRemoveCandidate"));
             }
         } catch (error) {
             console.error("Remove candidate failed", error);
@@ -192,7 +197,7 @@ export default function MeetingsPage() {
     };
 
     const handleConcludeVoting = async (meetingId: string) => {
-        if (!confirm("¿Estás seguro de que quieres finalizar la votación? No se puede deshacer.")) return;
+        if (!confirm(t("confirmConclude"))) return;
 
         try {
             const res = await fetch(`/api/groups/${groupId}/meetings/${meetingId}/conclude`, {
@@ -203,7 +208,7 @@ export default function MeetingsPage() {
                 fetchMeetings();
             } else {
                 const data = await res.json();
-                alert(data.error || "Failed to conclude voting");
+                alert(data.error || t("errorConclude"));
             }
         } catch (error) {
             console.error("Conclude voting failed", error);
@@ -232,7 +237,7 @@ export default function MeetingsPage() {
             });
 
             if (!proposalRes.ok) {
-                alert("No se ha podido proponer la película");
+                alert(t("errorPropose"));
                 return;
             }
 
@@ -252,19 +257,19 @@ export default function MeetingsPage() {
     };
 
     if (loading) {
-        return <div className={clsx("container", styles.loading)}>Cargando reuniones...</div>;
+        return <div className={clsx("container", styles.loading)}>{t("loading")}</div>;
     }
 
     return (
         <div className="page page-narrow">
             <header className={styles.header}>
-                <h1>Sesiones de Cine</h1>
+                <h1>{t("pageTitle")}</h1>
                 <div className={styles.headerActions}>
                     <button className="btn btn-ghost" onClick={() => handleCreateMeeting(null)}>
-                        <Plus size={16} /> Abrir Planificación
+                        <Plus size={16} /> {t("openPlanning")}
                     </button>
                     <button className="btn btn-primary" onClick={() => setShowDateModal(true)}>
-                        <Plus size={16} /> Programar Reunión
+                        <Plus size={16} /> {t("scheduleMeeting")}
                     </button>
                 </div>
             </header>
@@ -273,11 +278,11 @@ export default function MeetingsPage() {
             {showDateModal && (
                 <div className="modal-overlay" onClick={() => setShowDateModal(false)}>
                     <div className="glass-card modal" onClick={e => e.stopPropagation()}>
-                        <h3 className={styles.modalTitle}>Programar Sesión</h3>
+                        <h3 className={styles.modalTitle}>{tSchedule("title")}</h3>
                         <DateTimePicker value={newMeetingDate} onChange={setNewMeetingDate} />
                         <div className={styles.modalActions}>
-                            <button className="btn btn-ghost" onClick={() => setShowDateModal(false)}>Cancelar</button>
-                            <button className="btn btn-primary" onClick={() => handleCreateMeeting(newMeetingDate)}>Programar</button>
+                            <button className="btn btn-ghost" onClick={() => setShowDateModal(false)}>{tCommon("cancel")}</button>
+                            <button className="btn btn-primary" onClick={() => handleCreateMeeting(newMeetingDate)}>{tSchedule("action")}</button>
                         </div>
                     </div>
                 </div>
@@ -287,9 +292,9 @@ export default function MeetingsPage() {
                 {meetings.length === 0 ? (
                     <div className={clsx("glass-card", styles.empty)}>
                         <CalendarIcon size={48} className={styles.emptyIcon} />
-                        <p>No hay sesiones programadas.</p>
+                        <p>{t("noMeetings")}</p>
                         <button className={clsx("btn btn-ghost", styles.emptyAction)} onClick={() => setShowDateModal(true)}>
-                            Programar Una
+                            {t("scheduleOne")}
                         </button>
                     </div>
                 ) : (
@@ -303,7 +308,7 @@ export default function MeetingsPage() {
                                                 {new Date(meeting.date).getDate()}
                                             </span>
                                             <span className={styles.dateMonth}>
-                                                {new Date(meeting.date).toLocaleString('default', { month: 'short' })}
+                                                {format.dateTime(new Date(meeting.date), { month: 'short' })}
                                             </span>
                                         </>
                                     ) : (
@@ -314,10 +319,12 @@ export default function MeetingsPage() {
                                     <h3 className={styles.meetingDate}>
                                         {meeting.date ? (
                                             <>
-                                                {new Date(meeting.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                                                {' '}{new Date(meeting.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                {format.dateTime(new Date(meeting.date), {
+                                                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                                                })}
+                                                {' '}{format.dateTime(new Date(meeting.date), { hour: '2-digit', minute: '2-digit' })}
                                             </>
-                                        ) : "Sin fecha todavía"}
+                                        ) : t("noDate")}
                                     </h3>
                                     <div className={styles.meetingMeta}>
                                         <span className={clsx(styles.status, meeting.status === 'VOTING' && styles.statusVoting)}>
@@ -328,7 +335,7 @@ export default function MeetingsPage() {
                                                 className={clsx("btn btn-ghost", styles.smallAction)}
                                                 onClick={() => handleConcludeVoting(meeting.id)}
                                             >
-                                                Finalizar Votación
+                                                {t("concludeVoting")}
                                             </button>
                                         )}
                                         {meeting.status === 'PLANNING' && (
@@ -346,11 +353,9 @@ export default function MeetingsPage() {
                             {(meeting.status === 'VOTING' || meeting.status === 'PLANNING') && (
                                 <div>
                                     {meeting.status === 'PLANNING' && (
-                                        <p className={styles.pending}>
-                                            Aún sin fecha: propón películas y prográmala cuando decidáis el día.
-                                        </p>
+                                        <p className={styles.pending}>{t("planningHint")}</p>
                                     )}
-                                    <h4 className={styles.candidatesTitle}>Películas Propuestas</h4>
+                                    <h4 className={styles.candidatesTitle}>{t("candidatesTitle")}</h4>
                                     <div className={styles.candidates}>
                                         {meeting.candidates.map((candidate) => (
                                             <div key={candidate.id} className={styles.candidate}>
@@ -358,18 +363,18 @@ export default function MeetingsPage() {
                                                     <div className={styles.candidateTitle}>
                                                         <span className={styles.filmName}>{candidate.film.title}</span>
                                                         <span className={styles.filmYear}>
-                                                            ({candidate.film.releaseDate ? new Date(candidate.film.releaseDate).getFullYear() : 'N/A'})
+                                                            ({candidate.film.releaseDate ? new Date(candidate.film.releaseDate).getFullYear() : tCommon("notAvailable")})
                                                         </span>
                                                     </div>
                                                     <div className={styles.proposer}>
                                                         <User size={14} />
-                                                        <span>Propuesta por {candidate.user?.name || "Desconocido"}</span>
+                                                        <span>{t("proposedBy", { name: candidate.user?.name || tCommon("unknownUser") })}</span>
                                                     </div>
                                                 </div>
                                                 <div className={styles.candidateActions}>
                                                     {meeting.status === 'VOTING' && (
                                                         <>
-                                                            <span className={styles.voteCount}>{candidate.votes.length} votos</span>
+                                                            <span className={styles.voteCount}>{t("votes", { count: candidate.votes.length })}</span>
 
                                                             <button className={clsx("btn btn-ghost", styles.voteButton)} onClick={() => handleVote(meeting.id, candidate.id)}>
                                                                 <ThumbsUp size={18} />
@@ -389,21 +394,21 @@ export default function MeetingsPage() {
                                         {showAddModal === meeting.id ? (
                                             <div className={styles.picker}>
                                                 <div className={styles.pickerHeader}>
-                                                    <h5>Elige película a proponer:</h5>
-                                                    <button onClick={() => setShowAddModal(null)} className={clsx("btn btn-ghost", styles.smallAction)}>Cerrar</button>
+                                                    <h5>{t("pickerTitle")}</h5>
+                                                    <button onClick={() => setShowAddModal(null)} className={clsx("btn btn-ghost", styles.smallAction)}>{tCommon("close")}</button>
                                                 </div>
                                                 <div className={styles.pickerTabs}>
                                                     <button
                                                         className={clsx("btn", pickerTab === "proposals" ? "btn-primary" : "btn-ghost")}
                                                         onClick={() => setPickerTab("proposals")}
                                                     >
-                                                        Propuestas del grupo
+                                                        {t("tabProposals")}
                                                     </button>
                                                     <button
                                                         className={clsx("btn", pickerTab === "search" ? "btn-primary" : "btn-ghost")}
                                                         onClick={() => setPickerTab("search")}
                                                     >
-                                                        Buscar película
+                                                        {t("tabSearch")}
                                                     </button>
                                                 </div>
 
@@ -425,7 +430,7 @@ export default function MeetingsPage() {
                                                                 />
                                                             </div>
                                                         ))}
-                                                        {proposedFilms.length === 0 && <p className={styles.pickerEmpty}>No se encontraron propuestas.</p>}
+                                                        {proposedFilms.length === 0 && <p className={styles.pickerEmpty}>{t("noProposalsFound")}</p>}
                                                     </div>
                                                 ) : (
                                                     <MeetingFilmSearch
@@ -440,7 +445,7 @@ export default function MeetingsPage() {
                                                 className="btn btn-ghost btn-dashed"
                                                 onClick={() => openAddModal(meeting.id)}
                                             >
-                                                + Proponer película
+                                                {t("addFilm")}
                                             </button>
                                         )}
                                     </div>
@@ -450,17 +455,17 @@ export default function MeetingsPage() {
                             {meeting.status === 'CONCLUDED' && (
                                 <div className={styles.concluded}>
                                     <Trophy size={48} className={styles.trophy} />
-                                    <h3>¡Ganador Seleccionado!</h3>
+                                    <h3>{t("concludedTitle")}</h3>
                                     {(() => {
                                         const winner = meeting.candidates.find(c => c.film.id === meeting.selectedFilmId);
                                         return winner ? (
                                             <div className={styles.winner}>
                                                 <h2 className={styles.winnerTitle}>{winner.film.title}</h2>
-                                                <p className={styles.winnerProposer}>Propuesta por {winner.user?.name || "Desconocido"}</p>
-                                                <p className={styles.winnerVotes}>{winner.votes.length} votos</p>
+                                                <p className={styles.winnerProposer}>{t("proposedBy", { name: winner.user?.name || tCommon("unknownUser") })}</p>
+                                                <p className={styles.winnerVotes}>{t("votes", { count: winner.votes.length })}</p>
                                             </div>
                                         ) : (
-                                            <p>No hay ganador (Empate o sin votos)</p>
+                                            <p>{t("noWinner")}</p>
                                         );
                                     })()}
                                 </div>

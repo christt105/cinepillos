@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
+import { DEFAULT_LOCALE, LOCALE_TAGS, type Locale } from "@/i18n/config";
 
 export const SITE_NAME = "CinePillos";
-
-export const SITE_DESCRIPTION = "Un club de cine privado para ver pelis con tus amigos.";
 
 /** Branded card served by `/og`, used whenever a route has nothing better. */
 export const DEFAULT_OG_IMAGE = { url: "/og", width: 1200, height: 630 };
@@ -22,6 +21,7 @@ type SocialMetadata = {
     description: string;
     /// Absolute URL, or a path relative to the site origin.
     image?: OgImage;
+    locale?: Locale;
 };
 
 /**
@@ -29,7 +29,12 @@ type SocialMetadata = {
  * with an image instead of bare text. `openGraph` is replaced wholesale when a
  * page defines it, never merged with the layout's, hence the shared builder.
  */
-export function socialMetadata({ title, description, image = DEFAULT_OG_IMAGE }: SocialMetadata): Metadata {
+export function socialMetadata({
+    title,
+    description,
+    image = DEFAULT_OG_IMAGE,
+    locale = DEFAULT_LOCALE,
+}: SocialMetadata): Metadata {
     const images = [{ ...image, alt: title }];
 
     return {
@@ -38,7 +43,7 @@ export function socialMetadata({ title, description, image = DEFAULT_OG_IMAGE }:
         openGraph: {
             type: "website",
             siteName: SITE_NAME,
-            locale: "es_ES",
+            locale: LOCALE_TAGS[locale].replace("-", "_"),
             title,
             description,
             images,

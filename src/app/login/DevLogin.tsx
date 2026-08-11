@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import clsx from "clsx";
 import { avatarUrl } from "@/lib/avatar";
@@ -10,6 +11,7 @@ import styles from "./login.module.css";
 type DevUser = { id: string; name: string | null; email: string; image: string | null };
 
 function DevUserList() {
+    const t = useTranslations("login");
     const searchParams = useSearchParams();
     // Same relative-only callback the Google button uses.
     const callbackUrl = searchParams.get("callbackUrl") || "/";
@@ -49,7 +51,7 @@ function DevUserList() {
     return (
         <div className={styles.devLogin}>
             <div className={styles.divider}>
-                <span>Solo en dev / preview</span>
+                <span>{t("devOnly")}</span>
             </div>
 
             <div className={styles.devUsers}>

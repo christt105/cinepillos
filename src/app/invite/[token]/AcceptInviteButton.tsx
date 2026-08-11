@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 
 export default function AcceptInviteButton({ token }: { token: string }) {
+    const t = useTranslations("invite");
     const router = useRouter();
     const { update: updateSession } = useSession();
     const [joining, setJoining] = useState(false);
@@ -22,11 +24,11 @@ export default function AcceptInviteButton({ token }: { token: string }) {
                 await updateSession();
                 router.push(`/g/${groupId}`);
             } else {
-                setError("No se ha podido completar la unión al club. Prueba a recargar la página.");
+                setError(t("joinError"));
                 setJoining(false);
             }
         } catch {
-            setError("No se ha podido completar la unión al club. Prueba a recargar la página.");
+            setError(t("joinError"));
             setJoining(false);
         }
     };
@@ -34,7 +36,7 @@ export default function AcceptInviteButton({ token }: { token: string }) {
     return (
         <>
             <button className="btn btn-primary" onClick={handleJoin} disabled={joining}>
-                {joining ? "Uniéndote..." : "Unirme al club"}
+                {joining ? t("joining") : t("join")}
             </button>
             {error && <p className="form-error">{error}</p>}
         </>

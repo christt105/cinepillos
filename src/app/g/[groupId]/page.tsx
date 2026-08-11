@@ -3,6 +3,7 @@ import { requireGroupPage } from "@/lib/group-page";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import Image from "next/image";
+import { getFormatter, getTranslations } from "next-intl/server";
 import { recentMeetingCutoff } from "@/lib/meetings";
 import { avatarUrl } from "@/lib/avatar";
 import { sortByLikes } from "@/lib/proposals";
@@ -14,6 +15,9 @@ export const dynamic = "force-dynamic";
 
 export default async function GroupHome({ params }: { params: Promise<{ groupId: string }> }) {
   const { groupId } = await params;
+  const t = await getTranslations("home");
+  const tCommon = await getTranslations("common");
+  const format = await getFormatter();
   const { session } = await requireGroupPage(groupId);
 
   // Fetch Next Meeting (or recently concluded), including one still in
@@ -77,21 +81,21 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
     <div className="page">
       {/* Hero / Next Session */}
       <section className={styles.section}>
-        <h2 className="section-title">Próxima Sesión</h2>
+        <h2 className="section-title">{t("nextSession")}</h2>
         {nextMeeting ? (
           <div className={`glass-card ${styles.hero}`}>
             <div className={styles.heroContent}>
               <h3 className={styles.heroDate}>
                 {nextMeeting.date
-                  ? new Date(nextMeeting.date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })
-                  : 'Sin fecha todavía'}
+                  ? format.dateTime(new Date(nextMeeting.date), { weekday: 'long', day: 'numeric', month: 'long' })
+                  : t("noDate")}
               </h3>
-              <p className={styles.heroStatus}>Estado: {nextMeeting.status}</p>
+              <p className={styles.heroStatus}>{t("status", { status: nextMeeting.status })}</p>
 
               {/* Status: VOTING */}
               {nextMeeting.status === 'VOTING' && (
                 <div>
-                  <h4 className={styles.heroSubtitle}>Vota por la próxima película:</h4>
+                  <h4 className={styles.heroSubtitle}>{t("voteNext")}</h4>
                   <div className="responsive-proposals">
                     {nextMeeting.candidates.map(candidate => {
                       // Use original proposers
@@ -115,7 +119,7 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
                                 <Image src={avatarUrl(mainProposer)} alt={mainProposer.name || 'User'} fill className="poster-image" />
                               </div>
                             )}
-                            <span>{mainProposer?.name || 'Unknown'}</span>
+                            <span>{mainProposer?.name || tCommon("unknownUser")}</span>
                             {proposers.length > 1 && <span className={styles.extraProposers}>+{proposers.length - 1}</span>}
                           </div>
                         </div>
@@ -124,7 +128,7 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
                   </div>
                   <div className={styles.heroActions}>
                     <Link href={`/g/${groupId}/meetings`} className="btn btn-primary">
-                      Ir a la Sala de Votación
+                      {t("goToVotingRoom")}
                     </Link>
                   </div>
                 </div>
@@ -133,7 +137,7 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
               {/* Status: CONCLUDED */}
               {nextMeeting.status === 'CONCLUDED' && (
                 <div>
-                  <h4 className={styles.winnerTitle}>Película Ganadora</h4>
+                  <h4 className={styles.winnerTitle}>{t("winnerTitle")}</h4>
                   {(() => {
                     const winnerCandidate = nextMeeting.candidates.find(c => c.filmId === nextMeeting.selectedFilmId);
                     if (winnerCandidate) {
@@ -156,22 +160,22 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
                             <p className={styles.winnerOverview}>{winnerCandidate.film.overview.slice(0, 150)}...</p>
 
                             <div className={styles.winnerProposer}>
-                              <span className={styles.proposerLabel}>Propuesta por</span>
+                              <span className={styles.proposerLabel}>{t("proposedBy")}</span>
                               {mainProposer && (
                                 <Image src={avatarUrl(mainProposer)} alt={mainProposer.name || ''} width={24} height={24} className={styles.proposerAvatar} />
                               )}
                               <span className={styles.proposerName}>{mainProposer?.name}</span>
-                              {proposers.length > 1 && <span className={styles.extraProposers}>+{proposers.length - 1} others</span>}
+                              {proposers.length > 1 && <span className={styles.extraProposers}>{t("extraProposers", { count: proposers.length - 1 })}</span>}
                             </div>
 
                             <Link href={`/g/${groupId}/movies/${winnerCandidate.film.tmdbId}`} className="btn btn-primary">
-                              Ver Detalles
+                              {t("viewDetails")}
                             </Link>
                           </div>
                         </div>
                       );
                     }
-                    return <p>No se ha seleccionado ganador aún.</p>;
+                    return <p>{t("noWinnerYet")}</p>;
                   })()}
                 </div>
               )}
@@ -180,14 +184,12 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
               {(nextMeeting.status === 'PLANNING' || !nextMeeting.status) && (
                 <div>
                   <p className={styles.planningCount}>
-                    {nextMeeting.candidates.length === 1
-                      ? '1 película propuesta'
-                      : `${nextMeeting.candidates.length} películas propuestas`}
+                    {t("planningCount", { count: nextMeeting.candidates.length })}
                   </p>
                   <div className={styles.heroActions}>
                     <ScheduleMeetingButton groupId={groupId} meetingId={nextMeeting.id} />
                     <Link href={`/g/${groupId}/meetings`} className="btn btn-ghost">
-                      Proponer Películas
+                      {t("proposeFilms")}
                     </Link>
                   </div>
                 </div>
@@ -212,8 +214,8 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
           </div>
         ) : (
           <div className={`glass-card ${styles.emptyCard}`}>
-            <p className={styles.emptyText}>No hay sesiones programadas.</p>
-            <Link href={`/g/${groupId}/meetings`} className="btn btn-ghost">Programar Una</Link>
+            <p className={styles.emptyText}>{t("noSessions")}</p>
+            <Link href={`/g/${groupId}/meetings`} className="btn btn-ghost">{t("scheduleOne")}</Link>
           </div>
         )}
       </section>
@@ -221,9 +223,9 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
       {/* Proposals Row */}
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <h2 className={styles.headerTitle}>Propuestas</h2>
+          <h2 className={styles.headerTitle}>{t("proposalsTitle")}</h2>
           <Link href={`/g/${groupId}/search`} className="btn btn-ghost">
-            <Plus size={16} /> Añadir Nueva
+            <Plus size={16} /> {t("addNew")}
           </Link>
         </div>
 
@@ -271,8 +273,8 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
           </div>
         ) : (
           <div className={styles.emptyProposals}>
-            <p className={styles.emptyProposalsText}>Aún no hay propuestas.</p>
-            <Link href={`/g/${groupId}/search`} className="btn btn-primary">Empezar a Proponer</Link>
+            <p className={styles.emptyProposalsText}>{t("noProposals")}</p>
+            <Link href={`/g/${groupId}/search`} className="btn btn-primary">{t("startProposing")}</Link>
           </div>
         )}
       </section>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Heart } from "lucide-react";
+import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import styles from "./ProposalLikeButton.module.css";
 
@@ -24,6 +25,7 @@ export default function ProposalLikeButton({
     initialLiked,
     className,
 }: ProposalLikeButtonProps) {
+    const t = useTranslations("likes");
     const [liked, setLiked] = useState(initialLiked);
     const [count, setCount] = useState(initialCount);
     const [pending, setPending] = useState(false);
@@ -63,7 +65,7 @@ export default function ProposalLikeButton({
             className={clsx("btn btn-ghost", styles.button, liked && styles.liked, className)}
             onClick={toggle}
             aria-pressed={liked}
-            aria-label={liked ? "Quitar me gusta" : "Me gusta"}
+            aria-label={liked ? t("unlike") : t("like")}
         >
             <Heart size={16} className={clsx(styles.icon, liked && styles.iconLiked)} />
             <span>{count}</span>

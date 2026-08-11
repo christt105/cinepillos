@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
 
 interface ProposalButtonProps {
@@ -14,6 +15,7 @@ interface ProposalButtonProps {
 }
 
 export function ProposalButton({ tmdbId, title, overview, posterPath, releaseDate, initialProposalId }: ProposalButtonProps) {
+    const t = useTranslations("movie");
     const { groupId } = useParams<{ groupId: string }>();
     const [proposalId, setProposalId] = useState<string | null>(initialProposalId);
     const [loading, setLoading] = useState(false);
@@ -42,7 +44,7 @@ export function ProposalButton({ tmdbId, title, overview, posterPath, releaseDat
             router.refresh(); // Refresh server components to update UI if needed
         } catch (error) {
             console.error(error);
-            alert("Error creating proposal");
+            alert(t("errorPropose"));
         } finally {
             setLoading(false);
         }
@@ -64,7 +66,7 @@ export function ProposalButton({ tmdbId, title, overview, posterPath, releaseDat
             router.refresh();
         } catch (error) {
             console.error(error);
-            alert("Error removing proposal");
+            alert(t("errorRemove"));
         } finally {
             setLoading(false);
         }
@@ -77,9 +79,9 @@ export function ProposalButton({ tmdbId, title, overview, posterPath, releaseDat
                 className="btn btn-danger"
                 disabled={loading}
             >
-                {loading ? "Procesando..." : (
+                {loading ? t("processing") : (
                     <>
-                        <Trash2 size={16} /> Quitar Propuesta
+                        <Trash2 size={16} /> {t("removeProposal")}
                     </>
                 )}
             </button>
@@ -92,9 +94,9 @@ export function ProposalButton({ tmdbId, title, overview, posterPath, releaseDat
             className="btn btn-primary"
             disabled={loading}
         >
-            {loading ? "Procesando..." : (
+            {loading ? t("processing") : (
                 <>
-                    <Plus size={16} /> Proponer Película
+                    <Plus size={16} /> {t("proposeFilm")}
                 </>
             )}
         </button>
