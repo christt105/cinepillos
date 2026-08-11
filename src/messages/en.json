@@ -238,5 +238,9 @@
   },
   "datePicker": {
     "time": "Time"
+  },
+  "footer": {
+    "sourceCode": "Open source on GitHub",
+    "support": "Support on Ko-fi"
   }
 }

@@ -238,5 +238,9 @@
   },
   "datePicker": {
     "time": "Hora"
+  },
+  "footer": {
+    "sourceCode": "Código abierto en GitHub",
+    "support": "Apoya el proyecto en Ko-fi"
   }
 }
