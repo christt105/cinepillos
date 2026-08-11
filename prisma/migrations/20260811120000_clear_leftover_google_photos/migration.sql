@@ -9,5 +9,4 @@ UPDATE "User"
 SET "image" = NULL
 WHERE "image" IS NOT NULL
   AND "image" NOT LIKE '/%'
-  AND "image" NOT LIKE 'https://artworks.thetvdb.com/%'
-  AND "image" NOT LIKE 'http://artworks.thetvdb.com/%';
+  AND "image" NOT LIKE 'https://artworks.thetvdb.com/%';
