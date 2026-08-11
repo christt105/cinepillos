@@ -43,10 +43,10 @@
     text-align: center;
 }
 
+/* Width comes from `btn-block`. A <button> sizes to fit-content even at
+   `display: flex`, so inside the card's plain block flow it would otherwise
+   shrink to its label and sit against the left edge instead of centred. */
 .submit {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     gap: var(--space-3);
     padding: var(--space-3);
     font-size: 1rem;

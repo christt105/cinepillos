@@ -148,6 +148,17 @@ export default function MeetingsPage() {
         }
     };
 
+    /**
+     * The date picker keeps whatever time-of-day `newMeetingDate` already
+     * held, so opening it straight from its stale initial state would show
+     * today with a time that's already in the past and get rejected by the
+     * future-date check. Bumping it forward on open keeps "today" pickable.
+     */
+    const openScheduleModal = () => {
+        setNewMeetingDate(new Date(Date.now() + 30 * 60 * 1000));
+        setShowDateModal(true);
+    };
+
     /** Without a date the meeting is created in PLANNING, still undated. */
     const handleCreateMeeting = async (date: Date | null) => {
         try {
@@ -280,7 +291,7 @@ export default function MeetingsPage() {
                     <button className="btn btn-ghost" onClick={() => handleCreateMeeting(null)}>
                         <Plus size={16} /> {t("openPlanning")}
                     </button>
-                    <button className="btn btn-primary" onClick={() => setShowDateModal(true)}>
+                    <button className="btn btn-primary" onClick={openScheduleModal}>
                         <Plus size={16} /> {t("scheduleMeeting")}
                     </button>
                 </div>
@@ -305,7 +316,7 @@ export default function MeetingsPage() {
                     <div className={clsx("glass-card", styles.empty)}>
                         <CalendarIcon size={48} className={styles.emptyIcon} />
                         <p>{t("noMeetings")}</p>
-                        <button className={clsx("btn btn-ghost", styles.emptyAction)} onClick={() => setShowDateModal(true)}>
+                        <button className={clsx("btn btn-ghost", styles.emptyAction)} onClick={openScheduleModal}>
                             {t("scheduleOne")}
                         </button>
                     </div>

@@ -98,6 +98,12 @@ async function main() {
         data: { userId: users[0].id, filmId: films[5].id, groupId: cineForum.id },
     })
 
+    // Cine Fórum's only session has no date yet, which is the one state that
+    // offers "schedule a session" on the group home page.
+    await prisma.meeting.create({
+        data: { status: 'PLANNING', groupId: cineForum.id },
+    })
+
     const meeting = await prisma.meeting.create({
         data: {
             date: new Date(Date.now() + 5 * 86400000),

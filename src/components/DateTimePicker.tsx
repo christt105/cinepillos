@@ -46,11 +46,21 @@ function DrumColumn({
 }) {
     const ref = useRef<HTMLDivElement>(null);
     const isUserScrolling = useRef(false);
+    /// Where the wheel is heading, since a smooth scroll is still in flight
+    /// when the next notch arrives and `selected` would read behind.
+    const wheelTarget = useRef<number | null>(null);
+    const isPositioned = useRef(false);
 
     useEffect(() => {
         if (!ref.current || isUserScrolling.current) return;
         const idx = values.indexOf(selected);
-        if (idx !== -1) ref.current.scrollTo({ top: idx * ITEM_H, behavior: "smooth" });
+        if (idx === -1) return;
+
+        // Animating the very first jump left a window where interrupting it
+        // stranded the drum near the top, and the scroll-end handler then
+        // committed whatever value happened to be there.
+        ref.current.scrollTo({ top: idx * ITEM_H, behavior: isPositioned.current ? "smooth" : "auto" });
+        isPositioned.current = true;
     }, [selected, values]);
 
     const onScrollEnd = useDebouncedCallback(() => {
@@ -58,8 +68,40 @@ function DrumColumn({
         const idx = Math.round(ref.current.scrollTop / ITEM_H);
         const val = values[Math.max(0, Math.min(idx, values.length - 1))];
         isUserScrolling.current = false;
+        wheelTarget.current = null;
         onSelect(val);
     }, 120);
+
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+
+        // A wheel notch scrolls further than one item, so free-scrolling the
+        // drum skipped values and, once at either end, scrolled the dialog
+        // behind it. React's own onWheel is passive and cannot cancel that,
+        // hence the manual listener.
+        const onWheel = (event: WheelEvent) => {
+            event.preventDefault();
+
+            const step = Math.sign(event.deltaY);
+            if (!step) return;
+
+            // Stepping from the selected value rather than from `scrollTop`
+            // keeps a notch honest even while the drum is still gliding.
+            const from = wheelTarget.current ?? values.indexOf(selected);
+            if (from === -1) return;
+
+            const to = Math.max(0, Math.min(from + step, values.length - 1));
+            if (to === from) return;
+
+            isUserScrolling.current = true;
+            wheelTarget.current = to;
+            el.scrollTo({ top: to * ITEM_H, behavior: "smooth" });
+        };
+
+        el.addEventListener("wheel", onWheel, { passive: false });
+        return () => el.removeEventListener("wheel", onWheel);
+    }, [selected, values]);
 
     return (
         <div className={styles.column}>
