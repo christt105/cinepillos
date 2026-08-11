@@ -29,8 +29,7 @@ export async function GET(request: Request, { params }: Context) {
                 film: true, // Include full film details for 'all' scope
                 user: true, // Include proposer details
                 _count: { select: { likes: true } },
-                // Only the caller's own like, so the client knows how to paint the button
-                likes: { where: { userId: auth.user.id }, select: { id: true } }
+                likes: { orderBy: { createdAt: 'asc' }, include: { user: { select: { id: true, name: true, image: true } } } }
             }
         });
 

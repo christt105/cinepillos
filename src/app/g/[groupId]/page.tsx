@@ -69,7 +69,7 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
         include: {
           user: true,
           _count: { select: { likes: true } },
-          likes: { where: { userId: session.user.id }, select: { id: true } }
+          likes: { orderBy: { createdAt: 'asc' }, include: { user: true } }
         }
       }
     }
@@ -262,8 +262,8 @@ export default async function GroupHome({ params }: { params: Promise<{ groupId:
                       <ProposalLikeButton
                         groupId={groupId}
                         proposalId={mainProposal.id}
-                        initialCount={mainProposal._count.likes}
-                        initialLiked={mainProposal.likes.length > 0}
+                        initialLikers={mainProposal.likes.map(like => like.user)}
+                        currentUser={{ id: session.user.id, name: session.user.name ?? null, image: session.user.image ?? null }}
                       />
                     )}
                   </div>
