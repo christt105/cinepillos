@@ -56,9 +56,9 @@
   "privacy": {
     "title": "Política de privacidad",
     "storedTitle": "Qué guardamos",
-    "storedText": "Tu nombre y tu email al iniciar sesión; los clubes de los que formas parte; las películas que propones y votas dentro de cada club; y, si eliges uno, un póster o una cara de reparto de TMDB como avatar.",
+    "storedText": "Tu nombre y tu email al iniciar sesión, y el vínculo con la cuenta de Google con la que entras; los clubes de los que formas parte; las películas que propones y votas dentro de cada club; y, si eliges uno, un póster de TMDB o una cara de reparto de TheTVDB como avatar.",
     "sharedTitle": "Con quién se comparte",
-    "sharedText": "Con nadie fuera de la app. Usamos Google solo para el inicio de sesión y TMDB para los datos de las películas y los avatares; ninguno de los dos recibe tu email más allá de lo necesario para iniciar sesión. No usamos Gravatar ni guardamos tu foto de Google: el avatar es siempre algo que tú eliges de TMDB, o el avatar por defecto si no eliges ninguno.",
+    "sharedText": "Con nadie fuera de la app. Usamos Google solo para el inicio de sesión, y TMDB y TheTVDB para los datos de las películas y las imágenes de los avatares; ninguno de ellos recibe tu email más allá de lo necesario para iniciar sesión. No usamos Gravatar ni guardamos tu foto de Google: el avatar es siempre algo que tú eliges, o el avatar por defecto si no eliges ninguno.",
     "deleteTitle": "Borrar tu cuenta",
     "deleteText": "Desde <profile>Mi perfil</profile> puedes borrar tu cuenta en cualquier momento. Esto elimina tu usuario junto con tus propuestas y votos en todos los clubes; no queda rastro tuyo."
   },

@@ -56,9 +56,9 @@
   "privacy": {
     "title": "Privacy policy",
     "storedTitle": "What we store",
-    "storedText": "Your name and email when you sign in; the clubs you belong to; the films you propose and vote for inside each club; and, if you pick one, a TMDB poster or cast face as your avatar.",
+    "storedText": "Your name and email when you sign in, and the link to the Google account you sign in with; the clubs you belong to; the films you propose and vote for inside each club; and, if you pick one, a TMDB poster or a TheTVDB cast face as your avatar.",
     "sharedTitle": "Who we share it with",
-    "sharedText": "Nobody outside the app. We use Google only for signing in and TMDB for film data and avatars; neither of them gets your email beyond what signing in needs. We do not use Gravatar and we do not store your Google photo: your avatar is always something you pick from TMDB, or the default avatar if you pick nothing.",
+    "sharedText": "Nobody outside the app. We use Google only for signing in, and TMDB and TheTVDB for film data and avatar images; none of them gets your email beyond what signing in needs. We do not use Gravatar and we do not store your Google photo: your avatar is always something you pick, or the default avatar if you pick nothing.",
     "deleteTitle": "Deleting your account",
     "deleteText": "You can delete your account at any time from <profile>My profile</profile>. That removes your user along with your proposals and votes in every club; nothing of yours is left."
   },
