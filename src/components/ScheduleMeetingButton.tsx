@@ -44,6 +44,17 @@ export default function ScheduleMeetingButton({
         };
     }, [open]);
 
+    /**
+     * `date` keeps whatever time-of-day it already held, so opening the
+     * picker straight from its stale initial state would show today with a
+     * time that's already in the past and get rejected by the future-date
+     * check. Bumping it forward on open keeps "today" pickable.
+     */
+    const openModal = () => {
+        setDate(new Date(Date.now() + 30 * 60 * 1000));
+        setOpen(true);
+    };
+
     const handleSchedule = async () => {
         setSaving(true);
         try {
@@ -70,7 +81,7 @@ export default function ScheduleMeetingButton({
 
     return (
         <>
-            <button className={clsx("btn btn-primary", className)} onClick={() => setOpen(true)}>
+            <button className={clsx("btn btn-primary", className)} onClick={openModal}>
                 <CalendarPlus size={16} /> {t("action")}
             </button>
 
