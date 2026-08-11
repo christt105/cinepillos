@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Calendar as CalendarIcon, ThumbsUp, Plus, Trash2, User, Trophy } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -45,6 +46,7 @@ interface ProposedFilm {
     id: string;
     title: string;
     releaseDate: string | null;
+    posterPath: string | null;
 }
 
 interface Proposal {
@@ -392,53 +394,75 @@ export default function MeetingsPage() {
                                         ))}
 
                                         {showAddModal === meeting.id ? (
-                                            <div className={styles.picker}>
-                                                <div className={styles.pickerHeader}>
-                                                    <h5>{t("pickerTitle")}</h5>
-                                                    <button onClick={() => setShowAddModal(null)} className={clsx("btn btn-ghost", styles.smallAction)}>{tCommon("close")}</button>
-                                                </div>
-                                                <div className={styles.pickerTabs}>
-                                                    <button
-                                                        className={clsx("btn", pickerTab === "proposals" ? "btn-primary" : "btn-ghost")}
-                                                        onClick={() => setPickerTab("proposals")}
-                                                    >
-                                                        {t("tabProposals")}
-                                                    </button>
-                                                    <button
-                                                        className={clsx("btn", pickerTab === "search" ? "btn-primary" : "btn-ghost")}
-                                                        onClick={() => setPickerTab("search")}
-                                                    >
-                                                        {t("tabSearch")}
-                                                    </button>
-                                                </div>
-
-                                                {pickerTab === "proposals" ? (
-                                                    <div className={styles.pickerList}>
-                                                        {proposedFilms.map(option => (
-                                                            <div key={option.film.id} className={styles.pickerRow}>
-                                                                <button
-                                                                    className={clsx("btn btn-ghost", styles.pickerOption)}
-                                                                    onClick={() => handleAddCandidate(meeting.id, option.film.id)}
-                                                                >
-                                                                    <span>{option.film.title}</span>
-                                                                </button>
-                                                                <ProposalLikeButton
-                                                                    groupId={groupId}
-                                                                    proposalId={option.proposalId}
-                                                                    initialCount={option.likeCount}
-                                                                    initialLiked={option.liked}
-                                                                />
-                                                            </div>
-                                                        ))}
-                                                        {proposedFilms.length === 0 && <p className={styles.pickerEmpty}>{t("noProposalsFound")}</p>}
+                                            <div className="modal-overlay" onClick={() => setShowAddModal(null)}>
+                                                <div className={clsx("glass-card modal", styles.pickerModal)} onClick={e => e.stopPropagation()}>
+                                                    <div className={styles.pickerHeader}>
+                                                        <h5>{t("pickerTitle")}</h5>
+                                                        <button onClick={() => setShowAddModal(null)} className={clsx("btn btn-ghost", styles.smallAction)}>{tCommon("close")}</button>
                                                     </div>
-                                                ) : (
-                                                    <MeetingFilmSearch
-                                                        groupId={groupId}
-                                                        proposingId={proposingId}
-                                                        onPropose={movie => handleProposeAndAdd(meeting.id, movie)}
-                                                    />
-                                                )}
+                                                    <div className={styles.pickerTabs}>
+                                                        <button
+                                                            className={clsx("btn", pickerTab === "proposals" ? "btn-primary" : "btn-ghost")}
+                                                            onClick={() => setPickerTab("proposals")}
+                                                        >
+                                                            {t("tabProposals")}
+                                                        </button>
+                                                        <button
+                                                            className={clsx("btn", pickerTab === "search" ? "btn-primary" : "btn-ghost")}
+                                                            onClick={() => setPickerTab("search")}
+                                                        >
+                                                            {t("tabSearch")}
+                                                        </button>
+                                                    </div>
+
+                                                    <div className={styles.pickerBody}>
+                                                        {pickerTab === "proposals" ? (
+                                                            <div className={styles.resultsList}>
+                                                                {proposedFilms.map(option => (
+                                                                    <div key={option.film.id} className={styles.resultRowWrap}>
+                                                                        <button
+                                                                            className={styles.resultRow}
+                                                                            onClick={() => handleAddCandidate(meeting.id, option.film.id)}
+                                                                        >
+                                                                            <div className={styles.resultPoster}>
+                                                                                {option.film.posterPath ? (
+                                                                                    <Image
+                                                                                        src={`https://image.tmdb.org/t/p/w200${option.film.posterPath}`}
+                                                                                        alt={option.film.title}
+                                                                                        fill
+                                                                                        sizes="52px"
+                                                                                        className={styles.resultPosterImage}
+                                                                                    />
+                                                                                ) : (
+                                                                                    <div className="poster-placeholder">{tCommon("noPoster")}</div>
+                                                                                )}
+                                                                            </div>
+                                                                            <div className={styles.resultInfo}>
+                                                                                <span className={styles.resultTitle}>{option.film.title}</span>
+                                                                                <span className={styles.resultYear}>
+                                                                                    {option.film.releaseDate ? new Date(option.film.releaseDate).getFullYear() : tCommon("notAvailable")}
+                                                                                </span>
+                                                                            </div>
+                                                                            <Plus size={20} className={styles.resultAdd} />
+                                                                        </button>
+                                                                        <ProposalLikeButton
+                                                                            groupId={groupId}
+                                                                            proposalId={option.proposalId}
+                                                                            initialCount={option.likeCount}
+                                                                            initialLiked={option.liked}
+                                                                        />
+                                                                    </div>
+                                                                ))}
+                                                                {proposedFilms.length === 0 && <p className={styles.pickerEmpty}>{t("noProposalsFound")}</p>}
+                                                            </div>
+                                                        ) : (
+                                                            <MeetingFilmSearch
+                                                                proposingId={proposingId}
+                                                                onPropose={movie => handleProposeAndAdd(meeting.id, movie)}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </div>
                                         ) : (
                                             <button

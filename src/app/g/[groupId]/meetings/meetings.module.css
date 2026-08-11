@@ -197,11 +197,11 @@
     color: hsl(var(--destructive));
 }
 
-.picker {
-    background: var(--surface-sunken);
-    padding: var(--space-4);
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--hairline);
+.pickerModal {
+    display: flex;
+    flex-direction: column;
+    max-width: 480px;
+    max-height: 85vh;
 }
 
 .pickerHeader {
@@ -219,8 +219,15 @@
     margin-bottom: var(--space-4);
 }
 
+.pickerBody {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
 .searchPicker {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: var(--space-4);
 }
 
@@ -245,32 +252,93 @@
     border-color: hsl(var(--border));
 }
 
-.searchResults {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: var(--space-4);
-    max-height: 420px;
-    overflow-y: auto;
-}
-
-.pickerList {
-    display: grid;
+.resultsList {
+    display: flex;
+    flex-direction: column;
     gap: var(--space-2);
-    max-height: 300px;
-    overflow-y: auto;
 }
 
-.pickerRow {
+.resultRowWrap {
     display: flex;
     align-items: center;
     gap: var(--space-2);
 }
 
-.pickerOption {
+.resultRow {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+    background: var(--surface-1);
+    border: 1px solid transparent;
+    text-align: left;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.resultRow:hover:not(:disabled) {
+    background: var(--surface-2);
+    border-color: hsl(var(--border));
+}
+
+.resultRow:disabled {
+    opacity: 0.6;
+}
+
+.resultPoster {
+    position: relative;
+    width: 52px;
+    aspect-ratio: 2 / 3;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--placeholder);
+}
+
+.resultPosterImage {
+    object-fit: cover;
+}
+
+.resultInfo {
     flex: 1;
     min-width: 0;
-    justify-content: flex-start;
-    text-align: left;
+}
+
+.resultTitle {
+    display: block;
+    font-weight: bold;
+    font-size: var(--text-md);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.resultYear {
+    font-size: 0.8rem;
+    opacity: 0.6;
+}
+
+.resultOverview {
+    margin-top: var(--space-1);
+    font-size: 0.8rem;
+    opacity: 0.7;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.resultAdd {
+    flex-shrink: 0;
+    color: hsl(var(--primary));
+}
+
+.resultLoading {
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    opacity: 0.6;
 }
 
 .pickerEmpty {
