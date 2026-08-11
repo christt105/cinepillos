@@ -1,5 +1,10 @@
+import { DEFAULT_LOCALE, LOCALE_TAGS, type Locale } from "@/i18n/config";
+
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+
+/** Titles and overviews come back in the language the reader picked. */
+const language = (locale: Locale = DEFAULT_LOCALE) => ({ language: LOCALE_TAGS[locale] });
 
 export interface TMDBMovie {
     id: number;
@@ -58,18 +63,18 @@ async function fetchTMDB<T>(endpoint: string, params: Record<string, string> = {
 }
 
 export const tmdb = {
-    searchMovies: async (query: string) => {
-        return fetchTMDB<TMDBResponse<TMDBMovie>>('/search/movie', { query });
+    searchMovies: async (query: string, locale?: Locale) => {
+        return fetchTMDB<TMDBResponse<TMDBMovie>>('/search/movie', { query, ...language(locale) });
     },
-    getTrending: async () => {
-        return fetchTMDB<TMDBResponse<TMDBMovie>>('/trending/movie/week');
+    getTrending: async (locale?: Locale) => {
+        return fetchTMDB<TMDBResponse<TMDBMovie>>('/trending/movie/week', language(locale));
     },
-    getMovieDetails: async (id: number) => {
-        return fetchTMDB<TMDBMovie>(`/movie/${id}`);
+    getMovieDetails: async (id: number, locale?: Locale) => {
+        return fetchTMDB<TMDBMovie>(`/movie/${id}`, language(locale));
     },
     /** Movies and TV shows only — `include_adult` stays off by default, but `search/multi` still mixes in people. */
-    searchMulti: async (query: string) => {
-        const data = await fetchTMDB<TMDBResponse<TMDBMultiResult>>('/search/multi', { query });
+    searchMulti: async (query: string, locale?: Locale) => {
+        const data = await fetchTMDB<TMDBResponse<TMDBMultiResult>>('/search/multi', { query, ...language(locale) });
         return { ...data, results: data.results.filter(r => r.media_type === "movie" || r.media_type === "tv") };
     },
     /** `include_image_language=null` asks for the textless posters — no localized title art. */

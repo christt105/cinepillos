@@ -1,6 +1,10 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { requireGroupPage } from "@/lib/group-page";
 import { tmdb } from "@/lib/tmdb";
+import { getTranslations } from "next-intl/server";
+import { SITE_NAME, socialMetadata } from "@/lib/metadata";
+import { resolveLocale } from "@/i18n/request";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,10 +17,51 @@ interface PageProps {
     params: Promise<{ groupId: string; id: string }>;
 }
 
+/** Poster size that keeps the card sharp without shipping the original file. */
+const OG_POSTER = { base: "https://image.tmdb.org/t/p/w780", width: 780, height: 1170 };
+
+const MAX_OG_DESCRIPTION = 200;
+
+export async function generateMetadata(props: PageProps): Promise<Metadata> {
+    const { id } = await props.params;
+    const tmdbId = Number(id);
+
+    if (isNaN(tmdbId)) return {};
+
+    const locale = await resolveLocale();
+    const t = await getTranslations("movie");
+
+    let movie;
+    try {
+        movie = await tmdb.getMovieDetails(tmdbId, locale);
+    } catch (e) {
+        console.error("Failed to fetch TMDB movie for metadata", e);
+    }
+
+    if (!movie?.title) return {};
+
+    const overview = movie.overview?.trim() || t("metaFallbackDescription", { app: SITE_NAME });
+
+    return socialMetadata({
+        title: `${movie.title} · ${SITE_NAME}`,
+        description: overview.length > MAX_OG_DESCRIPTION
+            ? `${overview.slice(0, MAX_OG_DESCRIPTION).trimEnd()}…`
+            : overview,
+        locale,
+        // image.tmdb.org is public https, so the crawlers fetch it directly.
+        image: movie.poster_path
+            ? { url: `${OG_POSTER.base}${movie.poster_path}`, width: OG_POSTER.width, height: OG_POSTER.height }
+            : undefined,
+    });
+}
+
 export default async function MovieDetailsPage(props: PageProps) {
     const params = await props.params;
     const { groupId, id } = params;
 
+    const t = await getTranslations("movie");
+    const tCommon = await getTranslations("common");
+    const locale = await resolveLocale();
     const { session } = await requireGroupPage(groupId);
     const tmdbId = Number(id);
 
@@ -28,7 +73,7 @@ export default async function MovieDetailsPage(props: PageProps) {
     // Note: We need to handle cases where 3rd party API fails gracefully if possible, or just let error boundary catch it.
     let movie;
     try {
-        movie = await tmdb.getMovieDetails(tmdbId);
+        movie = await tmdb.getMovieDetails(tmdbId, locale);
     } catch (e) {
         console.error("Failed to fetch TMDB movie", e);
         // Fallback or notFound
@@ -56,7 +101,7 @@ export default async function MovieDetailsPage(props: PageProps) {
     return (
         <div className="page">
             <Link href={`/g/${groupId}`} className={`btn btn-ghost ${styles.back}`}>
-                <ArrowLeft size={16} /> Volver al Inicio
+                <ArrowLeft size={16} /> {t("back")}
             </Link>
 
             <div className={`glass-card ${styles.card}`}>
@@ -69,7 +114,7 @@ export default async function MovieDetailsPage(props: PageProps) {
                             className={styles.posterImage}
                         />
                     ) : (
-                        <div className="poster-placeholder">Sin poster</div>
+                        <div className="poster-placeholder">{tCommon("noPoster")}</div>
                     )}
                 </div>
 
@@ -102,20 +147,20 @@ export default async function MovieDetailsPage(props: PageProps) {
                             rel="noopener noreferrer"
                             className="btn btn-ghost"
                         >
-                            <LinkIcon size={16} /> Ver en TMDB
+                            <LinkIcon size={16} /> {t("viewOnTmdb")}
                         </a>
                     </div>
 
                     {allProposals.length > 0 && (
                         <div className={styles.proposers}>
-                            <h3 className={styles.proposersTitle}>Propuesta por:</h3>
+                            <h3 className={styles.proposersTitle}>{t("proposedByTitle")}</h3>
                             <div className={styles.proposersList}>
                                 {allProposals.map(p => (
                                     <div key={p.id} className={styles.proposer}>
                                         <div className={`avatar ${styles.proposerAvatar}`}>
                                             <Image
                                                 src={avatarUrl(p.user)}
-                                                alt={p.user.name || "User"}
+                                                alt={p.user.name || tCommon("unknownUser")}
                                                 fill
                                                 className={styles.posterImage}
                                             />

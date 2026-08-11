@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Copy, Trash2, LogOut } from "lucide-react";
+import { useFormatter, useTranslations } from "next-intl";
 import clsx from "clsx";
 import styles from "./management.module.css";
 
@@ -28,6 +29,8 @@ export default function MembersManagement({
     members: Member[];
     initialInvitations: Invitation[];
 }) {
+    const t = useTranslations("members");
+    const format = useFormatter();
     const router = useRouter();
     const [invitations, setInvitations] = useState(initialInvitations);
     const [creating, setCreating] = useState(false);
@@ -46,7 +49,7 @@ export default function MembersManagement({
                 const invitation = await res.json();
                 setInvitations(prev => [invitation, ...prev]);
             } else {
-                setError("No se ha podido crear la invitación");
+                setError(t("createInvitationError"));
             }
         } finally {
             setCreating(false);
@@ -67,8 +70,8 @@ export default function MembersManagement({
 
     const handleRemoveMember = async (userId: string) => {
         const isSelf = userId === currentUserId;
-        if (isSelf && !confirm("¿Seguro que quieres salir de este club?")) return;
-        if (!isSelf && !confirm("¿Seguro que quieres expulsar a este miembro?")) return;
+        if (isSelf && !confirm(t("confirmLeave"))) return;
+        if (!isSelf && !confirm(t("confirmKick"))) return;
 
         const res = await fetch(`/api/groups/${groupId}/members/${userId}`, { method: "DELETE" });
         if (res.ok) {
@@ -81,9 +84,9 @@ export default function MembersManagement({
         <div className={clsx("glass-card", styles.card)}>
             {isOwnerOrAdmin && (
                 <section className={styles.section}>
-                    <h3 className={styles.sectionTitle}>Invitar por enlace</h3>
+                    <h3 className={styles.sectionTitle}>{t("inviteByLink")}</h3>
                     <button className="btn btn-ghost" onClick={handleCreateInvitation} disabled={creating}>
-                        {creating ? "Creando..." : "Crear enlace de invitación"}
+                        {creating ? t("creatingInvitation") : t("createInvitation")}
                     </button>
                     {error && <p className="form-error">{error}</p>}
 
@@ -92,21 +95,23 @@ export default function MembersManagement({
                             {invitations.map(invitation => (
                                 <li key={invitation.id} className={styles.invitationItem}>
                                     <span className={styles.invitationMeta}>
-                                        Caduca el {new Date(invitation.expiresAt).toLocaleDateString()}
+                                        {t("invitationExpires", {
+                                            date: format.dateTime(new Date(invitation.expiresAt), "short"),
+                                        })}
                                         {invitation.maxUses
-                                            ? ` · ${invitation.useCount}/${invitation.maxUses} usos`
-                                            : ` · ${invitation.useCount} usos`}
+                                            ? t("invitationUsesCapped", { used: invitation.useCount, max: invitation.maxUses })
+                                            : t("invitationUses", { used: invitation.useCount })}
                                     </span>
                                     <button
                                         className="btn btn-ghost"
-                                        title="Copiar enlace"
+                                        title={t("copyLink")}
                                         onClick={() => handleCopyLink(invitation.token)}
                                     >
                                         <Copy size={16} />
                                     </button>
                                     <button
                                         className="btn btn-ghost"
-                                        title="Revocar"
+                                        title={t("revoke")}
                                         onClick={() => handleRevoke(invitation.id)}
                                     >
                                         <Trash2 size={16} />
@@ -119,17 +124,17 @@ export default function MembersManagement({
             )}
 
             <section className={styles.section}>
-                <h3 className={styles.sectionTitle}>Miembros</h3>
+                <h3 className={styles.sectionTitle}>{t("membersTitle")}</h3>
                 <ul className={styles.memberList}>
                     {members.map(member => (
                         <li key={member.userId} className={styles.memberItem}>
                             <span>
-                                {member.name} {member.role === "OWNER" && <span className={styles.role}>propietario</span>}
+                                {member.name} {member.role === "OWNER" && <span className={styles.role}>{t("owner")}</span>}
                             </span>
                             {(member.userId === currentUserId || isOwnerOrAdmin) && member.role !== "OWNER" && (
                                 <button
                                     className="btn btn-ghost"
-                                    title={member.userId === currentUserId ? "Salir del club" : "Expulsar"}
+                                    title={member.userId === currentUserId ? t("leaveClub") : t("kickMember")}
                                     onClick={() => handleRemoveMember(member.userId)}
                                 >
                                     {member.userId === currentUserId ? <LogOut size={16} /> : <Trash2 size={16} />}

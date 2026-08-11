@@ -20,6 +20,19 @@ export type InvitationState =
     | { status: "valid"; group: InvitationGroup };
 
 /**
+ * The club an invitation belongs to, with none of the acceptance rules. Used
+ * by the link preview, which has no session to check them against.
+ */
+export async function findInvitationGroup(token: string): Promise<InvitationGroup | null> {
+    const invitation = await prisma.invitation.findUnique({
+        where: { token },
+        select: { group: { select: { id: true, name: true } } },
+    });
+
+    return invitation?.group ?? null;
+}
+
+/**
  * Every rule an invitation must pass to be accepted, shared by the `/invite`
  * page (to explain why a link doesn't work) and the accept endpoint (to
  * enforce it). A deleted group takes its invitations with it via the schema's

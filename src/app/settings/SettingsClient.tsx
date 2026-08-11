@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { avatarUrl } from "@/lib/avatar";
 import AvatarPicker from "./AvatarPicker";
@@ -18,11 +19,9 @@ interface User {
     avatar: string;
 }
 
-const ERROR_MESSAGES: Record<string, string> = {
-    name_taken: "Ese nombre ya está en uso",
-};
-
 export default function SettingsClient({ user }: { user: User }) {
+    const t = useTranslations("settings");
+    const tCommon = useTranslations("common");
     const router = useRouter();
 
     const [name, setName] = useState(user.name || "");
@@ -51,7 +50,7 @@ export default function SettingsClient({ user }: { user: User }) {
                 router.refresh();
             } else {
                 const data = await res.json().catch(() => ({}));
-                setError(ERROR_MESSAGES[data.error] ?? "Error guardando los cambios");
+                setError(data.error === "name_taken" ? t("errorNameTaken") : t("errorDefault"));
             }
         } finally {
             setSaving(false);
@@ -92,14 +91,14 @@ export default function SettingsClient({ user }: { user: User }) {
                     <Image src={avatar} alt={name} fill className={styles.identityImage} />
                 </div>
                 <div>
-                    <h2 className={styles.identityName}>{name || "Sin nombre"}</h2>
+                    <h2 className={styles.identityName}>{name || t("noName")}</h2>
                     <p className={styles.identityEmail}>{user.email}</p>
                     <div className={styles.avatarActions}>
                         <button className="btn btn-ghost" onClick={() => setPickingAvatar(true)}>
-                            Cambiar avatar
+                            {t("changeAvatar")}
                         </button>
                         <button className="btn btn-ghost" onClick={handleRemoveAvatar} disabled={removingAvatar}>
-                            Quitar avatar
+                            {t("removeAvatar")}
                         </button>
                     </div>
                 </div>
@@ -118,7 +117,7 @@ export default function SettingsClient({ user }: { user: User }) {
             )}
 
             <div className={clsx("glass-card", styles.card)}>
-                <h3 className={styles.cardTitle}>Nombre</h3>
+                <h3 className={styles.cardTitle}>{t("nameLabel")}</h3>
                 <input
                     className="input"
                     value={name}
@@ -133,15 +132,15 @@ export default function SettingsClient({ user }: { user: User }) {
                 onClick={handleSave}
                 disabled={saving}
             >
-                {saved ? <><Check size={18} /> Guardado</> : saving ? "Guardando..." : "Guardar cambios"}
+                {saved ? <><Check size={18} /> {t("saved")}</> : saving ? t("saving") : t("save")}
             </button>
 
             <div className={clsx("glass-card", styles.card, styles.dangerZone)}>
-                <h3 className={styles.cardTitle}>Borrar cuenta</h3>
+                <h3 className={styles.cardTitle}>{t("deleteTitle")}</h3>
                 <p className={styles.dangerText}>
-                    Elimina tu usuario junto con tus propuestas y votos en todos los
-                    clubes. No se puede deshacer. Ver <Link href="/privacy">política de
-                    privacidad</Link>.
+                    {t.rich("deleteText", {
+                        privacy: chunks => <Link href="/privacy">{chunks}</Link>,
+                    })}
                 </p>
                 {confirmingDelete ? (
                     <div className={styles.dangerActions}>
@@ -150,19 +149,19 @@ export default function SettingsClient({ user }: { user: User }) {
                             onClick={handleDelete}
                             disabled={deleting}
                         >
-                            {deleting ? "Borrando..." : "Sí, borrar mi cuenta"}
+                            {deleting ? t("deleting") : t("confirmDelete")}
                         </button>
                         <button
                             className="btn btn-ghost"
                             onClick={() => setConfirmingDelete(false)}
                             disabled={deleting}
                         >
-                            Cancelar
+                            {tCommon("cancel")}
                         </button>
                     </div>
                 ) : (
                     <button className="btn btn-danger" onClick={() => setConfirmingDelete(true)}>
-                        Borrar cuenta
+                        {t("delete")}
                     </button>
                 )}
             </div>

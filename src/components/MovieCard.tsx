@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import clsx from "clsx";
+import { useTranslations } from "next-intl";
 import { Link as LinkIcon, Plus } from "lucide-react";
 import styles from "./MovieCard.module.css";
 import { TMDBMovie } from "@/lib/tmdb";
@@ -16,6 +17,8 @@ interface MovieCardProps {
 }
 
 export default function MovieCard({ movie, groupId, onAdd, loading = false, isProposed = false }: MovieCardProps) {
+    const t = useTranslations("movieCard");
+    const tCommon = useTranslations("common");
     const link = `/g/${groupId}/movies/${movie.id}`;
 
     return (
@@ -31,7 +34,7 @@ export default function MovieCard({ movie, groupId, onAdd, loading = false, isPr
                             className={styles.image}
                         />
                     ) : (
-                        <div className="poster-placeholder">Sin poster</div>
+                        <div className="poster-placeholder">{tCommon("noPoster")}</div>
                     )}
                 </Link>
                 <div className={styles.overlay}>
@@ -47,7 +50,7 @@ export default function MovieCard({ movie, groupId, onAdd, loading = false, isPr
                             ) : (
                                 <Plus size={16} className={clsx(styles.toggleIcon, isProposed && styles.toggleIconOn)} />
                             )}
-                            {isProposed ? "Quitar" : "Añadir"}
+                            {isProposed ? t("remove") : t("propose")}
                         </button>
                         <a
                             href={`https://www.themoviedb.org/movie/${movie.id}`}
@@ -63,7 +66,7 @@ export default function MovieCard({ movie, groupId, onAdd, loading = false, isPr
             <div className={styles.content}>
                 <h3 className={styles.title}>{movie.title}</h3>
                 <span className={styles.year}>
-                    {movie.release_date ? new Date(movie.release_date).getFullYear() : "N/A"}
+                    {movie.release_date ? new Date(movie.release_date).getFullYear() : tCommon("notAvailable")}
                 </span>
             </div>
         </div>

@@ -25,12 +25,14 @@ vi.mock("@/lib/auth", () => ({
 import { GET } from "@/app/api/tmdb/search/route";
 import { getServerSession } from "next-auth";
 
-const makeRequest = (query?: string, media?: string) => {
+const makeRequest = (query?: string, media?: string, locale?: string) => {
     const params = new URLSearchParams();
     if (query) params.set("query", query);
     if (media) params.set("media", media);
     const qs = params.toString();
-    return new Request(`http://localhost/api/tmdb/search${qs ? `?${qs}` : ""}`);
+    return new Request(`http://localhost/api/tmdb/search${qs ? `?${qs}` : ""}`, {
+        headers: locale ? { cookie: `locale=${locale}` } : undefined,
+    });
 };
 
 describe("GET /api/tmdb/search", () => {
@@ -55,7 +57,7 @@ describe("GET /api/tmdb/search", () => {
         expect(res.status).toBe(200);
         const data = await res.json();
         expect(data.results[0].title).toBe("Dune");
-        expect(mockSearchMovies).toHaveBeenCalledWith("dune");
+        expect(mockSearchMovies).toHaveBeenCalledWith("dune", "es");
     });
 
     it("falls back to trending without a query", async () => {
@@ -65,7 +67,7 @@ describe("GET /api/tmdb/search", () => {
         const res = await GET(makeRequest());
 
         expect(res.status).toBe(200);
-        expect(mockGetTrending).toHaveBeenCalledOnce();
+        expect(mockGetTrending).toHaveBeenCalledWith("es");
     });
 
     it("searches movies and TV shows when media=multi", async () => {
@@ -77,7 +79,25 @@ describe("GET /api/tmdb/search", () => {
         expect(res.status).toBe(200);
         const data = await res.json();
         expect(data.results[0].name).toBe("Frieren");
-        expect(mockSearchMulti).toHaveBeenCalledWith("frieren");
+        expect(mockSearchMulti).toHaveBeenCalledWith("frieren", "es");
         expect(mockSearchMovies).not.toHaveBeenCalled();
+    });
+
+    it("asks TMDB for the language in the locale cookie", async () => {
+        vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1" } } as never);
+        mockSearchMovies.mockResolvedValue({ results: [] });
+
+        await GET(makeRequest("dune", undefined, "en"));
+
+        expect(mockSearchMovies).toHaveBeenCalledWith("dune", "en");
+    });
+
+    it("falls back to the default language for an unknown cookie", async () => {
+        vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1" } } as never);
+        mockSearchMovies.mockResolvedValue({ results: [] });
+
+        await GET(makeRequest("dune", undefined, "klingon"));
+
+        expect(mockSearchMovies).toHaveBeenCalledWith("dune", "es");
     });
 });

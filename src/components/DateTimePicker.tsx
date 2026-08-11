@@ -1,13 +1,29 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import clsx from "clsx";
 import styles from "./DateTimePicker.module.css";
 
-const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-const DAYS_SHORT = ["L","M","X","J","V","S","D"];
 const ITEM_H = 48;
+
+/** Month and weekday names for the active language, straight from `Intl`. */
+function useCalendarNames() {
+    const locale = useLocale();
+
+    return useMemo(() => {
+        const months = Array.from({ length: 12 }, (_, month) =>
+            new Intl.DateTimeFormat(locale, { month: "long" }).format(new Date(2026, month, 1))
+        );
+        // 2026-01-05 is a Monday, so the week reads Monday-first like the grid.
+        const daysShort = Array.from({ length: 7 }, (_, day) =>
+            new Intl.DateTimeFormat(locale, { weekday: "narrow" }).format(new Date(2026, 0, 5 + day))
+        );
+
+        return { months, daysShort };
+    }, [locale]);
+}
 
 function useDebouncedCallback<T extends unknown[]>(fn: (...args: T) => void, delay: number) {
     const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -69,6 +85,7 @@ function DrumColumn({
 }
 
 function TimePicker({ selected, onSelect }: { selected: Date; onSelect: (d: Date) => void }) {
+    const t = useTranslations("datePicker");
     const hours = Array.from({ length: 24 }, (_, i) => i);
     const minutes = Array.from({ length: 12 }, (_, i) => i * 5);
 
@@ -79,7 +96,7 @@ function TimePicker({ selected, onSelect }: { selected: Date; onSelect: (d: Date
 
     return (
         <div className={styles.time}>
-            <p className={styles.timeLabel}>Hora</p>
+            <p className={styles.timeLabel}>{t("time")}</p>
 
             <div className={styles.drums}>
                 {/* Selection highlight */}
@@ -94,6 +111,7 @@ function TimePicker({ selected, onSelect }: { selected: Date; onSelect: (d: Date
 }
 
 function CalendarPicker({ selected, onSelect }: { selected: Date; onSelect: (d: Date) => void }) {
+    const { months, daysShort } = useCalendarNames();
     const [view, setView] = useState(new Date(selected.getFullYear(), selected.getMonth(), 1));
     const year = view.getFullYear();
     const month = view.getMonth();
@@ -119,14 +137,14 @@ function CalendarPicker({ selected, onSelect }: { selected: Date; onSelect: (d: 
                 <button className={clsx("btn btn-ghost", styles.calendarNav)} onClick={() => setView(new Date(year, month - 1, 1))}>
                     <ChevronLeft size={20} />
                 </button>
-                <span className={styles.calendarMonth}>{MONTHS[month]} {year}</span>
+                <span className={styles.calendarMonth}>{months[month]} {year}</span>
                 <button className={clsx("btn btn-ghost", styles.calendarNav)} onClick={() => setView(new Date(year, month + 1, 1))}>
                     <ChevronRight size={20} />
                 </button>
             </div>
 
             <div className={styles.days}>
-                {DAYS_SHORT.map(d => (
+                {daysShort.map(d => (
                     <div key={d} className={styles.dayName}>{d}</div>
                 ))}
                 {cells.map((day, i) => (
@@ -150,9 +168,10 @@ function CalendarPicker({ selected, onSelect }: { selected: Date; onSelect: (d: 
 }
 
 export default function DateTimePicker({ value, onChange }: { value: Date; onChange: (d: Date) => void }) {
+    const { months, daysShort } = useCalendarNames();
     const [tab, setTab] = useState<"date" | "time">("date");
 
-    const fmtDate = (d: Date) => `${DAYS_SHORT[(d.getDay() + 6) % 7]}, ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+    const fmtDate = (d: Date) => `${daysShort[(d.getDay() + 6) % 7]}, ${d.getDate()} ${months[d.getMonth()]}`;
     const fmtTime = (d: Date) => `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
 
     return (

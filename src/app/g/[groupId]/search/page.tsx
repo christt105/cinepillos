@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import MovieCard from "@/components/MovieCard";
+import { useTranslations } from "next-intl";
 import { Search } from "lucide-react";
 import { TMDBMovie } from "@/lib/tmdb";
 import styles from "./search.module.css";
@@ -13,6 +14,8 @@ interface Proposal {
 }
 
 export default function SearchPage() {
+    const t = useTranslations("search");
+    const tCommon = useTranslations("common");
     const { groupId } = useParams<{ groupId: string }>();
     const [query, setQuery] = useState("");
     const [movies, setMovies] = useState<TMDBMovie[]>([]);
@@ -104,7 +107,7 @@ export default function SearchPage() {
             }
         } catch (error) {
             console.error("Toggle failed", error);
-            alert("Action failed. Please try again.");
+            alert(t("toggleError"));
         } finally {
             setTogglingId(null);
         }
@@ -117,7 +120,7 @@ export default function SearchPage() {
                     <Search className={styles.searchIcon} />
                     <input
                         type="text"
-                        placeholder="Buscar una película..."
+                        placeholder={t("placeholder")}
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         className={`input ${styles.searchInput}`}
@@ -125,7 +128,7 @@ export default function SearchPage() {
                 </div>
             </div>
 
-            {loading && <p className={styles.status}>Cargando...</p>}
+            {loading && <p className={styles.status}>{tCommon("loading")}</p>}
 
             <div className={styles.results}>
                 {movies.map((movie) => (
@@ -141,7 +144,7 @@ export default function SearchPage() {
             </div>
 
             {!loading && movies.length === 0 && (
-                <p className={styles.emptyStatus}>No se encontraron películas.</p>
+                <p className={styles.emptyStatus}>{t("noResults")}</p>
             )}
         </div>
     );

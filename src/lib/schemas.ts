@@ -18,10 +18,17 @@ export const proposalSchema = z.object({
     releaseDate: z.string().max(30).nullish(),
 });
 
+const futureDate = z.coerce.date().refine(value => value.getTime() > Date.now(), {
+    message: "The meeting date must be in the future",
+});
+
+/** A meeting with no date is created in the `PLANNING` phase. */
 export const meetingSchema = z.object({
-    date: z.coerce.date().refine(value => value.getTime() > Date.now(), {
-        message: "The meeting date must be in the future",
-    }),
+    date: futureDate.nullish(),
+});
+
+export const meetingScheduleSchema = z.object({
+    date: futureDate,
 });
 
 export const candidateSchema = z.object({

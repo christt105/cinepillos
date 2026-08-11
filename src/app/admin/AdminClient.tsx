@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import styles from "./admin.module.css";
 
@@ -20,6 +21,7 @@ type AdminGroup = {
 };
 
 export default function AdminClient({ initialUsers, initialGroups }: { initialUsers: AdminUser[], initialGroups: AdminGroup[] }) {
+    const t = useTranslations("admin");
     const router = useRouter();
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -33,12 +35,12 @@ export default function AdminClient({ initialUsers, initialGroups }: { initialUs
             body: JSON.stringify({ name, email }),
         });
         if (res.ok) {
-            setMsg("Usuario creado");
+            setMsg(t("userCreated"));
             setName(""); setEmail("");
             router.refresh();
         } else {
             const data = await res.json();
-            setMsg(`Error: ${data.error}`);
+            setMsg(t("createError", { message: data.error }));
         }
         setTimeout(() => setMsg(""), 3000);
     };
@@ -64,15 +66,15 @@ export default function AdminClient({ initialUsers, initialGroups }: { initialUs
     return (
         <div className={styles.columns}>
             <div className={clsx("glass-card", styles.column)}>
-                <h2>Crear Usuario</h2>
+                <h2>{t("createUser")}</h2>
                 <form onSubmit={handleCreateUser} className={styles.form}>
-                    <input className="input" placeholder="Nombre *" value={name} onChange={e => setName(e.target.value)} required />
-                    <input className="input" type="email" placeholder="Email *" value={email} onChange={e => setEmail(e.target.value)} required />
-                    <button className="btn btn-primary" type="submit">Crear</button>
+                    <input className="input" placeholder={t("namePlaceholder")} value={name} onChange={e => setName(e.target.value)} required />
+                    <input className="input" type="email" placeholder={t("emailPlaceholder")} value={email} onChange={e => setEmail(e.target.value)} required />
+                    <button className="btn btn-primary" type="submit">{t("create")}</button>
                     {msg && <p className={styles.message}>{msg}</p>}
                 </form>
 
-                <h3 className={styles.listTitle}>Usuarios ({initialUsers.length})</h3>
+                <h3 className={styles.listTitle}>{t("usersTitle", { count: initialUsers.length })}</h3>
                 <ul className={styles.list}>
                     {initialUsers.map(u => (
                         <li key={u.id} className={styles.item}>
@@ -86,7 +88,7 @@ export default function AdminClient({ initialUsers, initialGroups }: { initialUs
                                     className={clsx("btn btn-ghost", styles.smallAction)}
                                     onClick={() => handleToggleAdmin(u.id, u.isAdmin)}
                                 >
-                                    {u.isAdmin ? "Quitar admin" : "Hacer admin"}
+                                    {u.isAdmin ? t("removeAdmin") : t("makeAdmin")}
                                 </button>
                             </div>
                             <div className={styles.itemRow}>
@@ -95,14 +97,14 @@ export default function AdminClient({ initialUsers, initialGroups }: { initialUs
                                     onChange={(e) => handleAssignGroup(u.id, e.target.value)}
                                     defaultValue=""
                                 >
-                                    <option value="" disabled>Añadir a grupo...</option>
+                                    <option value="" disabled>{t("addToGroup")}</option>
                                     {initialGroups.map(g => (
                                         <option key={g.id} value={g.id}>{g.name}</option>
                                     ))}
                                 </select>
                             </div>
                             <div className={styles.groups}>
-                                Grupos: {u.memberships.map(m => m.group.name).join(", ") || "—"}
+                                {t("userGroups", { names: u.memberships.map(m => m.group.name).join(", ") || "—" })}
                             </div>
                         </li>
                     ))}
@@ -110,18 +112,14 @@ export default function AdminClient({ initialUsers, initialGroups }: { initialUs
             </div>
 
             <div className={clsx("glass-card", styles.column)}>
-                <h2>Grupos</h2>
-                <p className={styles.message}>
-                    Cualquier usuario puede crear su propio club desde &quot;Crear
-                    club&quot;. Este panel ya solo sirve para añadir usuarios existentes
-                    a un grupo a mano.
-                </p>
+                <h2>{t("groupsTitle")}</h2>
+                <p className={styles.message}>{t("groupsNote")}</p>
 
-                <h3 className={styles.listTitle}>Grupos ({initialGroups.length})</h3>
+                <h3 className={styles.listTitle}>{t("groupsCount", { count: initialGroups.length })}</h3>
                 <ul className={styles.listTight}>
                     {initialGroups.map(g => (
                         <li key={g.id} className={styles.item}>
-                            <strong>{g.name}</strong> <span className={styles.email}>({g.memberships.length} miembros)</span>
+                            <strong>{g.name}</strong> <span className={styles.email}>{t("membersCount", { count: g.memberships.length })}</span>
                         </li>
                     ))}
                 </ul>
