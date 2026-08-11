@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { CalendarPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -34,6 +35,15 @@ export default function ScheduleMeetingButton({
     const [date, setDate] = useState<Date>(new Date());
     const [saving, setSaving] = useState(false);
 
+    /** Blocks the page behind the picker from scrolling while it's open. */
+    useEffect(() => {
+        if (!open) return;
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.body.style.overflow = "";
+        };
+    }, [open]);
+
     const handleSchedule = async () => {
         setSaving(true);
         try {
@@ -64,7 +74,10 @@ export default function ScheduleMeetingButton({
                 <CalendarPlus size={16} /> {t("action")}
             </button>
 
-            {open && (
+            {/* Portalled for the same reason as the film picker (063487f):
+                backdrop-filter on .glass-card makes the surrounding card a
+                containing block, which would clip this fixed overlay to it. */}
+            {open && createPortal(
                 <div className="modal-overlay" onClick={() => setOpen(false)}>
                     <div className="glass-card modal" onClick={e => e.stopPropagation()}>
                         <h3 className={styles.title}>{t("title")}</h3>
@@ -76,7 +89,8 @@ export default function ScheduleMeetingButton({
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </>
     );
