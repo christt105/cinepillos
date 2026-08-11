@@ -1,5 +1,5 @@
 import { NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
+import GoogleProvider, { GoogleProfile } from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 
@@ -21,6 +21,19 @@ export const authOptions: NextAuthOptions = {
             // of linking to that existing User. Safe because Google verifies
             // the email itself.
             allowDangerousEmailAccountLinking: true,
+            // Whatever this returns is what `PrismaAdapter.createUser` writes
+            // to the User row, and the default mapping includes Google's
+            // `picture`. Anyone who signs in without having been
+            // pre-provisioned goes through that path, so the default would
+            // store their Google photo — which /privacy promises we never do.
+            // Avatars only ever come from the picker in
+            // `/api/users/[id]/avatar`.
+            profile: (profile: GoogleProfile) => ({
+                id: profile.sub,
+                name: profile.name,
+                email: profile.email,
+                image: null,
+            }),
         }),
     ],
     callbacks: {
