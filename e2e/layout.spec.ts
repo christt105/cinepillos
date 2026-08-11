@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { signIn as authenticate } from "./auth";
+import { prisma } from "@/lib/prisma";
 
 /**
  * `body` hides horizontal overflow, so a cut-off element does not widen the
@@ -29,14 +30,18 @@ async function overflowingElements(page: Page) {
     });
 }
 
+/**
+ * Landing on "/" only proves the redirect works; it resolves to whichever club
+ * was visited last, which another spec may have changed. The demo data these
+ * tests assert on all lives in Zorropillos, so ask for it by name.
+ */
 async function signIn(page: Page) {
     await authenticate(page);
     await page.goto("/");
     await page.waitForURL(url => !url.pathname.startsWith("/login"));
 
-    const groupId = new URL(page.url()).pathname.split("/")[2];
-    expect(groupId).toBeTruthy();
-    return groupId;
+    const group = await prisma.group.findFirstOrThrow({ where: { name: "Zorropillos" } });
+    return group.id;
 }
 
 test("the login page fits the viewport", async ({ page }) => {
@@ -86,6 +91,43 @@ test("the group pages fit the viewport", async ({ page }) => {
         await page.waitForLoadState("networkidle");
         expect(await overflowingElements(page), `overflow on ${path}`).toEqual([]);
     }
+});
+
+test("the navbar keeps its contents inside the bar", async ({ page }) => {
+    const groupId = await signIn(page);
+    await page.goto(`/g/${groupId}`);
+    await page.waitForLoadState("networkidle");
+
+    // Christian is an admin in two clubs, which is the densest the bar ever
+    // gets. Stacked, that identity block was 122px tall inside a 70px bar, so
+    // the club selector sat above the top of the screen.
+    const report = await page.evaluate(() => {
+        const nav = document.querySelector("nav")!;
+        const bar = nav.getBoundingClientRect();
+        const row = nav.querySelector<HTMLElement>(".container")!;
+        const spills: string[] = [];
+
+        for (const el of nav.querySelectorAll("*")) {
+            const box = el.getBoundingClientRect();
+            if (box.width === 0 && box.height === 0) continue;
+            if (box.top < bar.top - 1 || box.bottom > bar.bottom + 1) {
+                spills.push(
+                    `<${el.tagName.toLowerCase()} class="${el.className}"> ` +
+                    `top=${Math.round(box.top)} bottom=${Math.round(box.bottom)} ` +
+                    `(bar ${Math.round(bar.top)}–${Math.round(bar.bottom)}): ` +
+                    `${(el.textContent ?? "").trim().slice(0, 30)}`
+                );
+            }
+        }
+
+        // `.container` caps the row well below the viewport, so a row that is
+        // too wide crowds and wraps inside the bar without ever reaching the
+        // edge of the screen for the viewport check above to notice.
+        return { spills, crowdedBy: row.scrollWidth - row.clientWidth };
+    });
+
+    expect(report.spills).toEqual([]);
+    expect(report.crowdedBy).toBeLessThanOrEqual(0);
 });
 
 test("the concluded hero keeps the winning title inside the card", async ({ page }) => {
