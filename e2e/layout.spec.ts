@@ -88,7 +88,13 @@ test("the group pages fit the viewport", async ({ page }) => {
         "/admin",
     ]) {
         await page.goto(path);
-        await page.waitForLoadState("networkidle");
+        // `networkidle` used to wait here, but it also waits out slow
+        // third-party poster fetches that can't move this layout: `.poster`
+        // is a fixed 2:3 aspect-ratio box, so the image never affects
+        // overflow. What can is data a page fetches after mount, so wait for
+        // that, capped — a single slow image proxy request shouldn't be able
+        // to eat the whole test's budget across six pages.
+        await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
         expect(await overflowingElements(page), `overflow on ${path}`).toEqual([]);
     }
 });
@@ -96,7 +102,12 @@ test("the group pages fit the viewport", async ({ page }) => {
 test("the navbar keeps its contents inside the bar", async ({ page }) => {
     const groupId = await signIn(page);
     await page.goto(`/g/${groupId}`);
-    await page.waitForLoadState("networkidle");
+
+    // The identity block is client-rendered off `useSession()`, so wait for
+    // the piece the rest of this test measures rather than for the network
+    // to fall quiet, which a slow poster fetch elsewhere on the page can
+    // delay for reasons that have nothing to do with the bar.
+    await expect(page.locator("nav").getByRole("combobox")).toBeVisible();
 
     // Christian is an admin in two clubs, which is the densest the bar ever
     // gets. Stacked, that identity block was 122px tall inside a 70px bar, so
@@ -133,8 +144,9 @@ test("the navbar keeps its contents inside the bar", async ({ page }) => {
 test("the concluded hero keeps the winning title inside the card", async ({ page }) => {
     const groupId = await signIn(page);
     await page.goto(`/g/${groupId}`);
-    await page.waitForLoadState("networkidle");
 
+    // The hero is server-rendered, so nothing here needs the network to go
+    // quiet; waiting for the heading is both necessary and sufficient.
     const hero = page.locator(".glass-card").first();
     await expect(hero.getByRole("heading", { level: 1 })).toBeVisible();
 
