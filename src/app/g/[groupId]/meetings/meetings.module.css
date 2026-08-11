@@ -314,9 +314,6 @@
     display: block;
     font-weight: bold;
     font-size: var(--text-md);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .resultYear {

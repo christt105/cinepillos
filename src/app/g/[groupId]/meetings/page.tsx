@@ -121,6 +121,15 @@ export default function MeetingsPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [groupId]);
 
+    /** Blocks the page behind the picker from scrolling while it's open. */
+    useEffect(() => {
+        if (!showAddModal) return;
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.body.style.overflow = "";
+        };
+    }, [showAddModal]);
+
     const handleVote = async (meetingId: string, candidateId: string) => {
         try {
             const res = await fetch(`/api/groups/${groupId}/vote`, {
