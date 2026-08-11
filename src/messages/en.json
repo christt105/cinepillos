@@ -230,7 +230,8 @@
     "proposeFilm": "Propose film",
     "errorPropose": "The proposal could not be created",
     "errorRemove": "The proposal could not be removed",
-    "metaFallbackDescription": "Proposed on {app}."
+    "metaFallbackDescription": "Proposed on {app}.",
+    "similarTitle": "Similar films"
   },
   "likes": {
     "like": "Like",

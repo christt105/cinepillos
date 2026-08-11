@@ -79,3 +79,26 @@
 .proposerAvatar {
     --avatar-size: 32px;
 }
+
+.similarSection {
+    margin-top: var(--space-8);
+}
+
+.similarTitle {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    margin-bottom: var(--space-4);
+}
+
+.similarGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--space-6);
+}
+
+@media (max-width: 600px) {
+    .similarGrid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-4);
+    }
+}

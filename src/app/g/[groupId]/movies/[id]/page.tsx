@@ -10,6 +10,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Link as LinkIcon } from "lucide-react";
 import { ProposalButton } from "./ProposalButton";
+import SimilarMovies from "./SimilarMovies";
 import { avatarUrl } from "@/lib/avatar";
 import styles from "./movie.module.css";
 
@@ -173,6 +174,8 @@ export default async function MovieDetailsPage(props: PageProps) {
                     )}
                 </div>
             </div>
+
+            <SimilarMovies groupId={groupId} tmdbId={movie.id} />
         </div>
     );
 }

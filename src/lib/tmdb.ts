@@ -40,6 +40,11 @@ export interface TMDBImages {
     posters: TMDBImage[];
 }
 
+export interface TMDBGenre {
+    id: number;
+    name: string;
+}
+
 async function fetchTMDB<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
     if (!TMDB_API_KEY) {
         console.warn("TMDB_API_KEY is missing");
@@ -80,5 +85,19 @@ export const tmdb = {
     /** `include_image_language=null` asks for the textless posters — no localized title art. */
     getImages: async (mediaType: "movie" | "tv", id: number) => {
         return fetchTMDB<TMDBImages>(`/${mediaType}/${id}/images`, { include_image_language: "null" });
+    },
+    getGenres: async (locale?: Locale) => {
+        return fetchTMDB<{ genres: TMDBGenre[] }>('/genre/movie/list', language(locale));
+    },
+    /** Browse by genre, most popular first — for when there's nothing specific to search for. */
+    discoverMovies: async (genreId: number, locale?: Locale) => {
+        return fetchTMDB<TMDBResponse<TMDBMovie>>('/discover/movie', {
+            with_genres: String(genreId),
+            sort_by: 'popularity.desc',
+            ...language(locale),
+        });
+    },
+    getSimilarMovies: async (id: number, locale?: Locale) => {
+        return fetchTMDB<TMDBResponse<TMDBMovie>>(`/movie/${id}/similar`, language(locale));
     },
 };

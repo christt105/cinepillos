@@ -230,7 +230,8 @@
     "proposeFilm": "Proponer Película",
     "errorPropose": "No se ha podido crear la propuesta",
     "errorRemove": "No se ha podido quitar la propuesta",
-    "metaFallbackDescription": "Propuesta en {app}."
+    "metaFallbackDescription": "Propuesta en {app}.",
+    "similarTitle": "Películas similares"
   },
   "likes": {
     "like": "Me gusta",
