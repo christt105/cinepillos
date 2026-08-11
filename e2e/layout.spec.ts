@@ -44,6 +44,33 @@ test("the login page fits the viewport", async ({ page }) => {
     expect(await overflowingElements(page)).toEqual([]);
 });
 
+test("the Google sign-in button is centred in the login card", async ({ page }) => {
+    await page.goto("/login");
+
+    const card = page.locator(".glass-card").first();
+    const button = card.getByRole("button", { name: /google/i });
+    await expect(button).toBeVisible();
+
+    // A <button> sizes to fit-content, so without an explicit width it sat
+    // against the card's left padding edge rather than under the title.
+    const fit = await card.evaluate(box => {
+        const button = box.querySelector("button")!.getBoundingClientRect();
+        const card = box.getBoundingClientRect();
+        const style = getComputedStyle(box);
+        const inset = (side: "Left" | "Right") =>
+            parseFloat(style[`padding${side}` as "paddingLeft"]) +
+            parseFloat(style[`border${side}Width` as "borderLeftWidth"]);
+
+        return {
+            buttonCentre: (button.left + button.right) / 2,
+            contentCentre:
+                (card.left + inset("Left") + card.right - inset("Right")) / 2,
+        };
+    });
+
+    expect(Math.abs(fit.buttonCentre - fit.contentCentre)).toBeLessThanOrEqual(1);
+});
+
 test("the group pages fit the viewport", async ({ page }) => {
     const groupId = await signIn(page);
 

@@ -40,7 +40,7 @@ function SignInButton() {
             <button
                 type="button"
                 onClick={() => signIn("google", { callbackUrl })}
-                className={clsx("btn btn-primary", styles.submit)}
+                className={clsx("btn btn-primary btn-block", styles.submit)}
             >
                 <GoogleIcon />
                 {t("continueWithGoogle")}
