@@ -270,11 +270,15 @@
     align-items: center;
     gap: var(--space-3);
     min-width: 0;
-    padding: var(--space-2);
+    width: 100%;
+    padding: var(--space-3);
     border-radius: var(--radius-sm);
     background: var(--surface-1);
     border: 1px solid transparent;
+    color: hsl(var(--foreground));
+    font: inherit;
     text-align: left;
+    cursor: pointer;
     transition: background 0.15s, border-color 0.15s;
 }
 

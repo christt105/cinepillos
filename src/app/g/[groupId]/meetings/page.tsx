@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { Calendar as CalendarIcon, ThumbsUp, Plus, Trash2, User, Trophy } from "lucide-react";
 import { useParams } from "next/navigation";
@@ -393,7 +394,7 @@ export default function MeetingsPage() {
                                             </div>
                                         ))}
 
-                                        {showAddModal === meeting.id ? (
+                                        {showAddModal === meeting.id ? createPortal(
                                             <div className="modal-overlay" onClick={() => setShowAddModal(null)}>
                                                 <div className={clsx("glass-card modal", styles.pickerModal)} onClick={e => e.stopPropagation()}>
                                                     <div className={styles.pickerHeader}>
@@ -463,7 +464,8 @@ export default function MeetingsPage() {
                                                         )}
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </div>,
+                                            document.body
                                         ) : (
                                             <button
                                                 className="btn btn-ghost btn-dashed"
