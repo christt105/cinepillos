@@ -58,10 +58,26 @@
     border-radius: var(--radius-sm);
 }
 
+.proposers + .proposers {
+    margin-top: var(--space-4);
+}
+
 .proposersTitle {
     font-size: var(--text-md);
     margin-bottom: var(--space-4);
     font-weight: 600;
+}
+
+.likersHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+}
+
+.likersHeader .proposersTitle {
+    margin-bottom: 0;
 }
 
 .proposersList {

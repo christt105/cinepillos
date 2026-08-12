@@ -1,18 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import { Heart } from "lucide-react";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { avatarUrl } from "@/lib/avatar";
+import { useLikeToggle, type Liker } from "@/lib/useLikeToggle";
 import styles from "./ProposalLikeButton.module.css";
 
-export interface Liker {
-    id: string;
-    name: string | null;
-    image: string | null;
-}
+export type { Liker };
 
 interface ProposalLikeButtonProps {
     groupId: string;
@@ -38,40 +34,12 @@ export default function ProposalLikeButton({
 }: ProposalLikeButtonProps) {
     const t = useTranslations("likes");
     const tCommon = useTranslations("common");
-    const [likers, setLikers] = useState(initialLikers);
-    const [pending, setPending] = useState(false);
+    const { likers, liked, toggle } = useLikeToggle(groupId, proposalId, initialLikers, currentUser);
 
-    const liked = likers.some(liker => liker.id === currentUser.id);
-
-    const toggle = async (event: React.MouseEvent) => {
+    const handleClick = (event: React.MouseEvent) => {
         event.preventDefault();
         event.stopPropagation();
-        if (pending) return;
-
-        const next = !liked;
-        setPending(true);
-        setLikers(current =>
-            next
-                ? [...current, currentUser]
-                : current.filter(liker => liker.id !== currentUser.id)
-        );
-
-        try {
-            const res = await fetch(`/api/groups/${groupId}/proposals/${proposalId}/like`, {
-                method: next ? "POST" : "DELETE",
-            });
-
-            if (!res.ok) throw new Error("Failed to toggle like");
-        } catch (error) {
-            console.error("Toggle like failed", error);
-            setLikers(current =>
-                next
-                    ? current.filter(liker => liker.id !== currentUser.id)
-                    : [...current, currentUser]
-            );
-        } finally {
-            setPending(false);
-        }
+        toggle();
     };
 
     return (
@@ -91,7 +59,7 @@ export default function ProposalLikeButton({
             <button
                 type="button"
                 className={clsx("btn btn-ghost", styles.button, liked && styles.liked)}
-                onClick={toggle}
+                onClick={handleClick}
                 aria-pressed={liked}
                 aria-label={liked ? t("unlike") : t("like")}
             >

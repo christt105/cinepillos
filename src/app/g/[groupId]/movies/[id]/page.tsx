@@ -11,6 +11,7 @@ import Link from "next/link";
 import { ArrowLeft, Link as LinkIcon } from "lucide-react";
 import { ProposalButton } from "./ProposalButton";
 import SimilarMovies from "./SimilarMovies";
+import LikeSection from "./LikeSection";
 import { avatarUrl } from "@/lib/avatar";
 import styles from "./movie.module.css";
 
@@ -91,6 +92,7 @@ export default async function MovieDetailsPage(props: PageProps) {
         include: {
             proposals: {
                 where: { groupId },
+                orderBy: { createdAt: 'asc' },
                 include: { user: true, likes: { include: { user: true } } }
             }
         }
@@ -106,6 +108,10 @@ export default async function MovieDetailsPage(props: PageProps) {
             allProposals.flatMap(p => p.likes.map(like => [like.user.id, like.user] as const))
         ).values()
     ];
+
+    // Likes hang off a proposal, so liking the film from its own page acts on
+    // the group's first proposal of it — same convention the home page uses.
+    const mainProposal = allProposals[0];
 
     return (
         <div className="page">
@@ -181,25 +187,13 @@ export default async function MovieDetailsPage(props: PageProps) {
                         </div>
                     )}
 
-                    {allLikers.length > 0 && (
-                        <div className={styles.proposers}>
-                            <h3 className={styles.proposersTitle}>{t("likedByTitle")}</h3>
-                            <div className={styles.proposersList}>
-                                {allLikers.map(user => (
-                                    <div key={user.id} className={styles.proposer}>
-                                        <div className={`avatar ${styles.proposerAvatar}`}>
-                                            <Image
-                                                src={avatarUrl(user)}
-                                                alt={user.name || tCommon("unknownUser")}
-                                                fill
-                                                className={styles.posterImage}
-                                            />
-                                        </div>
-                                        <span>{user.name}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                    {mainProposal && (
+                        <LikeSection
+                            groupId={groupId}
+                            proposalId={mainProposal.id}
+                            initialLikers={allLikers}
+                            currentUser={{ id: session.user.id, name: session.user.name ?? null, image: session.user.image ?? null }}
+                        />
                     )}
                 </div>
             </div>
