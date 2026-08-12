@@ -12,8 +12,9 @@ that group.
 
 Next.js (App Router) with React server components, Prisma over Postgres
 (hosted on [Neon](https://neon.tech)), NextAuth with Google as the only
-provider, and TMDB for film search, posters, metadata and avatars. No CSS framework:
-design tokens in `src/app/globals.css` plus CSS Modules.
+provider, TMDB for film search, posters and metadata, and TVDB for character
+avatar photos. No CSS framework: design tokens in `src/app/globals.css` plus
+CSS Modules.
 
 ## Environment
 
@@ -22,8 +23,9 @@ Copy `.env.example` to `.env` and fill it in.
 | Variable | What it is |
 | --- | --- |
 | `DATABASE_URL` | Neon's pooled Postgres connection string, used by the running app. |
-| `DIRECT_URL` | Neon's direct Postgres connection string, used by `prisma migrate`. |
+| `DATABASE_URL_UNPOOLED` | Neon's direct Postgres connection string, used by `prisma migrate`. Named to match what Vercel's Neon integration provisions automatically. |
 | `TMDB_API_KEY` | TMDB v3 API key. Without it, search returns nothing instead of crashing. |
+| `TVDB_API_KEY` | TVDB v4 API key. Without it, the avatar picker offers posters but no character photos. |
 | `NEXTAUTH_SECRET` | Signs the session cookies. `openssl rand -base64 32`. |
 | `NEXTAUTH_URL` | Public origin of the app, no trailing slash. |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | OAuth client from the Google Cloud console. Redirect URI is `<NEXTAUTH_URL>/api/auth/callback/google`. |
@@ -46,7 +48,7 @@ docker run -d --name cinepillos-db -e POSTGRES_PASSWORD=postgres \
   -e POSTGRES_DB=cinepillos -p 5432:5432 postgres:16-alpine
 ```
 
-with `DATABASE_URL` and `DIRECT_URL` both set to
+with `DATABASE_URL` and `DATABASE_URL_UNPOOLED` both set to
 `postgresql://postgres:postgres@localhost:5432/cinepillos`.
 
 Sign in as the seeded administrator, then create the real accounts and groups
@@ -64,12 +66,14 @@ adding an existing user to a group by hand; it no longer creates groups
 itself. Members can change their own name from `/settings`, and delete their
 account entirely from there too — see `/privacy` for what that removes.
 
-Avatars come only from TMDB: `/settings` lets a member search a film, then
-pick one of its textless posters or a cast member's photo as their avatar.
-There is no Google photo sync and no Gravatar fallback, and the backend never
-stores a URL a client sent as-is — a poster path has to still be present in a
-fresh TMDB response for that movie, and a cast photo is resolved from the
-person's TMDB id rather than a path at all (`/api/users/[id]/avatar`).
+Avatars come only from TMDB and TVDB: `/settings` lets a member search a film
+or series, then pick one of its textless TMDB posters or a TVDB character
+photo as their avatar — TVDB's character photos are stills of the role
+itself, not the actor's press photos TMDB's cast credits would give. There is
+no Google photo sync and no Gravatar fallback, and the backend never stores a
+URL a client sent as-is — a poster path has to still be present in a fresh
+TMDB response for that title, and a character photo is resolved from the
+TVDB character's id rather than a URL at all (`/api/users/[id]/avatar`).
 Anyone without a chosen avatar gets the bundled `public/default-avatar.svg`.
 
 An owner (or a site admin) can also invite people straight from `/g/<groupId>/members`:
@@ -95,19 +99,36 @@ The app is meant to run on [Vercel](https://vercel.com) (Hobby plan) with a
 the environment variables above in the Vercel project, and Vercel builds and
 deploys on every push. There is no persistent disk to manage.
 
-`docker compose up -d` still pulls the published image
-(`ghcr.io/christt105/cinepillos`) and starts the app on port 6889 for
-self-hosting instead. `docker-compose.yml` currently hardcodes
-`DATABASE_URL=file:../data/club.db`, left over from SQLite — that line needs
-replacing with a Postgres `DATABASE_URL`/`DIRECT_URL` (e.g. via
-`docker-compose.override.yml`) before the container will start against this
-schema. Not fixed here on purpose: the compose file stays untouched until a
-deliberate call on whether self-hosting is kept around at all now that Vercel
-is the primary deployment.
+Every branch gets its own preview subdomain, which Google OAuth rejects since
+only pre-registered redirect URIs work — registering each one by hand doesn't
+scale. Locally and on any deployment where `VERCEL_ENV` isn't `production`,
+`/login` also offers the users seeded by `prisma/seed-preview.ts` (or `prisma
+db seed` locally); picking one hits `/api/dev-login`, which mints the same
+session cookie a real Google sign-in would, skipping Google entirely. That
+route 404s on the production deployment.
 
-`public/uploads/` is still mounted for uploaded avatars in this setup.
+For self-hosting, `docker compose up -d` builds the image and starts both the
+app (port 6889) and its own Postgres, with a named volume so the database
+survives restarts. Copy `.env.example` to `.env` and fill in `TMDB_API_KEY`,
+`TVDB_API_KEY`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL` and the Google OAuth pair — the
+`DATABASE_URL`/`DATABASE_URL_UNPOOLED` in `.env` are ignored in this setup,
+since `docker-compose.yml` points the app at the bundled `postgres` service
+instead. The entrypoint runs `prisma migrate deploy` on every start, so the
+schema is ready by the time the app comes up.
 
-If you want to put the app behind a reverse proxy or a tunnel, add a
+The runtime image only ships the Prisma CLI, not `tsx`, so `prisma db seed`
+can't run inside the `cinepillos` container. The bundled Postgres is published
+to `127.0.0.1:5432`, so seed the admin from the host instead, from a checkout
+with `npm ci` already run:
+
+```bash
+DATABASE_URL="postgresql://cinepillos:cinepillos@localhost:5432/cinepillos" \
+DATABASE_URL_UNPOOLED="postgresql://cinepillos:cinepillos@localhost:5432/cinepillos" \
+npx prisma db seed
+```
+
+If you want to put the app behind a reverse proxy or a tunnel, or point it at
+an external Postgres instead of the bundled one, add a
 `docker-compose.override.yml` (not tracked by git) instead of editing
 `docker-compose.yml`.
 
@@ -122,7 +143,7 @@ npm run test:e2e         # Playwright layout checks (needs npx playwright instal
 ```
 
 The integration project needs a real Postgres reachable via `DATABASE_URL`/
-`DIRECT_URL` — see the throwaway container command above. `global-setup.ts`
+`DATABASE_URL_UNPOOLED` — see the throwaway container command above. `global-setup.ts`
 runs `prisma migrate deploy` once per `vitest` run; every test file then
 shares that one database, and `resetDatabase()` (in `factories.ts`) empties it
 before each individual test, so nothing leaks between tests or files. CI spins
@@ -138,3 +159,21 @@ width and at desktop width.
 GitHub Actions runs lint, tests and build on every push and pull request.
 
 ![Voting room on a phone](docs/screenshot-mobile.png)
+
+If you find CinePillos useful and want to support its development, you can buy me a coffee!
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/christt105)
+
+## Attribution
+
+This product uses the [TMDB](https://www.themoviedb.org/) API for film
+search, posters and metadata, but is not endorsed or certified by TMDB.
+
+Character avatar photos are provided by [TheTVDB](https://thetvdb.com/).
+Please consider adding missing information or subscribing.
+
+Both are also credited in the app's footer, visible on every page.
+
+## License
+
+[AGPL-3.0](LICENSE).

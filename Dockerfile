@@ -39,9 +39,6 @@ COPY --from=deps --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/
 COPY --chown=nextjs:nodejs entrypoint.sh ./entrypoint.sh
 RUN chmod +x entrypoint.sh
 
-RUN mkdir -p public/uploads/avatars && chown -R nextjs:nodejs public/uploads
-RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
-
 USER nextjs
 
 EXPOSE 6889

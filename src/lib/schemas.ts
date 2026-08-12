@@ -6,6 +6,10 @@ export const activeGroupSchema = z.object({
     groupId: id,
 });
 
+export const devLoginSchema = z.object({
+    userId: id,
+});
+
 export const proposalSchema = z.object({
     tmdbId: z.coerce.number().int().positive(),
     title: z.string().min(1).max(300),
@@ -14,10 +18,17 @@ export const proposalSchema = z.object({
     releaseDate: z.string().max(30).nullish(),
 });
 
+const futureDate = z.coerce.date().refine(value => value.getTime() > Date.now(), {
+    message: "The meeting date must be in the future",
+});
+
+/** A meeting with no date is created in the `PLANNING` phase. */
 export const meetingSchema = z.object({
-    date: z.coerce.date().refine(value => value.getTime() > Date.now(), {
-        message: "The meeting date must be in the future",
-    }),
+    date: futureDate.nullish(),
+});
+
+export const meetingScheduleSchema = z.object({
+    date: futureDate,
 });
 
 export const candidateSchema = z.object({
@@ -35,15 +46,17 @@ export const userUpdateSchema = z
     .strict();
 
 const tmdbId = z.coerce.number().int().positive();
+const mediaType = z.enum(["movie", "tv"]);
 
 /**
- * Never a client-supplied URL: `path`/`personId` only pick out which of a
- * movie's own TMDB images to use, and the backend re-validates the choice
- * against a fresh TMDB response before it resolves and stores an actual path.
+ * Never a client-supplied URL: `path`/`characterId` only pick out which of a
+ * title's own TMDB/TVDB images to use, and the backend re-validates the
+ * choice against a fresh API response before it resolves and stores an
+ * actual URL.
  */
 export const avatarSelectSchema = z.discriminatedUnion("kind", [
-    z.object({ kind: z.literal("poster"), tmdbId, path: z.string().min(1).max(300) }),
-    z.object({ kind: z.literal("cast"), tmdbId, personId: z.coerce.number().int().positive() }),
+    z.object({ kind: z.literal("poster"), tmdbId, mediaType, path: z.string().min(1).max(300) }),
+    z.object({ kind: z.literal("cast"), tmdbId, mediaType, characterId: z.coerce.number().int().positive() }),
 ]);
 
 export const adminUserCreateSchema = z.object({

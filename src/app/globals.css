@@ -337,6 +337,15 @@ a {
   padding-bottom: var(--space-6);
 }
 
+/* A grid item's automatic min-width is its content's min-content size, and a
+   nowrap title's min-content is its full unwrapped width — `.poster-title`'s
+   own `overflow: hidden` doesn't stop that from bubbling up. Without this,
+   whichever card has the longest title grows its whole column past its 1fr
+   share, at the other column's expense. */
+.responsive-proposals > * {
+  min-width: 0;
+}
+
 .proposal-card {
   width: 100%;
   position: relative;

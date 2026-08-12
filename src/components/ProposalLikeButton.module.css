@@ -1,0 +1,46 @@
+.wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.stack {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.stackAvatar {
+    --avatar-size: 20px;
+    border: 1px solid hsl(var(--background));
+}
+
+.stackAvatarImage {
+    object-fit: cover;
+}
+
+.stackMore {
+    font-size: var(--text-xs);
+    opacity: 0.6;
+    margin-left: var(--space-1);
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 0.2rem var(--space-2);
+    font-size: var(--text-xs);
+}
+
+.liked {
+    color: hsl(var(--primary));
+}
+
+.icon {
+    flex-shrink: 0;
+}
+
+.iconLiked {
+    fill: currentColor;
+}

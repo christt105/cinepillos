@@ -1,5 +1,5 @@
 import { NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
+import GoogleProvider, { GoogleProfile } from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 
@@ -21,6 +21,19 @@ export const authOptions: NextAuthOptions = {
             // of linking to that existing User. Safe because Google verifies
             // the email itself.
             allowDangerousEmailAccountLinking: true,
+            // Whatever this returns is what `PrismaAdapter.createUser` writes
+            // to the User row, and the default mapping includes Google's
+            // `picture`. Anyone who signs in without having been
+            // pre-provisioned goes through that path, so the default would
+            // store their Google photo — which /privacy promises we never do.
+            // Avatars only ever come from the picker in
+            // `/api/users/[id]/avatar`.
+            profile: (profile: GoogleProfile) => ({
+                id: profile.sub,
+                name: profile.name,
+                email: profile.email,
+                image: null,
+            }),
         }),
     ],
     callbacks: {
@@ -34,6 +47,8 @@ export const authOptions: NextAuthOptions = {
                 const dbUser = await prisma.user.findUnique({
                     where: { id: token.id as string },
                     select: {
+                        name: true,
+                        image: true,
                         isAdmin: true,
                         activeGroupId: true,
                         memberships: {
@@ -50,6 +65,11 @@ export const authOptions: NextAuthOptions = {
                     user: {
                         ...session.user,
                         id: token.id,
+                        // The JWT only ever holds what Google returned at sign-in, so a
+                        // display name or avatar changed later in /settings would
+                        // otherwise never show up here — read it fresh every request.
+                        name: dbUser?.name ?? session.user.name,
+                        image: dbUser?.image ?? null,
                         activeGroupId: dbUser?.activeGroupId,
                         activeGroup,
                         groups,

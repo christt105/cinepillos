@@ -35,6 +35,7 @@
 .drum {
     height: calc(var(--item-height) * 3);
     overflow-y: scroll;
+    overscroll-behavior: contain;
     scroll-snap-type: y mandatory;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
@@ -139,7 +140,10 @@
 }
 
 .day {
-    min-height: 44px;
+    width: 100%;
+    max-width: 44px;
+    aspect-ratio: 1;
+    margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -152,6 +156,11 @@
 .dayEmpty {
     opacity: 0;
     cursor: default;
+}
+
+.dayPast {
+    opacity: 0.3;
+    cursor: not-allowed;
 }
 
 .dayToday {

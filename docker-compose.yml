@@ -1,4 +1,22 @@
 services:
+  postgres:
+    container_name: cinepillos-db
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=cinepillos
+      - POSTGRES_PASSWORD=cinepillos
+      - POSTGRES_DB=cinepillos
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cinepillos"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   cinepillos:
     container_name: cinepillos
     image: ghcr.io/christt105/cinepillos:latest
@@ -6,13 +24,18 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
     env_file:
       - .env
     environment:
-      - DATABASE_URL=file:../data/club.db
+      - DATABASE_URL=postgresql://cinepillos:cinepillos@postgres:5432/cinepillos
+      - DATABASE_URL_UNPOOLED=postgresql://cinepillos:cinepillos@postgres:5432/cinepillos
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-    volumes:
-      - ./data:/app/data
     ports:
       - "6889:6889"
+
+volumes:
+  db-data:

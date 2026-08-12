@@ -1,6 +1,11 @@
 import { GET as getProposals, POST as postProposal } from "@/app/api/groups/[groupId]/proposals/route";
 import { DELETE as deleteProposal } from "@/app/api/groups/[groupId]/proposals/[id]/route";
+import {
+    POST as likeProposal,
+    DELETE as unlikeProposal,
+} from "@/app/api/groups/[groupId]/proposals/[id]/like/route";
 import { GET as getMeetings, POST as postMeeting } from "@/app/api/groups/[groupId]/meetings/route";
+import { PATCH as patchMeeting } from "@/app/api/groups/[groupId]/meetings/[id]/route";
 import { POST as postCandidate } from "@/app/api/groups/[groupId]/meetings/[id]/candidates/route";
 import { DELETE as deleteCandidate } from "@/app/api/groups/[groupId]/meetings/[id]/candidates/[candidateId]/route";
 import { PATCH as patchConclude } from "@/app/api/groups/[groupId]/meetings/[id]/conclude/route";
@@ -44,11 +49,23 @@ export const api = {
     deleteProposal: (groupId: string, id: string) =>
         deleteProposal(jsonRequest(`/api/groups/${groupId}/proposals/${id}`, "DELETE"), context({ groupId, id })),
 
+    likeProposal: (groupId: string, id: string) =>
+        likeProposal(jsonRequest(`/api/groups/${groupId}/proposals/${id}/like`, "POST"), context({ groupId, id })),
+
+    unlikeProposal: (groupId: string, id: string) =>
+        unlikeProposal(jsonRequest(`/api/groups/${groupId}/proposals/${id}/like`, "DELETE"), context({ groupId, id })),
+
     listMeetings: (groupId: string) =>
         getMeetings(jsonRequest(`/api/groups/${groupId}/meetings`, "GET"), context({ groupId })),
 
     createMeeting: (groupId: string, body: unknown) =>
         postMeeting(jsonRequest(`/api/groups/${groupId}/meetings`, "POST", body), context({ groupId })),
+
+    scheduleMeeting: (groupId: string, meetingId: string, body: unknown) =>
+        patchMeeting(
+            jsonRequest(`/api/groups/${groupId}/meetings/${meetingId}`, "PATCH", body),
+            context({ groupId, id: meetingId })
+        ),
 
     addCandidate: (groupId: string, meetingId: string, body: unknown) =>
         postCandidate(

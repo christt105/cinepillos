@@ -43,11 +43,54 @@
     text-align: center;
 }
 
+/* Width comes from `btn-block`. A <button> sizes to fit-content even at
+   `display: flex`, so inside the card's plain block flow it would otherwise
+   shrink to its label and sit against the left edge instead of centred. */
 .submit {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     gap: var(--space-3);
     padding: var(--space-3);
     font-size: 1rem;
+}
+
+.devLogin {
+    margin-top: var(--space-6);
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+    color: hsl(var(--muted-foreground));
+    font-size: var(--text-sm);
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: hsl(var(--border));
+}
+
+.devUsers {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.devUser {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    justify-content: flex-start;
+    padding: var(--space-2) var(--space-3);
+}
+
+.devUserAvatar {
+    --avatar-size: 28px;
+}
+
+.devUserImage {
+    object-fit: cover;
 }

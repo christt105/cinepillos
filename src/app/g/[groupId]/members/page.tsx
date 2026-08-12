@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireGroupPage } from "@/lib/group-page";
 import Image from "next/image";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { avatarUrl } from "@/lib/avatar";
 import MembersManagement from "./MembersManagement";
 import styles from "./members.module.css";
@@ -10,6 +11,8 @@ export const dynamic = "force-dynamic";
 
 export default async function GroupMembersPage({ params }: { params: Promise<{ groupId: string }> }) {
     const { groupId } = await params;
+    const t = await getTranslations("members");
+    const tCommon = await getTranslations("common");
     const { session, membership } = await requireGroupPage(groupId);
 
     const isOwnerOrAdmin = membership?.role === "OWNER" || !!session.user.isAdmin;
@@ -74,7 +77,7 @@ export default async function GroupMembersPage({ params }: { params: Promise<{ g
                             <div>
                                 <h2 className={styles.memberName}>{member.name}</h2>
                                 <span className={styles.memberCount}>
-                                    {member.proposals.length} {member.proposals.length === 1 ? "propuesta" : "propuestas"}
+                                    {t("proposalsCount", { count: member.proposals.length })}
                                 </span>
                             </div>
                         </div>
@@ -93,7 +96,7 @@ export default async function GroupMembersPage({ params }: { params: Promise<{ g
                                                         className="poster-image"
                                                     />
                                                 ) : (
-                                                    <div className="poster-placeholder">Sin poster</div>
+                                                    <div className="poster-placeholder">{tCommon("noPoster")}</div>
                                                 )}
                                             </div>
                                             <h4 className="poster-title">
@@ -109,7 +112,7 @@ export default async function GroupMembersPage({ params }: { params: Promise<{ g
                                 ))}
                             </div>
                         ) : (
-                            <p className={styles.empty}>Sin propuestas todavía.</p>
+                            <p className={styles.empty}>{t("noProposals")}</p>
                         )}
                     </section>
                 ))}

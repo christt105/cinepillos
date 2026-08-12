@@ -1,13 +1,29 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import clsx from "clsx";
 import styles from "./DateTimePicker.module.css";
 
-const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-const DAYS_SHORT = ["L","M","X","J","V","S","D"];
 const ITEM_H = 48;
+
+/** Month and weekday names for the active language, straight from `Intl`. */
+function useCalendarNames() {
+    const locale = useLocale();
+
+    return useMemo(() => {
+        const months = Array.from({ length: 12 }, (_, month) =>
+            new Intl.DateTimeFormat(locale, { month: "long" }).format(new Date(2026, month, 1))
+        );
+        // 2026-01-05 is a Monday, so the week reads Monday-first like the grid.
+        const daysShort = Array.from({ length: 7 }, (_, day) =>
+            new Intl.DateTimeFormat(locale, { weekday: "narrow" }).format(new Date(2026, 0, 5 + day))
+        );
+
+        return { months, daysShort };
+    }, [locale]);
+}
 
 function useDebouncedCallback<T extends unknown[]>(fn: (...args: T) => void, delay: number) {
     const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -30,11 +46,21 @@ function DrumColumn({
 }) {
     const ref = useRef<HTMLDivElement>(null);
     const isUserScrolling = useRef(false);
+    /// Where the wheel is heading, since a smooth scroll is still in flight
+    /// when the next notch arrives and `selected` would read behind.
+    const wheelTarget = useRef<number | null>(null);
+    const isPositioned = useRef(false);
 
     useEffect(() => {
         if (!ref.current || isUserScrolling.current) return;
         const idx = values.indexOf(selected);
-        if (idx !== -1) ref.current.scrollTo({ top: idx * ITEM_H, behavior: "smooth" });
+        if (idx === -1) return;
+
+        // Animating the very first jump left a window where interrupting it
+        // stranded the drum near the top, and the scroll-end handler then
+        // committed whatever value happened to be there.
+        ref.current.scrollTo({ top: idx * ITEM_H, behavior: isPositioned.current ? "smooth" : "auto" });
+        isPositioned.current = true;
     }, [selected, values]);
 
     const onScrollEnd = useDebouncedCallback(() => {
@@ -42,8 +68,40 @@ function DrumColumn({
         const idx = Math.round(ref.current.scrollTop / ITEM_H);
         const val = values[Math.max(0, Math.min(idx, values.length - 1))];
         isUserScrolling.current = false;
+        wheelTarget.current = null;
         onSelect(val);
     }, 120);
+
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+
+        // A wheel notch scrolls further than one item, so free-scrolling the
+        // drum skipped values and, once at either end, scrolled the dialog
+        // behind it. React's own onWheel is passive and cannot cancel that,
+        // hence the manual listener.
+        const onWheel = (event: WheelEvent) => {
+            event.preventDefault();
+
+            const step = Math.sign(event.deltaY);
+            if (!step) return;
+
+            // Stepping from the selected value rather than from `scrollTop`
+            // keeps a notch honest even while the drum is still gliding.
+            const from = wheelTarget.current ?? values.indexOf(selected);
+            if (from === -1) return;
+
+            const to = Math.max(0, Math.min(from + step, values.length - 1));
+            if (to === from) return;
+
+            isUserScrolling.current = true;
+            wheelTarget.current = to;
+            el.scrollTo({ top: to * ITEM_H, behavior: "smooth" });
+        };
+
+        el.addEventListener("wheel", onWheel, { passive: false });
+        return () => el.removeEventListener("wheel", onWheel);
+    }, [selected, values]);
 
     return (
         <div className={styles.column}>
@@ -69,6 +127,7 @@ function DrumColumn({
 }
 
 function TimePicker({ selected, onSelect }: { selected: Date; onSelect: (d: Date) => void }) {
+    const t = useTranslations("datePicker");
     const hours = Array.from({ length: 24 }, (_, i) => i);
     const minutes = Array.from({ length: 12 }, (_, i) => i * 5);
 
@@ -79,7 +138,7 @@ function TimePicker({ selected, onSelect }: { selected: Date; onSelect: (d: Date
 
     return (
         <div className={styles.time}>
-            <p className={styles.timeLabel}>Hora</p>
+            <p className={styles.timeLabel}>{t("time")}</p>
 
             <div className={styles.drums}>
                 {/* Selection highlight */}
@@ -94,6 +153,7 @@ function TimePicker({ selected, onSelect }: { selected: Date; onSelect: (d: Date
 }
 
 function CalendarPicker({ selected, onSelect }: { selected: Date; onSelect: (d: Date) => void }) {
+    const { months, daysShort } = useCalendarNames();
     const [view, setView] = useState(new Date(selected.getFullYear(), selected.getMonth(), 1));
     const year = view.getFullYear();
     const month = view.getMonth();
@@ -104,8 +164,10 @@ function CalendarPicker({ selected, onSelect }: { selected: Date; onSelect: (d: 
 
     const isSel = (d: number) => selected.getFullYear() === year && selected.getMonth() === month && selected.getDate() === d;
     const isToday = (d: number) => { const t = new Date(); return t.getFullYear() === year && t.getMonth() === month && t.getDate() === d; };
+    const isPast = (d: number) => new Date(year, month, d + 1) <= new Date(new Date().setHours(0, 0, 0, 0));
 
     const pick = (day: number) => {
+        if (isPast(day)) return;
         const d = new Date(selected);
         d.setFullYear(year, month, day);
         onSelect(d);
@@ -117,14 +179,14 @@ function CalendarPicker({ selected, onSelect }: { selected: Date; onSelect: (d: 
                 <button className={clsx("btn btn-ghost", styles.calendarNav)} onClick={() => setView(new Date(year, month - 1, 1))}>
                     <ChevronLeft size={20} />
                 </button>
-                <span className={styles.calendarMonth}>{MONTHS[month]} {year}</span>
+                <span className={styles.calendarMonth}>{months[month]} {year}</span>
                 <button className={clsx("btn btn-ghost", styles.calendarNav)} onClick={() => setView(new Date(year, month + 1, 1))}>
                     <ChevronRight size={20} />
                 </button>
             </div>
 
             <div className={styles.days}>
-                {DAYS_SHORT.map(d => (
+                {daysShort.map(d => (
                     <div key={d} className={styles.dayName}>{d}</div>
                 ))}
                 {cells.map((day, i) => (
@@ -134,6 +196,7 @@ function CalendarPicker({ selected, onSelect }: { selected: Date; onSelect: (d: 
                         className={clsx(
                             styles.day,
                             !day && styles.dayEmpty,
+                            day && isPast(day) && styles.dayPast,
                             day && isToday(day) && styles.dayToday,
                             day && isSel(day) && styles.daySelected,
                         )}
@@ -147,9 +210,10 @@ function CalendarPicker({ selected, onSelect }: { selected: Date; onSelect: (d: 
 }
 
 export default function DateTimePicker({ value, onChange }: { value: Date; onChange: (d: Date) => void }) {
+    const { months, daysShort } = useCalendarNames();
     const [tab, setTab] = useState<"date" | "time">("date");
 
-    const fmtDate = (d: Date) => `${DAYS_SHORT[(d.getDay() + 6) % 7]}, ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+    const fmtDate = (d: Date) => `${daysShort[(d.getDay() + 6) % 7]}, ${d.getDate()} ${months[d.getMonth()]}`;
     const fmtTime = (d: Date) => `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
 
     return (

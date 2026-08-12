@@ -15,9 +15,11 @@ export async function GET(request: Request, { params }: Context) {
         if (!auth.ok) return auth.response;
 
         const meetings = await prisma.meeting.findMany({
-            orderBy: { date: 'asc' },
+            orderBy: { date: { sort: 'asc', nulls: 'first' } },
             where: {
-                date: { gt: recentMeetingCutoff() },
+                // A meeting still in PLANNING has no date yet, so it can never
+                // fall out of the window the way a past meeting does.
+                OR: [{ date: { gt: recentMeetingCutoff() } }, { date: null }],
                 groupId: auth.group.id
             },
             include: {
@@ -49,11 +51,13 @@ export async function POST(request: Request, { params }: Context) {
     const body = await parseBody(request, meetingSchema);
     if (!body.ok) return body.response;
 
+    const date = body.data.date ?? null;
+
     try {
         const meeting = await prisma.meeting.create({
             data: {
-                date: body.data.date,
-                status: "VOTING",
+                date,
+                status: date ? "VOTING" : "PLANNING",
                 groupId: auth.group.id,
             }
         });

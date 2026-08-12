@@ -24,9 +24,12 @@ export async function GET(request: Request, { params }: Context) {
 
         const proposals = await prisma.proposal.findMany({
             where: whereClause,
+            orderBy: { createdAt: 'asc' },
             include: {
                 film: true, // Include full film details for 'all' scope
-                user: true  // Include proposer details
+                user: true, // Include proposer details
+                _count: { select: { likes: true } },
+                likes: { orderBy: { createdAt: 'asc' }, include: { user: { select: { id: true, name: true, image: true } } } }
             }
         });
 

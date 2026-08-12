@@ -1,5 +1,10 @@
+import { DEFAULT_LOCALE, LOCALE_TAGS, type Locale } from "@/i18n/config";
+
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+
+/** Titles and overviews come back in the language the reader picked. */
+const language = (locale: Locale = DEFAULT_LOCALE) => ({ language: LOCALE_TAGS[locale] });
 
 export interface TMDBMovie {
     id: number;
@@ -16,14 +21,14 @@ export interface TMDBResponse<T> {
     total_pages: number;
 }
 
-export interface TMDBCastMember {
+export interface TMDBMultiResult {
     id: number;
-    name: string;
-    profile_path: string | null;
-}
-
-export interface TMDBCredits {
-    cast: TMDBCastMember[];
+    media_type: "movie" | "tv" | "person";
+    title?: string;
+    name?: string;
+    poster_path: string | null;
+    release_date?: string;
+    first_air_date?: string;
 }
 
 export interface TMDBImage {
@@ -33,6 +38,11 @@ export interface TMDBImage {
 
 export interface TMDBImages {
     posters: TMDBImage[];
+}
+
+export interface TMDBGenre {
+    id: number;
+    name: string;
 }
 
 async function fetchTMDB<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
@@ -58,20 +68,36 @@ async function fetchTMDB<T>(endpoint: string, params: Record<string, string> = {
 }
 
 export const tmdb = {
-    searchMovies: async (query: string) => {
-        return fetchTMDB<TMDBResponse<TMDBMovie>>('/search/movie', { query });
+    searchMovies: async (query: string, locale?: Locale) => {
+        return fetchTMDB<TMDBResponse<TMDBMovie>>('/search/movie', { query, ...language(locale) });
     },
-    getTrending: async () => {
-        return fetchTMDB<TMDBResponse<TMDBMovie>>('/trending/movie/week');
+    getTrending: async (locale?: Locale) => {
+        return fetchTMDB<TMDBResponse<TMDBMovie>>('/trending/movie/week', language(locale));
     },
-    getMovieDetails: async (id: number) => {
-        return fetchTMDB<TMDBMovie>(`/movie/${id}`);
+    getMovieDetails: async (id: number, locale?: Locale) => {
+        return fetchTMDB<TMDBMovie>(`/movie/${id}`, language(locale));
     },
-    getMovieCredits: async (id: number) => {
-        return fetchTMDB<TMDBCredits>(`/movie/${id}/credits`);
+    /** Movies and TV shows only — `include_adult` stays off by default, but `search/multi` still mixes in people. */
+    searchMulti: async (query: string, locale?: Locale) => {
+        const data = await fetchTMDB<TMDBResponse<TMDBMultiResult>>('/search/multi', { query, ...language(locale) });
+        return { ...data, results: data.results.filter(r => r.media_type === "movie" || r.media_type === "tv") };
     },
     /** `include_image_language=null` asks for the textless posters — no localized title art. */
-    getMovieImages: async (id: number) => {
-        return fetchTMDB<TMDBImages>(`/movie/${id}/images`, { include_image_language: "null" });
+    getImages: async (mediaType: "movie" | "tv", id: number) => {
+        return fetchTMDB<TMDBImages>(`/${mediaType}/${id}/images`, { include_image_language: "null" });
+    },
+    getGenres: async (locale?: Locale) => {
+        return fetchTMDB<{ genres: TMDBGenre[] }>('/genre/movie/list', language(locale));
+    },
+    /** Browse by genre, most popular first — for when there's nothing specific to search for. */
+    discoverMovies: async (genreId: number, locale?: Locale) => {
+        return fetchTMDB<TMDBResponse<TMDBMovie>>('/discover/movie', {
+            with_genres: String(genreId),
+            sort_by: 'popularity.desc',
+            ...language(locale),
+        });
+    },
+    getSimilarMovies: async (id: number, locale?: Locale) => {
+        return fetchTMDB<TMDBResponse<TMDBMovie>>(`/movie/${id}/similar`, language(locale));
     },
 };

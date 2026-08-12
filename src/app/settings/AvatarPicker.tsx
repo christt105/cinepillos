@@ -3,14 +3,31 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import clsx from "clsx";
-import { TMDBMovie } from "@/lib/tmdb";
+import { TMDBMultiResult } from "@/lib/tmdb";
 import styles from "./avatar-picker.module.css";
+
+type SearchResult = {
+    id: number;
+    mediaType: "movie" | "tv";
+    title: string;
+    posterPath: string | null;
+};
 
 type AvatarOptions = {
     posters: string[];
-    cast: { id: number; name: string; profilePath: string }[];
+    cast: { id: number; name: string; imageUrl: string }[];
 };
+
+function toSearchResult(item: TMDBMultiResult): SearchResult {
+    return {
+        id: item.id,
+        mediaType: item.media_type as "movie" | "tv",
+        title: item.title ?? item.name ?? "",
+        posterPath: item.poster_path,
+    };
+}
 
 export default function AvatarPicker({
     userId,
@@ -21,57 +38,64 @@ export default function AvatarPicker({
     onSelected: (image: string) => void;
     onClose: () => void;
 }) {
+    const t = useTranslations("avatarPicker");
+    const tCommon = useTranslations("common");
     const [query, setQuery] = useState("");
-    const [movies, setMovies] = useState<TMDBMovie[]>([]);
-    const [selectedMovie, setSelectedMovie] = useState<TMDBMovie | null>(null);
+    const [results, setResults] = useState<SearchResult[]>([]);
+    const [selectedItem, setSelectedItem] = useState<SearchResult | null>(null);
     const [options, setOptions] = useState<AvatarOptions | null>(null);
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         const timer = setTimeout(async () => {
             if (!query) {
-                setMovies([]);
+                setResults([]);
                 return;
             }
-            const res = await fetch(`/api/tmdb/search?query=${encodeURIComponent(query)}`);
+            const res = await fetch(`/api/tmdb/search?query=${encodeURIComponent(query)}&media=multi`);
             if (res.ok) {
                 const data = await res.json();
-                setMovies(data.results ?? []);
+                setResults((data.results ?? []).map(toSearchResult));
             }
         }, 400);
         return () => clearTimeout(timer);
     }, [query]);
 
-    const handlePickMovie = async (movie: TMDBMovie) => {
-        setSelectedMovie(movie);
+    const handlePickResult = async (item: SearchResult) => {
+        setSelectedItem(item);
         setOptions(null);
-        const res = await fetch(`/api/tmdb/movies/${movie.id}/avatar-options`);
+        const res = await fetch(`/api/tmdb/movies/${item.id}/avatar-options?mediaType=${item.mediaType}`);
         if (res.ok) {
             setOptions(await res.json());
         }
     };
 
     const handleSelectPoster = async (path: string) => {
-        if (!selectedMovie || saving) return;
+        if (!selectedItem || saving) return;
         setSaving(true);
         const res = await fetch(`/api/users/${userId}/avatar`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ kind: "poster", tmdbId: selectedMovie.id, path }),
+            body: JSON.stringify({ kind: "poster", tmdbId: selectedItem.id, mediaType: selectedItem.mediaType, path }),
         });
         if (res.ok) onSelected(path);
         setSaving(false);
     };
 
-    const handleSelectCast = async (personId: number, profilePath: string) => {
-        if (!selectedMovie || saving) return;
+    const handleSelectCast = async (characterId: number, imageUrl: string) => {
+        if (!selectedItem || saving) return;
         setSaving(true);
         const res = await fetch(`/api/users/${userId}/avatar`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ kind: "cast", tmdbId: selectedMovie.id, personId }),
+            body: JSON.stringify({
+                kind: "cast",
+                tmdbId: selectedItem.id,
+                mediaType: selectedItem.mediaType,
+                characterId,
+            }),
         });
-        if (res.ok) onSelected(profilePath);
+        if (res.ok) onSelected(imageUrl);
         setSaving(false);
     };
 
@@ -79,58 +103,58 @@ export default function AvatarPicker({
         <div className="modal-overlay" onClick={onClose}>
             <div className={clsx("modal glass-card", styles.modal)} onClick={e => e.stopPropagation()}>
                 <div className={styles.header}>
-                    <h3>Elegir avatar</h3>
+                    <h3>{t("title")}</h3>
                     <button className="btn btn-ghost" onClick={onClose}>
                         <X size={18} />
                     </button>
                 </div>
 
-                {!selectedMovie ? (
+                {!selectedItem ? (
                     <>
                         <input
                             className="input"
-                            placeholder="Busca una película o serie..."
+                            placeholder={t("searchPlaceholder")}
                             value={query}
                             onChange={e => setQuery(e.target.value)}
                             autoFocus
                         />
                         <div className={styles.movieGrid}>
-                            {movies.map(movie => (
+                            {results.map(item => (
                                 <button
-                                    key={movie.id}
+                                    key={`${item.mediaType}-${item.id}`}
                                     className={styles.movieOption}
-                                    onClick={() => handlePickMovie(movie)}
+                                    onClick={() => handlePickResult(item)}
                                 >
                                     <div className="poster">
-                                        {movie.poster_path ? (
+                                        {item.posterPath ? (
                                             <Image
-                                                src={`https://image.tmdb.org/t/p/w200${movie.poster_path}`}
-                                                alt={movie.title}
+                                                src={`https://image.tmdb.org/t/p/w200${item.posterPath}`}
+                                                alt={item.title}
                                                 fill
                                                 className="poster-image"
                                             />
                                         ) : (
-                                            <div className="poster-placeholder">Sin poster</div>
+                                            <div className="poster-placeholder">{tCommon("noPoster")}</div>
                                         )}
                                     </div>
-                                    <span className={styles.movieOptionTitle}>{movie.title}</span>
+                                    <span className={styles.movieOptionTitle}>{item.title}</span>
                                 </button>
                             ))}
                         </div>
                     </>
                 ) : (
                     <>
-                        <button className="btn btn-ghost" onClick={() => setSelectedMovie(null)}>
-                            ← Buscar otra
+                        <button className="btn btn-ghost" onClick={() => setSelectedItem(null)}>
+                            {t("searchAgain")}
                         </button>
 
                         {!options ? (
-                            <p className={styles.status}>Cargando opciones...</p>
+                            <p className={styles.status}>{t("loadingOptions")}</p>
                         ) : (
                             <>
                                 {options.posters.length > 0 && (
                                     <section>
-                                        <h4 className={styles.sectionTitle}>Pósters</h4>
+                                        <h4 className={styles.sectionTitle}>{t("posters")}</h4>
                                         <div className={styles.imageGrid}>
                                             {options.posters.map(path => (
                                                 <button
@@ -141,7 +165,7 @@ export default function AvatarPicker({
                                                 >
                                                     <Image
                                                         src={`https://image.tmdb.org/t/p/w200${path}`}
-                                                        alt="Póster"
+                                                        alt={t("posterAlt")}
                                                         fill
                                                         className={styles.imageOptionImage}
                                                     />
@@ -153,18 +177,18 @@ export default function AvatarPicker({
 
                                 {options.cast.length > 0 && (
                                     <section>
-                                        <h4 className={styles.sectionTitle}>Reparto</h4>
+                                        <h4 className={styles.sectionTitle}>{t("characters")}</h4>
                                         <div className={styles.imageGrid}>
                                             {options.cast.map(member => (
                                                 <button
                                                     key={member.id}
                                                     className={clsx("avatar", styles.imageOption)}
                                                     title={member.name}
-                                                    onClick={() => handleSelectCast(member.id, member.profilePath)}
+                                                    onClick={() => handleSelectCast(member.id, member.imageUrl)}
                                                     disabled={saving}
                                                 >
                                                     <Image
-                                                        src={`https://image.tmdb.org/t/p/w200${member.profilePath}`}
+                                                        src={member.imageUrl}
                                                         alt={member.name}
                                                         fill
                                                         className={styles.imageOptionImage}
@@ -176,7 +200,7 @@ export default function AvatarPicker({
                                 )}
 
                                 {options.posters.length === 0 && options.cast.length === 0 && (
-                                    <p className={styles.status}>No hay imágenes disponibles para esta película.</p>
+                                    <p className={styles.status}>{t("noImages")}</p>
                                 )}
                             </>
                         )}

@@ -3,15 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import styles from "../../settings/settings.module.css";
 
-const ERROR_MESSAGES: Record<string, string> = {
-    group_limit_reached: "Has alcanzado el número máximo de clubes que puedes crear.",
-    rate_limited: "Demasiados intentos seguidos. Espera un momento y vuelve a intentarlo.",
+const ERROR_KEYS: Record<string, "errorLimitReached" | "errorRateLimited"> = {
+    group_limit_reached: "errorLimitReached",
+    rate_limited: "errorRateLimited",
 };
 
 export default function GroupsNewClient() {
+    const t = useTranslations("groupsNew");
     const router = useRouter();
     const { update: updateSession } = useSession();
 
@@ -37,7 +39,7 @@ export default function GroupsNewClient() {
                 router.push(`/g/${group.id}`);
             } else {
                 const data = await res.json().catch(() => ({}));
-                setError(ERROR_MESSAGES[data.error] ?? "No se ha podido crear el club");
+                setError(t(ERROR_KEYS[data.error] ?? "errorDefault"));
             }
         } finally {
             setSaving(false);
@@ -47,11 +49,11 @@ export default function GroupsNewClient() {
     return (
         <form onSubmit={handleSubmit} className={styles.form}>
             <div className={clsx("glass-card", styles.card)}>
-                <label className="field-label" htmlFor="group-name">Nombre del club</label>
+                <label className="field-label" htmlFor="group-name">{t("nameLabel")}</label>
                 <input
                     id="group-name"
                     className="input"
-                    placeholder="Los Cinéfilos del Jueves"
+                    placeholder={t("namePlaceholder")}
                     value={name}
                     onChange={e => setName(e.target.value)}
                     maxLength={60}
@@ -62,7 +64,7 @@ export default function GroupsNewClient() {
             {error && <p className="form-error">{error}</p>}
 
             <button className="btn btn-primary btn-block" type="submit" disabled={saving}>
-                {saving ? "Creando..." : "Crear club"}
+                {saving ? t("creating") : t("create")}
             </button>
         </form>
     );

@@ -2,6 +2,7 @@
   "name": "cinepillos",
   "version": "0.1.0",
   "private": true,
+  "license": "AGPL-3.0-only",
   "scripts": {
     "dev": "next dev -p 6889",
     "build": "next build",
@@ -14,8 +15,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "studio": "prisma studio",
-    "postinstall": "prisma generate",
-    "backup": "sh scripts/backup-db.sh"
+    "postinstall": "prisma generate"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -27,6 +27,7 @@
     "lucide-react": "^0.562.0",
     "next": "16.1.1",
     "next-auth": "^4.24.13",
+    "next-intl": "^4.13.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "zod": "^4.4.3"
