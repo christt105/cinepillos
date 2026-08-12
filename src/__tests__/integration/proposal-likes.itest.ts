@@ -118,4 +118,20 @@ describe("likes on proposals", () => {
         expect(await prisma.vote.count()).toBe(0);
         expect(await prisma.meetingCandidate.count()).toBe(0);
     });
+
+    it("lists every liker of a proposal, not just the caller's own like", async () => {
+        const proposal = await createProposal(group, owner);
+        signIn(member);
+        await api.likeProposal(group.id, proposal.id);
+        signIn(owner);
+        await api.likeProposal(group.id, proposal.id);
+
+        const res = await api.listProposals(group.id, "all");
+        const [listed] = await res.json();
+
+        expect(listed.likes).toHaveLength(2);
+        expect(listed.likes.map((like: { user: { id: string } }) => like.user.id).sort()).toEqual(
+            [member.id, owner.id].sort()
+        );
+    });
 });

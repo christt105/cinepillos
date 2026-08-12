@@ -25,6 +25,19 @@
     border-color: hsl(var(--border));
 }
 
+.genres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+}
+
+.genreChip {
+    font-size: var(--text-sm);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-pill);
+}
+
 .results {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));

@@ -47,6 +47,8 @@ export const authOptions: NextAuthOptions = {
                 const dbUser = await prisma.user.findUnique({
                     where: { id: token.id as string },
                     select: {
+                        name: true,
+                        image: true,
                         isAdmin: true,
                         activeGroupId: true,
                         memberships: {
@@ -63,6 +65,11 @@ export const authOptions: NextAuthOptions = {
                     user: {
                         ...session.user,
                         id: token.id,
+                        // The JWT only ever holds what Google returned at sign-in, so a
+                        // display name or avatar changed later in /settings would
+                        // otherwise never show up here — read it fresh every request.
+                        name: dbUser?.name ?? session.user.name,
+                        image: dbUser?.image ?? null,
                         activeGroupId: dbUser?.activeGroupId,
                         activeGroup,
                         groups,

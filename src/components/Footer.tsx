@@ -1,7 +1,14 @@
 import Image from "next/image";
+import { Github, Coffee } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import styles from "./Footer.module.css";
 
-export default function Footer() {
+const REPO_URL = "https://github.com/christt105/cinepillos";
+const KOFI_URL = "https://ko-fi.com/christt105";
+
+export default async function Footer() {
+    const t = await getTranslations("footer");
+
     return (
         <footer className={styles.footer}>
             <div className={styles.bar}>
@@ -28,6 +35,16 @@ export default function Footer() {
                         Metadata provided by TheTVDB. Please consider adding
                         missing information or subscribing.
                     </span>
+                </a>
+            </div>
+            <div className={styles.links}>
+                <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                    <Github size={16} />
+                    <span>{t("sourceCode")}</span>
+                </a>
+                <a href={KOFI_URL} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                    <Coffee size={16} />
+                    <span>{t("support")}</span>
                 </a>
             </div>
         </footer>

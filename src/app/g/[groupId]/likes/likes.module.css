@@ -1,0 +1,16 @@
+.posterYear {
+    font-size: var(--text-xs);
+    opacity: 0.6;
+}
+
+.empty {
+    padding: var(--space-7);
+    text-align: center;
+    border: 1px dashed var(--hairline);
+    border-radius: var(--radius-lg);
+}
+
+.emptyText {
+    opacity: 0.5;
+    margin-bottom: var(--space-4);
+}

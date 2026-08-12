@@ -19,6 +19,7 @@
     "search": "Search",
     "meetings": "Meetings",
     "myGroup": "My club",
+    "myLikes": "My likes",
     "admin": "Administration",
     "signIn": "Sign in",
     "signOut": "Sign out",
@@ -225,18 +226,29 @@
     "back": "Back to home",
     "viewOnTmdb": "View on TMDB",
     "proposedByTitle": "Proposed by:",
+    "likedByTitle": "Liked by:",
     "processing": "Working...",
     "removeProposal": "Remove proposal",
     "proposeFilm": "Propose film",
     "errorPropose": "The proposal could not be created",
     "errorRemove": "The proposal could not be removed",
-    "metaFallbackDescription": "Proposed on {app}."
+    "metaFallbackDescription": "Proposed on {app}.",
+    "similarTitle": "Similar films"
   },
   "likes": {
     "like": "Like",
     "unlike": "Remove like"
   },
+  "myLikes": {
+    "pageTitle": "My likes",
+    "empty": "You haven't liked any film yet.",
+    "browse": "Browse films"
+  },
   "datePicker": {
     "time": "Time"
+  },
+  "footer": {
+    "sourceCode": "Open source on GitHub",
+    "support": "Support on Ko-fi"
   }
 }

@@ -19,6 +19,7 @@
     "search": "Buscar",
     "meetings": "Reuniones",
     "myGroup": "Mi Grupo",
+    "myLikes": "Mis Likes",
     "admin": "Administración",
     "signIn": "Entrar",
     "signOut": "Cerrar sesión",
@@ -225,18 +226,29 @@
     "back": "Volver al Inicio",
     "viewOnTmdb": "Ver en TMDB",
     "proposedByTitle": "Propuesta por:",
+    "likedByTitle": "Le ha gustado a:",
     "processing": "Procesando...",
     "removeProposal": "Quitar Propuesta",
     "proposeFilm": "Proponer Película",
     "errorPropose": "No se ha podido crear la propuesta",
     "errorRemove": "No se ha podido quitar la propuesta",
-    "metaFallbackDescription": "Propuesta en {app}."
+    "metaFallbackDescription": "Propuesta en {app}.",
+    "similarTitle": "Películas similares"
   },
   "likes": {
     "like": "Me gusta",
     "unlike": "Quitar me gusta"
   },
+  "myLikes": {
+    "pageTitle": "Mis Likes",
+    "empty": "Todavía no le has dado like a ninguna película.",
+    "browse": "Explorar películas"
+  },
   "datePicker": {
     "time": "Hora"
+  },
+  "footer": {
+    "sourceCode": "Código abierto en GitHub",
+    "support": "Apoya el proyecto en Ko-fi"
   }
 }

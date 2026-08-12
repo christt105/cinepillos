@@ -10,7 +10,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import DateTimePicker from "@/components/DateTimePicker";
 import ScheduleMeetingButton from "@/components/ScheduleMeetingButton";
 import MeetingFilmSearch from "./MeetingFilmSearch";
-import ProposalLikeButton from "@/components/ProposalLikeButton";
+import ProposalLikeButton, { type Liker } from "@/components/ProposalLikeButton";
 import { TMDBMovie } from "@/lib/tmdb";
 import clsx from "clsx";
 import styles from "./meetings.module.css";
@@ -53,16 +53,14 @@ interface ProposedFilm {
 interface Proposal {
     id: string;
     film: ProposedFilm;
-    _count: { likes: number };
-    likes: { id: string }[];
+    likes: { user: Liker }[];
 }
 
 /// One entry per film: the group's first proposal of it carries the likes.
 interface ProposedFilmOption {
     film: ProposedFilm;
     proposalId: string;
-    likeCount: number;
-    liked: boolean;
+    likers: Liker[];
 }
 
 export default function MeetingsPage() {
@@ -107,8 +105,7 @@ export default function MeetingsPage() {
                     uniqueFilms.set(proposal.film.id, {
                         film: proposal.film,
                         proposalId: proposal.id,
-                        likeCount: proposal._count.likes,
-                        liked: proposal.likes.length > 0,
+                        likers: proposal.likes.map(like => like.user),
                     });
                 }
             });
@@ -466,12 +463,14 @@ export default function MeetingsPage() {
                                                                             </div>
                                                                             <Plus size={20} className={styles.resultAdd} />
                                                                         </button>
-                                                                        <ProposalLikeButton
-                                                                            groupId={groupId}
-                                                                            proposalId={option.proposalId}
-                                                                            initialCount={option.likeCount}
-                                                                            initialLiked={option.liked}
-                                                                        />
+                                                                        {session?.user && (
+                                                                            <ProposalLikeButton
+                                                                                groupId={groupId}
+                                                                                proposalId={option.proposalId}
+                                                                                initialLikers={option.likers}
+                                                                                currentUser={{ id: session.user.id, name: session.user.name ?? null, image: session.user.image ?? null }}
+                                                                            />
+                                                                        )}
                                                                     </div>
                                                                 ))}
                                                                 {proposedFilms.length === 0 && <p className={styles.pickerEmpty}>{t("noProposalsFound")}</p>}

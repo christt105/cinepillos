@@ -81,6 +81,11 @@ export default function Navbar() {
                                     {t("myGroup")}
                                 </Link>
                             )}
+                            {currentGroupId && (
+                                <Link href={groupHref("/likes")} className={styles.link}>
+                                    {t("myLikes")}
+                                </Link>
+                            )}
                             <div className={styles.userMenu}>
                                 <div className={styles.identity}>
                                     {groupControl()}
@@ -145,6 +150,15 @@ export default function Navbar() {
                                         onClick={() => setIsMenuOpen(false)}
                                     >
                                         {t("myGroup")}
+                                    </Link>
+                                )}
+                                {currentGroupId && (
+                                    <Link
+                                        href={groupHref("/likes")}
+                                        className={styles.link}
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        {t("myLikes")}
                                     </Link>
                                 )}
                                 <div className={styles.userMenu}>
