@@ -16,11 +16,11 @@ type Invitation = {
     useCount: number;
 };
 
-const errorMessage = async (res: Response, fallback: string) => {
+const errorMessage = async (res: Response, fallback: string, lastOwnerMessage?: string) => {
     const body = await res.json().catch(() => null);
 
-    if (body?.error === "last_owner") {
-        return "Antes tienes que traspasar el club a otra persona.";
+    if (body?.error === "last_owner" && lastOwnerMessage) {
+        return lastOwnerMessage;
     }
 
     return fallback;
@@ -42,6 +42,7 @@ export default function MembersManagement({
     initialInvitations: Invitation[];
 }) {
     const t = useTranslations("members");
+    const tCommon = useTranslations("common");
     const format = useFormatter();
     const router = useRouter();
     const [invitations, setInvitations] = useState(initialInvitations);
@@ -96,12 +97,12 @@ export default function MembersManagement({
             router.push(isSelf ? "/" : `/g/${groupId}/members`);
             router.refresh();
         } else {
-            setError(await errorMessage(res, "No se ha podido completar la acción"));
+            setError(await errorMessage(res, t("errorRemoveMember"), t("lastOwnerError")));
         }
     };
 
     const handleTransfer = async (userId: string, memberName: string | null) => {
-        if (!confirm(`¿Traspasar el club a ${memberName ?? "este miembro"}? Dejarás de ser propietario.`)) return;
+        if (!confirm(t("confirmTransfer", { name: memberName ?? t("thisMember") }))) return;
 
         setError("");
         const res = await fetch(`/api/groups/${groupId}/members/${userId}`, {
@@ -112,7 +113,7 @@ export default function MembersManagement({
         if (res.ok) {
             router.refresh();
         } else {
-            setError(await errorMessage(res, "No se ha podido traspasar el club"));
+            setError(await errorMessage(res, t("errorTransfer")));
         }
     };
 
@@ -128,7 +129,7 @@ export default function MembersManagement({
             if (res.ok) {
                 router.refresh();
             } else {
-                setError(await errorMessage(res, "No se ha podido cambiar el nombre"));
+                setError(await errorMessage(res, t("errorRename")));
             }
         } finally {
             setRenaming(false);
@@ -144,11 +145,11 @@ export default function MembersManagement({
                 router.push("/");
                 router.refresh();
             } else {
-                setError(await errorMessage(res, "No se ha podido eliminar el club"));
+                setError(await errorMessage(res, t("errorDelete")));
                 setDeleting(false);
             }
         } catch {
-            setError("No se ha podido eliminar el club");
+            setError(t("errorDelete"));
             setDeleting(false);
         }
     };
@@ -157,21 +158,21 @@ export default function MembersManagement({
         <div className={clsx("glass-card", styles.card)}>
             {isOwnerOrAdmin && (
                 <section className={styles.section}>
-                    <h3 className={styles.sectionTitle}>Nombre del club</h3>
+                    <h3 className={styles.sectionTitle}>{t("renameSectionTitle")}</h3>
                     <div className={styles.renameRow}>
                         <input
                             className="input"
                             value={name}
                             maxLength={60}
                             onChange={event => setName(event.target.value)}
-                            aria-label="Nombre del club"
+                            aria-label={t("renameSectionTitle")}
                         />
                         <button
                             className="btn btn-primary"
                             onClick={handleRename}
                             disabled={renaming || !name.trim() || name === groupName}
                         >
-                            {renaming ? "Guardando..." : "Guardar"}
+                            {renaming ? t("saving") : t("save")}
                         </button>
                     </div>
                 </section>
@@ -229,7 +230,7 @@ export default function MembersManagement({
                                 {isOwnerOrAdmin && member.role !== "OWNER" && (
                                     <button
                                         className="btn btn-ghost"
-                                        title="Hacer propietario"
+                                        title={t("makeOwner")}
                                         onClick={() => handleTransfer(member.userId, member.name)}
                                     >
                                         <Crown size={16} />
@@ -252,14 +253,15 @@ export default function MembersManagement({
 
             {isOwnerOrAdmin && (
                 <section className={styles.section}>
-                    <h3 className={styles.sectionTitle}>Eliminar el club</h3>
-                    <p className={styles.dangerNote}>
-                        Se borran también sus propuestas, quedadas, votos e invitaciones. No se puede deshacer.
-                    </p>
+                    <h3 className={styles.sectionTitle}>{t("deleteSectionTitle")}</h3>
+                    <p className={styles.dangerNote}>{t("deleteWarning")}</p>
                     {confirmingDelete ? (
                         <div className={styles.dangerConfirm}>
                             <label className={styles.dangerLabel} htmlFor="delete-confirmation">
-                                Escribe <strong>{groupName}</strong> para confirmar
+                                {t.rich("deleteConfirmLabel", {
+                                    name: groupName,
+                                    strong: chunks => <strong>{chunks}</strong>,
+                                })}
                             </label>
                             <input
                                 id="delete-confirmation"
@@ -273,7 +275,7 @@ export default function MembersManagement({
                                     onClick={handleDeleteGroup}
                                     disabled={deleting || deleteConfirmation !== groupName}
                                 >
-                                    {deleting ? "Eliminando..." : "Eliminar definitivamente"}
+                                    {deleting ? t("deleting") : t("deleteConfirmButton")}
                                 </button>
                                 <button
                                     className="btn btn-ghost"
@@ -282,13 +284,13 @@ export default function MembersManagement({
                                         setDeleteConfirmation("");
                                     }}
                                 >
-                                    Cancelar
+                                    {tCommon("cancel")}
                                 </button>
                             </div>
                         </div>
                     ) : (
                         <button className="btn btn-danger" onClick={() => setConfirmingDelete(true)}>
-                            Eliminar club
+                            {t("deleteClubButton")}
                         </button>
                     )}
                 </section>
