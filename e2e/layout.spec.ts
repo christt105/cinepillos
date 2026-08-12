@@ -106,8 +106,14 @@ test("the navbar keeps its contents inside the bar", async ({ page }) => {
     // The identity block is client-rendered off `useSession()`, so wait for
     // the piece the rest of this test measures rather than for the network
     // to fall quiet, which a slow poster fetch elsewhere on the page can
-    // delay for reasons that have nothing to do with the bar.
-    await expect(page.locator("nav").getByRole("combobox")).toBeVisible();
+    // delay for reasons that have nothing to do with the bar. `.first()`
+    // because the desktop bar also has the language switcher, another
+    // <select> — both are legitimately visible at once, so without it this
+    // strict-mode-violates the moment the club selector finishes hydrating
+    // (it renders after the language one, which doesn't wait on the
+    // session). It's still the club selector: that one comes first in the
+    // DOM, ahead of <LanguageSwitcher>.
+    await expect(page.locator("nav").getByRole("combobox").first()).toBeVisible();
 
     // Christian is an admin in two clubs, which is the densest the bar ever
     // gets. Stacked, that identity block was 122px tall inside a 70px bar, so
