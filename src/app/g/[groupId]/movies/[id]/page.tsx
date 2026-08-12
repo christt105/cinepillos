@@ -91,13 +91,21 @@ export default async function MovieDetailsPage(props: PageProps) {
         include: {
             proposals: {
                 where: { groupId },
-                include: { user: true }
+                include: { user: true, likes: { include: { user: true } } }
             }
         }
     });
 
     const existingProposalId = dbFilm?.proposals?.find(p => p.userId === session.user.id)?.id || null;
     const allProposals = dbFilm?.proposals || [];
+
+    // A film can have more than one proposal in the group (one per proposer),
+    // each with its own likes, so dedupe likers across all of them by user id.
+    const allLikers = [
+        ...new Map(
+            allProposals.flatMap(p => p.likes.map(like => [like.user.id, like.user] as const))
+        ).values()
+    ];
 
     return (
         <div className="page">
@@ -167,6 +175,27 @@ export default async function MovieDetailsPage(props: PageProps) {
                                             />
                                         </div>
                                         <span>{p.user.name}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {allLikers.length > 0 && (
+                        <div className={styles.proposers}>
+                            <h3 className={styles.proposersTitle}>{t("likedByTitle")}</h3>
+                            <div className={styles.proposersList}>
+                                {allLikers.map(user => (
+                                    <div key={user.id} className={styles.proposer}>
+                                        <div className={`avatar ${styles.proposerAvatar}`}>
+                                            <Image
+                                                src={avatarUrl(user)}
+                                                alt={user.name || tCommon("unknownUser")}
+                                                fill
+                                                className={styles.posterImage}
+                                            />
+                                        </div>
+                                        <span>{user.name}</span>
                                     </div>
                                 ))}
                             </div>
