@@ -19,6 +19,7 @@
     "search": "Buscar",
     "meetings": "Reuniones",
     "myGroup": "Mi Grupo",
+    "myLikes": "Mis Likes",
     "admin": "Administración",
     "signIn": "Entrar",
     "signOut": "Cerrar sesión",
@@ -237,6 +238,11 @@
   "likes": {
     "like": "Me gusta",
     "unlike": "Quitar me gusta"
+  },
+  "myLikes": {
+    "pageTitle": "Mis Likes",
+    "empty": "Todavía no le has dado like a ninguna película.",
+    "browse": "Explorar películas"
   },
   "datePicker": {
     "time": "Hora"
