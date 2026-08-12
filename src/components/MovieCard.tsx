@@ -63,12 +63,12 @@ export default function MovieCard({ movie, groupId, onAdd, loading = false, isPr
                     </div>
                 </div>
             </div>
-            <div className={styles.content}>
+            <Link href={link} className={styles.content}>
                 <h3 className={styles.title}>{movie.title}</h3>
                 <span className={styles.year}>
                     {movie.release_date ? new Date(movie.release_date).getFullYear() : tCommon("notAvailable")}
                 </span>
-            </div>
+            </Link>
         </div>
     );
 }
