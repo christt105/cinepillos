@@ -59,3 +59,41 @@
     font-size: var(--text-xs);
     margin-left: var(--space-2);
 }
+
+.memberActions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.renameRow {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.renameRow .input {
+    flex: 1;
+    min-width: 12rem;
+}
+
+.dangerNote {
+    font-size: var(--text-sm);
+    opacity: 0.7;
+}
+
+.dangerConfirm {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.dangerLabel {
+    font-size: var(--text-sm);
+}
+
+.dangerActions {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}

@@ -13,7 +13,8 @@ import { POST as postVote } from "@/app/api/groups/[groupId]/vote/route";
 import { POST as postActiveGroup } from "@/app/api/users/activeGroup/route";
 import { GET as getInvitations, POST as postInvitation } from "@/app/api/groups/[groupId]/invitations/route";
 import { DELETE as deleteInvitation } from "@/app/api/groups/[groupId]/invitations/[invitationId]/route";
-import { DELETE as deleteMember } from "@/app/api/groups/[groupId]/members/[userId]/route";
+import { DELETE as deleteMember, PATCH as patchMember } from "@/app/api/groups/[groupId]/members/[userId]/route";
+import { PATCH as patchGroup, DELETE as deleteGroup } from "@/app/api/groups/[groupId]/route";
 import { GET as getInvitationByToken, POST as acceptInvitation } from "@/app/api/invitations/[token]/route";
 
 const BASE = "http://localhost";
@@ -107,6 +108,18 @@ export const api = {
 
     removeMember: (groupId: string, userId: string) =>
         deleteMember(jsonRequest(`/api/groups/${groupId}/members/${userId}`, "DELETE"), context({ groupId, userId })),
+
+    setMemberRole: (groupId: string, userId: string, role: string) =>
+        patchMember(
+            jsonRequest(`/api/groups/${groupId}/members/${userId}`, "PATCH", { role }),
+            context({ groupId, userId })
+        ),
+
+    renameGroup: (groupId: string, name: string) =>
+        patchGroup(jsonRequest(`/api/groups/${groupId}`, "PATCH", { name }), context({ groupId })),
+
+    deleteGroup: (groupId: string) =>
+        deleteGroup(jsonRequest(`/api/groups/${groupId}`, "DELETE"), context({ groupId })),
 
     getInvitation: (token: string) =>
         getInvitationByToken(jsonRequest(`/api/invitations/${token}`, "GET"), context({ token })),
