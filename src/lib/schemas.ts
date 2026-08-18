@@ -76,6 +76,18 @@ export const groupCreateSchema = z.object({
     name: z.string().min(1).max(60),
 });
 
+export const groupUpdateSchema = z
+    .object({
+        name: z.string().min(1).max(60),
+    })
+    .strict();
+
+export const membershipUpdateSchema = z
+    .object({
+        role: z.enum(["OWNER", "MEMBER"]),
+    })
+    .strict();
+
 export const adminMembershipSchema = z.object({
     groupId: id,
 });
