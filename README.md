@@ -8,6 +8,27 @@ that group.
 
 ![Home page](docs/screenshot-home.png)
 
+## Screenshots
+
+<table>
+  <tr>
+    <td><img src="docs/screenshot-search.png" alt="Searching TMDB, with genre filters"></td>
+    <td><img src="docs/screenshot-detail.png" alt="Film detail page"></td>
+  </tr>
+  <tr>
+    <td align="center">Search, backed by TMDB</td>
+    <td align="center">Film detail page</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshot-voting.png" alt="An open voting round"></td>
+    <td><img src="docs/screenshot-mobile.png" alt="Voting room on a phone"></td>
+  </tr>
+  <tr>
+    <td align="center">A session's voting round</td>
+    <td align="center">Same round, on a phone</td>
+  </tr>
+</table>
+
 ## Stack
 
 Next.js (App Router) with React server components, Prisma over Postgres
@@ -157,8 +178,6 @@ checks the pages for elements that stick out of the viewport, at a 375px phone
 width and at desktop width.
 
 GitHub Actions runs lint, tests and build on every push and pull request.
-
-![Voting room on a phone](docs/screenshot-mobile.png)
 
 If you find CinePillos useful and want to support its development, you can buy me a coffee!
 
